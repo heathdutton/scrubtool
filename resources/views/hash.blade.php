@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
+@section('title', 'Hash a File')
+
 @section('content')
     <div class="title m-b-md">
-        {{ config('app.name') }}
+        Upload
     </div>
+    @include('partials.fileupload')
 @endsection

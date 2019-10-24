@@ -11,6 +11,8 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'WelcomeController@index');
+
+Route::get('/hash', 'HashFileController@index');
+
+Route::post('/hash/file/upload', 'HashFileController@upload');
