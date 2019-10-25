@@ -6,9 +6,17 @@ use App\File;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Maatwebsite\Excel\Excel;
 
 class HashFileController extends Controller
 {
+    private $excel;
+
+    public function __construct(Excel $excel)
+    {
+        $this->excel = $excel;
+    }
+
     public function index()
     {
         return view('hash');
@@ -24,45 +32,18 @@ class HashFileController extends Controller
      */
     public function upload(Request $request)
     {
-        $filesUploaded = [];
+        $errors = $filesUploaded = [];
 
         /** @var UploadedFile $uploadedFile */
         foreach ($request->allFiles() as $uploadedFile) {
-            if (!($uploadedFile instanceof UploadedFile)) {
-                throw new Exception('Unable to parse file upload.');
+            $file = new File();
+            try {
+                $file->createAndMove($uploadedFile, File::TYPE_HASH, $request);
+                $filesUploaded[] = $uploadedFile->getClientOriginalName();
+            } catch (Exception $e) {
+                $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
             }
-
-            $fileModel = new File();
-            /** @var File $file */
-            $file = $fileModel::create([
-                'name'                 => $uploadedFile->getClientOriginalName(),
-                'location'             => $uploadedFile->getRealPath(),
-                'user_id'              => $request->user() ? $request->user()->id : null,
-                'list_id'              => null,
-                'ip_address'           => $request->getClientIp(),
-                'session_id'           => $request->getSession()->getId(),
-                'type'                 => File::TYPE_HASH,
-                'format'               => null,
-                'columns'              => null,
-                'column_count'         => 0,
-                'size'                 => $uploadedFile->getSize(),
-                'rows_total'           => 0,
-                'rows_processed'       => 0,
-                'rows_scrubbed'        => 0,
-                'rows_invalid'         => 0,
-                'rows_email_valid'     => 0,
-                'rows_email_invalid'   => 0,
-                'rows_email_duplicate' => 0,
-                'rows_email_dnc'       => 0,
-                'rows_phone_valid'     => 0,
-                'rows_phone_invalid'   => 0,
-                'rows_phone_duplicate' => 0,
-                'rows_phone_dnc'       => 0,
-            ]);
-            $file->move($uploadedFile);
-            $filesUploaded[] = $uploadedFile->getClientOriginalName();
         }
-
-        return response()->json(['success' => $filesUploaded]);
+        return response()->json(['success' => $filesUploaded, 'errors' => $errors]);
     }
 }

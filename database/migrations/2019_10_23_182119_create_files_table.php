@@ -24,11 +24,13 @@ class CreateFilesTable extends Migration
             $table->unsignedBigInteger('list_id')->nullable();
             $table->ipAddress('ip_address');
             $table->string('session_id');
+            $table->unsignedTinyInteger('status')->nullable();
             $table->unsignedTinyInteger('type')->nullable();
-            $table->unsignedTinyInteger('format')->nullable();
+            $table->string('format')->nullable();
             $table->json('columns')->nullable();
             $table->unsignedInteger('column_count');
             $table->unsignedBigInteger('size');
+            $table->string('message')->nullable();
             $table->unsignedBigInteger('rows_total');
             $table->unsignedBigInteger('rows_processed');
             $table->unsignedBigInteger('rows_scrubbed');

@@ -149,7 +149,7 @@ return [
         | Supported handlers: null|db
         |
         */
-        'handler' => 'db',
+        'handler' => 'null',
     ],
 
     'temporary_files' => [
