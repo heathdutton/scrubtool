@@ -43,21 +43,23 @@ class FilesController extends Controller
      */
     public function upload(Request $request)
     {
-        $errors = $filesUploaded = [];
+        $errors = $filesUploaded = $stats = [];
 
         /** @var UploadedFile $uploadedFile */
         foreach ($request->allFiles() as $uploadedFile) {
             $file = new File();
             try {
-                $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
-                $filesUploaded[] = $uploadedFile->getClientOriginalName();
+                $fileName        = $uploadedFile->getClientOriginalName();
+                $file            = $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
+                $filesUploaded[] = $fileName;
+                $stats[]         = $file->getAttributesForOutput();
             } catch (Exception $e) {
                 $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
             }
         }
 
         return response()->json([
-            'success' => $filesUploaded, 'errors' => $errors, 'stats' => $file->getAttributesForOutput(),
+            'success' => $filesUploaded, 'errors' => $errors, 'stats' => $stats,
         ]);
     }
 }

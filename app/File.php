@@ -218,6 +218,6 @@ class File extends Model
      */
     public function getAttributesForOutput()
     {
-        return array_diff_key($this->getAttributes(), self::STAT_PROPERTY_BLACKLIST);
+        return array_diff_key($this->getAttributes(), array_flip(self::STAT_PROPERTY_BLACKLIST));
     }
 }

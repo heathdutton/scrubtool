@@ -6,5 +6,7 @@
     <div class="title m-b-md">
         Upload
     </div>
-    @include('partials.fileupload')
+    @include('partials.filesupload')
+
+    @include('partials.fileslist')
 @endsection
