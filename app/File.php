@@ -2,7 +2,8 @@
 
 namespace App;
 
-use App\Imports\GenericImport;
+use App\Imports\FileImport;
+use App\Imports\FileImportAnalysis;
 use App\Jobs\ProcessFile;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -11,31 +12,47 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Class File
+ *
+ * Files go through the following workflow:
+ *  - Added: Freshly uploaded, waiting to be picked up
+ *  - Analysis: Checking for size, column types and such with a short-run import for a preview.
+ *  - Input: Awaiting user input to know what to do next.
+ *  - Ready: Ready to begin import.
+ *  - Running: Running the import operation based on options provided.
+ *  - Stopped: Cancelled run due to error or user input.
+ *  - Whole: The file was completed.
+ *
+ * @package App
+ */
 class File extends Model
 {
-    const MIN_BYTES        = 10;
+    const MIN_BYTES           = 10;
 
-    const PRIVATE_STORAGE  = 'private';
+    const PRIVATE_STORAGE     = 'private';
 
-    const STATUS_COMPLETE  = 16;
+    const STATUS_ADDED        = 1;
 
-    const STATUS_DELAYED   = 2;
+    const STATUS_ANALYSIS     = 2;
 
-    CONST STATUS_EMPTY     = 32;
+    const STATUS_INPUT_NEEDED = 4;
 
-    CONST STATUS_ERROR     = 4;
+    const STATUS_READY        = 8;
 
-    const STATUS_IMPORTING = 8;
+    const STATUS_RUNNING      = 16;
 
-    const STATUS_WAITING   = 1;
+    const STATUS_STOPPED      = 32;
 
-    const STORAGE          = 'local';
+    const STATUS_WHOLE        = 64;
 
-    const TYPE_HASH        = 1;
+    const STORAGE             = 'local';
 
-    const TYPE_LIST        = 2;
+    const TYPE_HASH           = 1;
 
-    const TYPE_SCRUB       = 4;
+    const TYPE_LIST           = 2;
+
+    const TYPE_SCRUB          = 4;
 
     protected $guarded = [
         'id',
@@ -126,8 +143,9 @@ class File extends Model
         }
 
         // Move the file and save the new location.
-        $uploadedFile->move($realDir, $fileName);
-        $this->location = $realDestination;
+        $uploadedFile->move($realDir, $inputFileName);
+        $this->input_location  = $realInputFileDestination;
+        $this->output_location = $realOutputFileDestination;
         $this->save();
 
         return $this;
@@ -139,16 +157,27 @@ class File extends Model
     public function process()
     {
         if ($this->size < self::MIN_BYTES) {
-            $this->status  = self::STATUS_EMPTY;
+            $this->status  = self::STATUS_STOPPED;
             $this->message = 'File was empty after upload.';
-
-            return $this->save();
+            $this->save();
         }
 
-        if ($this->status & self::STATUS_WAITING || $this->status & self::STATUS_DELAYED) {
-            $this->status = self::STATUS_IMPORTING;
+        if ($this->status & self::STATUS_ADDED) {
+            $this->status  = self::STATUS_ANALYSIS;
+            $this->message = 'File contents are under analysis.';
             $this->save();
-            Excel::import(new GenericImport($this->type), $this->location, self::STORAGE);
+            $fileImportAnalysis = new FileImportAnalysis($this);
+            Excel::import($fileImportAnalysis, $this->input_location, self::STORAGE);
+
+            $analysis = $fileImportAnalysis->getAnalysis();
+        }
+
+        if ($this->status & self::STATUS_READY) {
+            $this->status  = self::STATUS_RUNNING;
+            $this->message = 'File is being processed.';
+            $this->save();
+            $fileImport = new FileImport($this);
+            Excel::import($fileImport, $this->input_location, self::STORAGE);
         }
 
         return $this;
