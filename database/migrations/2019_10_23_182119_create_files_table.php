@@ -19,9 +19,10 @@ class CreateFilesTable extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->text('name');
-            $table->text('location')->nullable();
+            $table->text('input_location')->nullable();
+            $table->text('output_location')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->unsignedBigInteger('list_id')->nullable();
+            $table->json('input_settings')->nullable();
             $table->ipAddress('ip_address');
             $table->string('session_id');
             $table->unsignedTinyInteger('status')->nullable();

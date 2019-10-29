@@ -57,12 +57,13 @@ class File extends Model
         /** @var File $file */
         $file = $this::create([
             'name'                 => $uploadedFile->getClientOriginalName() ?? 'na',
-            'location'             => $uploadedFile->getRealPath(),
+            'input_location'       => $uploadedFile->getRealPath(),
+            'output_location'      => null,
             'user_id'              => $request->user() ? $request->user()->id : null,
-            'list_id'              => null, // @todo - Assign by post option later with permission check.
+            'input_settings'       => null,
             'ip_address'           => $request->getClientIp(),
             'session_id'           => $request->getSession()->getId(),
-            'status'               => File::STATUS_WAITING,
+            'status'               => self::STATUS_ADDED,
             'type'                 => $fileType,
             'format'               => null,
             'columns'              => null,
@@ -99,22 +100,27 @@ class File extends Model
      */
     private function move(UploadedFile $uploadedFile)
     {
-        $storage   = Storage::disk(self::STORAGE);
-        $now       = Carbon::now('UTC');
-        $date      = $now->format('Y-m-d');
-        $time      = $now->format('H-i-s-v'); // Change timestamp format to control rate limit.
-        $fileId    = $this->id ?? 0;
-        $userId    = $this->user_id ?? $this->session_id;
-        $fileType  = $this->file_type ?? 0;
-        $directory = self::PRIVATE_STORAGE.DIRECTORY_SEPARATOR.$date;
-        $extension = pathinfo($this->name)['extension'] ?? 'tmp';
-        $fileName  = implode('-', [$date, $time, $fileType, $userId, $fileId]).'.'.$extension;
+        $storage        = Storage::disk(self::STORAGE);
+        $now            = Carbon::now('UTC');
+        $date           = $now->format('Y-m-d');
+        $time           = $now->format('H-i-s-v'); // Change timestamp format to control rate limit.
+        $fileId         = $this->id ?? 0;
+        $userId         = $this->user_id ?? $this->session_id;
+        $fileType       = $this->file_type ?? 0;
+        $directory      = self::PRIVATE_STORAGE.DIRECTORY_SEPARATOR.$date;
+        $extension      = pathinfo($this->name)['extension'] ?? 'tmp';
+        $inputFileName  = implode('-', [$date, $time, $fileType, $userId, $fileId]).'-input.'.$extension;
+        $outputFileName = implode('-', [$date, $time, $fileType, $userId, $fileId]).'-output.'.$extension;
         if (!$storage->exists($directory)) {
             $storage->makeDirectory($directory);
         }
-        $realDir         = storage_path('app'.DIRECTORY_SEPARATOR.$directory);
-        $realDestination = $realDir.DIRECTORY_SEPARATOR.$fileName;
-        if ($storage->exists($realDestination)) {
+        $realDir                   = storage_path('app'.DIRECTORY_SEPARATOR.$directory);
+        $realInputFileDestination  = $realDir.DIRECTORY_SEPARATOR.$inputFileName;
+        $realOutputFileDestination = $realDir.DIRECTORY_SEPARATOR.$outputFileName;
+        if (
+            $storage->exists($realInputFileDestination)
+            || $storage->exists($realOutputFileDestination)
+        ) {
             // More than one file by type, user and time. Likely DoS attack.
             throw new Exception('Too many files are being uploaded by the same user at once.');
         }
