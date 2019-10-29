@@ -70,6 +70,24 @@ class File extends Model
     ];
 
     /**
+     * @param  Request  $request
+     *
+     * @return mixed
+     */
+    public static function findByCurrentUser(Request $request)
+    {
+        if ($request->user()) {
+            $qb = self::where('user_id', $request->user()->id);
+        } elseif ($request->getSession()) {
+            $qb = self::where('session_id', $request->getSession()->getId());
+        }
+
+        return $qb->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+    }
+
+    /**
      * @param $uploadedFile
      * @param $mode
      * @param  Request  $request

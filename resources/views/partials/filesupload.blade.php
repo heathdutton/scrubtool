@@ -17,7 +17,7 @@
                 addRemoveLinks: false,
                 timeout: 899,
                 success: function (file, response) {
-                    console.log(response);
+                    console.log(file, response);
                 }
             });
         });

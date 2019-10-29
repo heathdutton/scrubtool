@@ -11,16 +11,30 @@ use Maatwebsite\Excel\Excel;
 
 class FilesController extends Controller
 {
+
+    /** @var Excel */
     private $excel;
 
+    /**
+     * FilesController constructor.
+     *
+     * @param  Excel  $excel
+     */
     public function __construct(Excel $excel)
     {
         $this->excel = $excel;
     }
 
-    public function index()
+    /**
+     * @param  Request  $request
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function index(Request $request)
     {
-        return view('files');
+        $files = File::findByCurrentUser($request);
+
+        return view('files', ['files' => $files]);
     }
 
     /**
@@ -49,17 +63,16 @@ class FilesController extends Controller
         foreach ($request->allFiles() as $uploadedFile) {
             $file = new File();
             try {
-                $fileName        = $uploadedFile->getClientOriginalName();
-                $file            = $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
-                $filesUploaded[] = $fileName;
-                $stats[]         = $file->getAttributesForOutput();
+                $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
+                $filesUploaded[] = $uploadedFile->getClientOriginalName();
             } catch (Exception $e) {
                 $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
             }
         }
 
         return response()->json([
-            'success' => $filesUploaded, 'errors' => $errors, 'stats' => $stats,
+            'success' => $filesUploaded,
+            'errors'  => $errors,
         ]);
     }
 }
