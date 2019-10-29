@@ -407,7 +407,7 @@ class HashHelper
     public function detectHash($string, $hashName = '')
     {
         $selection = null;
-        $string    = strtolower(trim($string));
+        $string    = strtolower($string);
         $length    = strlen($string);
         // Remove Octal identifiers.
         if (in_array(substr($string, 0, 2), ['0x', '0h'])) {
