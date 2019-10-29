@@ -6,14 +6,22 @@ use App\Imports\FileImport;
 use App\Imports\FileImportAnalysis;
 use App\Jobs\ProcessFile;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Helpers\FileTypeDetector;
 
 /**
  * Class File
+ *
+ * Files go into the system in 3 modes:
+ *  - Hash: Just hash email/phone based on input provided.
+ *  - List: Generate/append/replace a suppression list.
+ *  - Scrub: Scrub records in the file against one or more suppression lists.
  *
  * Files go through the following workflow:
  *  - Added: Freshly uploaded, waiting to be picked up
@@ -29,6 +37,12 @@ use Maatwebsite\Excel\Facades\Excel;
 class File extends Model
 {
     const MIN_BYTES           = 10;
+
+    const MODE_HASH           = 1;
+
+    const MODE_LIST           = 2;
+
+    const MODE_SCRUB          = 4;
 
     const PRIVATE_STORAGE     = 'private';
 
@@ -48,27 +62,33 @@ class File extends Model
 
     const STORAGE             = 'local';
 
-    const TYPE_HASH           = 1;
-
-    const TYPE_LIST           = 2;
-
-    const TYPE_SCRUB          = 4;
-
     protected $guarded = [
         'id',
     ];
 
     /**
      * @param $uploadedFile
-     * @param $fileType
+     * @param $mode
      * @param  Request  $request
      *
-     * @return $this
+     * @return File
+     * @throws Exception
      */
-    public function createAndMove($uploadedFile, $fileType, Request $request)
+    public function createAndMove($uploadedFile, $mode, Request $request)
     {
         if (!($uploadedFile instanceof UploadedFile)) {
             throw new Exception('Unable to parse file upload.');
+        }
+
+        $fileSize = $uploadedFile->getSize();
+        if ($fileSize < self::MIN_BYTES) {
+            throw new Exception('File was empty.');
+        }
+
+        try {
+            $fileType = FileTypeDetector::detect($uploadedFile);
+        } catch (NoTypeDetectedException $exception) {
+            throw new Exception('Could not discern the file type. Please make sure to use the proper file extensions.');
         }
 
         /** @var File $file */
@@ -81,11 +101,11 @@ class File extends Model
             'ip_address'           => $request->getClientIp(),
             'session_id'           => $request->getSession()->getId(),
             'status'               => self::STATUS_ADDED,
+            'mode'                 => File::MODE_HASH,
             'type'                 => $fileType,
-            'format'               => null,
             'columns'              => null,
             'column_count'         => 0,
-            'size'                 => $uploadedFile->getSize(),
+            'size'                 => $fileSize,
             'rows_total'           => 0,
             'rows_processed'       => 0,
             'rows_scrubbed'        => 0,
@@ -102,7 +122,7 @@ class File extends Model
         $file->move($uploadedFile);
 
         ProcessFile::dispatch($file->id)
-            ->onQueue($fileType);
+            ->onQueue($mode);
 
         return $file;
     }
@@ -114,6 +134,7 @@ class File extends Model
      * @param  UploadedFile  $uploadedFile
      *
      * @return $this
+     * @throws Exception
      */
     private function move(UploadedFile $uploadedFile)
     {
@@ -123,11 +144,11 @@ class File extends Model
         $time           = $now->format('H-i-s-v'); // Change timestamp format to control rate limit.
         $fileId         = $this->id ?? 0;
         $userId         = $this->user_id ?? $this->session_id;
-        $fileType       = $this->file_type ?? 0;
+        $mode           = $this->mode ?? 0;
         $directory      = self::PRIVATE_STORAGE.DIRECTORY_SEPARATOR.$date;
         $extension      = pathinfo($this->name)['extension'] ?? 'tmp';
-        $inputFileName  = implode('-', [$date, $time, $fileType, $userId, $fileId]).'-input.'.$extension;
-        $outputFileName = implode('-', [$date, $time, $fileType, $userId, $fileId]).'-output.'.$extension;
+        $inputFileName  = implode('-', [$date, $time, $mode, $userId, $fileId]).'-input.'.$extension;
+        $outputFileName = implode('-', [$date, $time, $mode, $userId, $fileId]).'-output.'.$extension;
         if (!$storage->exists($directory)) {
             $storage->makeDirectory($directory);
         }
@@ -146,6 +167,7 @@ class File extends Model
         $uploadedFile->move($realDir, $inputFileName);
         $this->input_location  = $realInputFileDestination;
         $this->output_location = $realOutputFileDestination;
+
         $this->save();
 
         return $this;
@@ -156,20 +178,19 @@ class File extends Model
      */
     public function process()
     {
-        if ($this->size < self::MIN_BYTES) {
-            $this->status  = self::STATUS_STOPPED;
-            $this->message = 'File was empty after upload.';
-            $this->save();
-        }
-
         if ($this->status & self::STATUS_ADDED) {
             $this->status  = self::STATUS_ANALYSIS;
             $this->message = 'File contents are under analysis.';
             $this->save();
+
+            // Discern reader type by file extension, but assume the person may have it wrong.
+
+
             $fileImportAnalysis = new FileImportAnalysis($this);
-            Excel::import($fileImportAnalysis, $this->input_location, self::STORAGE);
+            $excel              = Excel::import($fileImportAnalysis, $this->input_location, null, $reader);
 
             $analysis = $fileImportAnalysis->getAnalysis();
+
         }
 
         if ($this->status & self::STATUS_READY) {
@@ -177,7 +198,7 @@ class File extends Model
             $this->message = 'File is being processed.';
             $this->save();
             $fileImport = new FileImport($this);
-            Excel::import($fileImport, $this->input_location, self::STORAGE);
+            Excel::import($fileImport, $this->input_location);
         }
 
         return $this;

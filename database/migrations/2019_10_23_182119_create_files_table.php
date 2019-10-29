@@ -26,8 +26,8 @@ class CreateFilesTable extends Migration
             $table->ipAddress('ip_address');
             $table->string('session_id');
             $table->unsignedTinyInteger('status')->nullable();
-            $table->unsignedTinyInteger('type')->nullable();
-            $table->string('format')->nullable();
+            $table->unsignedTinyInteger('mode');
+            $table->string('type')->nullable();
             $table->json('columns')->nullable();
             $table->unsignedInteger('column_count');
             $table->unsignedBigInteger('size');
@@ -45,7 +45,6 @@ class CreateFilesTable extends Migration
             $table->unsignedBigInteger('rows_phone_duplicate');
             $table->unsignedBigInteger('rows_phone_dnc');
             $table->index(['user_id', 'updated_at']);
-            $table->index(['list_id', 'updated_at']);
             $table->index('size');
         });
     }

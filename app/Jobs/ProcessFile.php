@@ -30,8 +30,8 @@ class ProcessFile implements ShouldQueue
         }
     }
 
-    public function failed(Exception $exception)
-    {
-        // Send user notification of failure, etc..
-    }
+    // public function failed(Exception $exception)
+    // {
+    //    @todo - Send user notification of failure, etc..
+    // }
 }

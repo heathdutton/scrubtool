@@ -38,15 +38,15 @@ class FileImport implements ToModel, WithChunkReading
         $data = $this->getFileDataHelper()
             ->parseRow($row, ++$this->rowIndex);
 
-        if ($this->file->status % File::STATUS_ANALYSIS) {
+        if ($this->file->status & File::STATUS_ANALYSIS) {
             // Running an analysis. No export needed.
-            if (!$data->getRowIsHeader()) {
+            if ($this->rowIndex <= 20 && !$data->getRowIsHeader()) {
                 $this->samples[] = $data->getRowData();
             }
         }
 
         // Running an import/export process.
-        if ($this->file->status % File::STATUS_RUNNING) {
+        if ($this->file->status & File::STATUS_RUNNING) {
             $this->appendRowToExport($data->getRowData());
         }
     }
@@ -73,18 +73,25 @@ class FileImport implements ToModel, WithChunkReading
 
     public function getAnalysis()
     {
+        // Get column analysis from the helper.
         $columns = $this->getFileDataHelper()->getColumnAnalysis();
 
         // Append column examples.
         foreach ($this->samples as $rowIndex => $sample) {
             foreach ($columns as $columnIndex => &$column) {
-                // if (!isset($column['samples'])) {
-                //     $column['samples'] = [];
-                // }
+                if (!isset($column['samples'])) {
+                    $column['samples'] = [];
+                }
                 $column['samples'][$rowIndex] = $sample[$columnIndex] ?? null;
             }
         }
-        return $columns;
+
+        // Get the format from the importer.
+        $tmp = 1;
+
+        return [
+            'columns' => $columns,
+        ];
     }
 
     public function chunkSize(): int

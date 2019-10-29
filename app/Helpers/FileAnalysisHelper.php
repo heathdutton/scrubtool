@@ -9,7 +9,7 @@ class FileAnalysisHelper
 {
     const TYPE_EMAIL   = 1;
 
-    const TYPE_HASH    = 2;
+    const MODE_HASH    = 2;
 
     const TYPE_PHONE   = 4;
 
@@ -61,11 +61,11 @@ class FileAnalysisHelper
         'ph'        => self::TYPE_PHONE,
         'cell'      => self::TYPE_PHONE,
         'mobile'    => self::TYPE_PHONE,
-        'hash'      => self::TYPE_HASH,
-        'emailhash' => self::TYPE_HASH | self::TYPE_EMAIL,
-        'hashemail' => self::TYPE_HASH | self::TYPE_EMAIL,
-        'phonehash' => self::TYPE_HASH | self::TYPE_PHONE,
-        'hashphone' => self::TYPE_HASH | self::TYPE_PHONE,
+        'hash'      => self::MODE_HASH,
+        'emailhash' => self::MODE_HASH | self::TYPE_EMAIL,
+        'hashemail' => self::MODE_HASH | self::TYPE_EMAIL,
+        'phonehash' => self::MODE_HASH | self::TYPE_PHONE,
+        'hashphone' => self::MODE_HASH | self::TYPE_PHONE,
     ];
 
     /**
@@ -98,10 +98,10 @@ class FileAnalysisHelper
     {
         $count = count($row);
         if ($this->columnCount < $count) {
-            array_pad($this->columnNames, $count, null);
-            array_pad($this->columnHashes, $count, null);
-            array_pad($this->columnTypes, $count, self::TYPE_UNKNOWN);
-            $this->columnCount = $count;
+            $this->columnNames  = array_pad($this->columnNames, $count, null);
+            $this->columnHashes = array_pad($this->columnHashes, $count, null);
+            $this->columnTypes  = array_pad($this->columnTypes, $count, self::TYPE_UNKNOWN);
+            $this->columnCount  = $count;
         }
     }
 
@@ -164,7 +164,7 @@ class FileAnalysisHelper
     {
         foreach ($row as $i => $value) {
             // Try not to manipulate the column headers more than necessary so that output matches input.
-            $this->columnNames[$i] = trim($value);
+            $this->columnNames[$i] = trim((string) $value);
 
             // Assume type based on header contents (can be overridden later).
             $this->columnTypes[$i] = self::TYPE_UNKNOWN;
@@ -172,7 +172,7 @@ class FileAnalysisHelper
             if (isset($this->typeIdentifiers[$simple])) {
                 $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
             } elseif (in_array($simple, $this->getHashHelper()->list(false, true))) {
-                $this->columnTypes[$i] = self::TYPE_HASH;
+                $this->columnTypes[$i] = self::MODE_HASH;
             }
         }
         $this->columnCount = count($this->columnNames);
@@ -198,12 +198,12 @@ class FileAnalysisHelper
         // For performance, prioritize the first few lines and then try again every once and a while.
         if ($rowIndex < 101) { // } || 0 === $rowIndex % 997) {
             foreach ($this->columnTypes as $i => &$type) {
-                if (!empty($row[$i])) {
+                if ($value = trim((string) $row[$i] ?? '')) {
                     if ($type & self::TYPE_UNKNOWN) {
-                        $type = $this->getType($row[$i], $i);
+                        $type = $this->getType($value, $i);
                     }
                     if ($type ^ self::TYPE_UNKNOWN && !$this->columnHashes[$i]) {
-                        $this->columnHashes[$i] = $this->getHashHelper()->detectHash($row[$i]);
+                        $this->columnHashes[$i] = $this->getHashHelper()->detectHash($value);
                     }
                 }
             }
@@ -224,7 +224,7 @@ class FileAnalysisHelper
             return self::TYPE_EMAIL;
         }
         if ($this->isHash($value)) {
-            return self::TYPE_HASH;
+            return self::MODE_HASH;
         }
         if ($this->isPhone($value)) {
             return self::TYPE_PHONE;
@@ -311,4 +311,14 @@ class FileAnalysisHelper
     {
         return $this->columnCount;
     }
+
+    // private function normalized($row)
+    // {
+    //     // Floats can cause issues to evaluation.
+    //     foreach ($row as $columnIndex => &$value) {
+    //         if (is_float($value)) {
+    //             $value = (string) $value;
+    //         }
+    //     }
+    // }
 }

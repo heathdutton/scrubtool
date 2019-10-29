@@ -38,7 +38,7 @@ class HashFileController extends Controller
         foreach ($request->allFiles() as $uploadedFile) {
             $file = new File();
             try {
-                $file->createAndMove($uploadedFile, File::TYPE_HASH, $request);
+                $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
                 $filesUploaded[] = $uploadedFile->getClientOriginalName();
             } catch (Exception $e) {
                 $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
