@@ -6,9 +6,10 @@ use App\File;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Excel;
 
-class HashFileController extends Controller
+class FilesController extends Controller
 {
     private $excel;
 
@@ -19,7 +20,17 @@ class HashFileController extends Controller
 
     public function index()
     {
-        return view('hash');
+        return view('files');
+    }
+
+    /**
+     * Later can be a page for the results of a single file upload.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function file()
+    {
+        return Redirect::to('files', 301);
     }
 
     /**
@@ -44,6 +55,9 @@ class HashFileController extends Controller
                 $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
             }
         }
-        return response()->json(['success' => $filesUploaded, 'errors' => $errors]);
+
+        return response()->json([
+            'success' => $filesUploaded, 'errors' => $errors, 'stats' => $file->getAttributesForOutput(),
+        ]);
     }
 }

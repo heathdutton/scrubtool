@@ -14,11 +14,14 @@ class FileImport implements ToModel, WithChunkReading
 {
     use SkipsFailures, SkipsErrors;
 
+    /** @var int */
     const CHUNK_SIZE = 1009;
 
+    /** @var int */
     private $rowIndex = 0;
 
-    private $fileDataHelper;
+    /** @var FileAnalysisHelper */
+    private $FileAnalysisHelper;
 
     /** @var FileExport export */
     private $export = null;
@@ -26,16 +29,27 @@ class FileImport implements ToModel, WithChunkReading
     /** @var File */
     private $file;
 
+    /** @var array */
     private $samples = [];
 
+    /**
+     * FileImport constructor.
+     *
+     * @param  File  $file
+     */
     public function __construct(File $file)
     {
         $this->file = $file;
     }
 
+    /**
+     * @param  array  $row
+     *
+     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Model[]|void|null
+     */
     public function model(array $row)
     {
-        $data = $this->getFileDataHelper()
+        $data = $this->getFileAnalysisHelper()
             ->parseRow($row, ++$this->rowIndex);
 
         if ($this->file->status & File::STATUS_ANALYSIS) {
@@ -54,15 +68,18 @@ class FileImport implements ToModel, WithChunkReading
     /**
      * @return FileAnalysisHelper
      */
-    private function getFileDataHelper()
+    private function getFileAnalysisHelper()
     {
-        if (!$this->fileDataHelper) {
-            $this->fileDataHelper = new FileAnalysisHelper();
+        if (!$this->FileAnalysisHelper) {
+            $this->FileAnalysisHelper = new FileAnalysisHelper();
         }
 
-        return $this->fileDataHelper;
+        return $this->FileAnalysisHelper;
     }
 
+    /**
+     * @param $row
+     */
     private function appendRowToExport($row)
     {
         if (!$this->export) {
@@ -71,10 +88,13 @@ class FileImport implements ToModel, WithChunkReading
         $this->export->appendRowToSheet($row);
     }
 
+    /**
+     * @return array
+     */
     public function getAnalysis()
     {
         // Get column analysis from the helper.
-        $columns = $this->getFileDataHelper()->getColumnAnalysis();
+        $columns = $this->getFileAnalysisHelper()->getColumnAnalysis();
 
         // Append column examples.
         foreach ($this->samples as $rowIndex => $sample) {
@@ -86,24 +106,32 @@ class FileImport implements ToModel, WithChunkReading
             }
         }
 
-        // Get the format from the importer.
-        $tmp = 1;
-
         return [
             'columns' => $columns,
         ];
     }
 
+    /**
+     * @return int
+     */
     public function chunkSize(): int
     {
         return self::CHUNK_SIZE;
     }
 
+    /**
+     * @return bool|\Illuminate\Foundation\Bus\PendingDispatch
+     */
     public function finish()
     {
-        $this->export->store($this->fileOutput, File::STORAGE);
+        return $this->export->store($this->fileOutput, File::STORAGE);
     }
 
+    /**
+     * @param $row
+     *
+     * @return bool
+     */
     private function rowIsHeader($row)
     {
         foreach ($row as $value) {

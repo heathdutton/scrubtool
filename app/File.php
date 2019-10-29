@@ -26,7 +26,7 @@ use Maatwebsite\Excel\Helpers\FileTypeDetector;
  * Files go through the following workflow:
  *  - Added: Freshly uploaded, waiting to be picked up
  *  - Analysis: Checking for size, column types and such with a short-run import for a preview.
- *  - Input: Awaiting user input to know what to do next.
+ *  - Input Needed: Awaiting user input to know what to do next.
  *  - Ready: Ready to begin import.
  *  - Running: Running the import operation based on options provided.
  *  - Stopped: Cancelled run due to error or user input.
@@ -60,7 +60,10 @@ class File extends Model
 
     const STATUS_WHOLE        = 64;
 
-    const STORAGE             = 'local';
+    /** @var array Attributes we do not wish to expose to the user. */
+    const STAT_PROPERTY_BLACKLIST = ['input_location', 'output_location', 'user_id', 'session_id'];
+
+    const STORAGE                 = 'local';
 
     protected $guarded = [
         'id',
@@ -121,8 +124,7 @@ class File extends Model
         ]);
         $file->move($uploadedFile);
 
-        ProcessFile::dispatch($file->id)
-            ->onQueue($mode);
+        ProcessFile::dispatch($file->id)->onQueue($mode);
 
         return $file;
     }
@@ -178,29 +180,44 @@ class File extends Model
      */
     public function process()
     {
-        if ($this->status & self::STATUS_ADDED) {
-            $this->status  = self::STATUS_ANALYSIS;
-            $this->message = 'File contents are under analysis.';
+        try {
+            if ($this->status & self::STATUS_ADDED) {
+                $this->status  = self::STATUS_ANALYSIS;
+                $this->message = 'File contents are under analysis.';
+                $this->save();
+
+                $fileImportAnalysis = new FileImportAnalysis($this);
+                Excel::import($fileImportAnalysis, $this->input_location, null, $this->type);
+
+                $this->columns = $fileImportAnalysis->getAnalysis()['columns'];
+                $this->status  = self::STATUS_INPUT_NEEDED;
+                $this->message = 'Analysis complete. Need setting input to continue.';
+                $this->save();
+                // ProcessFile::dispatch($this->id)->onQueue($this->mode);
+            }
+
+            if ($this->status & self::STATUS_READY) {
+                $this->status  = self::STATUS_RUNNING;
+                $this->message = 'File is being processed.';
+                $this->save();
+                $fileImport = new FileImport($this);
+                Excel::import($fileImport, $this->input_location);
+            }
+
+        } catch (Exception $e) {
+            $this->status  = self::STATUS_STOPPED;
+            $this->message = 'An error was encountered while trying to import: '.$e->getMessage();
             $this->save();
-
-            // Discern reader type by file extension, but assume the person may have it wrong.
-
-
-            $fileImportAnalysis = new FileImportAnalysis($this);
-            $excel              = Excel::import($fileImportAnalysis, $this->input_location, null, $reader);
-
-            $analysis = $fileImportAnalysis->getAnalysis();
-
-        }
-
-        if ($this->status & self::STATUS_READY) {
-            $this->status  = self::STATUS_RUNNING;
-            $this->message = 'File is being processed.';
-            $this->save();
-            $fileImport = new FileImport($this);
-            Excel::import($fileImport, $this->input_location);
         }
 
         return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttributesForOutput()
+    {
+        return array_diff_key($this->getAttributes(), self::STAT_PROPERTY_BLACKLIST);
     }
 }

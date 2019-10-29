@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Hash a File')
+@section('title', 'Upload Files')
 
 @section('content')
     <div class="title m-b-md">

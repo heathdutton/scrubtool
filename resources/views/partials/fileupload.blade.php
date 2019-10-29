@@ -2,24 +2,28 @@
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/dropzone.js"></script>
     <script type="text/javascript">
-        Dropzone.options.dropzone =
-            {
-                maxFilesize: 100,
-                // renameFile: function (file) {
-                //     var dt = new Date();
-                //     var time = dt.getTime();
-                //     return time + file.name;
-                // },
-                acceptedFiles: '.xlsx,.csv,.tsv,.ods,.xls,.slk,.xml,.gnumeric,.html',
-                addRemoveLinks: false,
-                timeout: 600,
-                success: function (file, response) {
-                    console.log(response);
-                },
-                error: function (file, response) {
-                    return false;
-                }
-            };
+        Dropzone.options.dropzone = {
+            autoDiscover: false,
+            maxFilesize: 100,
+            acceptedFiles: '.xlsx,.csv,.tsv,.ods,.xls,.slk,.xml,.gnumeric,.html',
+            addRemoveLinks: false,
+            timeout: 899,
+            dictDefaultMessage: '<strong>Drop spreadsheets here or click to upload.</strong>',
+            success: function (file, response) {
+                console.log(response);
+            },
+            error: function (file, response) {
+                return false;
+            }
+        };
+
+        $(document).ready(function () {
+            var DZ = new Dropzone(document.body, {
+                url: "{{url('files/upload')}}",
+                previewsContainer: '#previews',
+                clickable: '#previews'
+            });
+        });
     </script>
 @endsection
 
@@ -29,9 +33,8 @@
 @endsection
 
 <div class="container">
-    <h3 class="jumbotron">Upload a spreadsheet to hash the contact details</h3>
-    <form method="post" action="{{url('hash/file/upload')}}" enctype="multipart/form-data"
-          class="dropzone" id="dropzone">
+    <form method="post" action="{{url('files/upload')}}" enctype="multipart/form-data" class="dropzone" id="dropzone">
         @csrf
+        <div id="previews" class="dropzone-previews"></div>
     </form>
 </div>

@@ -13,6 +13,8 @@
 
 Route::get('/', 'WelcomeController@index');
 
-Route::get('/hash', 'HashFileController@index');
+Route::get('/files', 'FilesController@index');
 
-Route::post('/hash/file/upload', 'HashFileController@upload');
+Route::post('/files/upload', 'FilesController@upload');
+
+Route::get('/file', 'FilesController@file');

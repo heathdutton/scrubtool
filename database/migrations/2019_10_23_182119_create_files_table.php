@@ -45,6 +45,7 @@ class CreateFilesTable extends Migration
             $table->unsignedBigInteger('rows_phone_duplicate');
             $table->unsignedBigInteger('rows_phone_dnc');
             $table->index(['user_id', 'updated_at']);
+            $table->index(['session_id', 'updated_at']);
             $table->index('size');
         });
     }
