@@ -21,7 +21,10 @@
             var DZ = new Dropzone(document.body, {
                 url: "{{url('files/upload')}}",
                 previewsContainer: '#previews',
-                clickable: '#previews'
+                clickable: '#previews',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
             });
         });
     </script>
