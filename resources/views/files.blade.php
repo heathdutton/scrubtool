@@ -4,13 +4,12 @@
 
 @section('content')
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                @include('partials.filesupload')
-
-                <br/>
-
-                @include('partials.fileslist')
+        <div class="col-md-12">
+            <div class="justify-content-center mb-3">
+                @include('partials.upload')
+            </div>
+            <div class="justify-content-center mt-3">
+                @include('partials.files')
             </div>
         </div>
     </div>

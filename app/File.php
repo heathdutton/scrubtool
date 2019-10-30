@@ -40,9 +40,11 @@ class File extends Model
 
     const MODE_HASH           = 1;
 
-    const MODE_LIST           = 2;
+    const MODE_LIST_APPEND    = 2;
 
-    const MODE_SCRUB          = 4;
+    const MODE_LIST_REPLACE   = 4;
+
+    const MODE_SCRUB          = 8;
 
     const PRIVATE_STORAGE     = 'private';
 
@@ -86,6 +88,14 @@ class File extends Model
         return $qb->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function users()
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

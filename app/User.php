@@ -37,6 +37,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function lists()
+    {
+        return $this->hasMany(SuppressionList::class);
+    }
+
+    /**
      * @param $roles
      *
      * @return bool
@@ -77,6 +85,6 @@ class User extends Authenticatable
      */
     public function hasRole($role)
     {
-        return null !== $this->roles()->where(‘name’, $role)->first();
+        return null !== $this->roles()->where('name', $role)->first();
     }
 }

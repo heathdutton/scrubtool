@@ -15,9 +15,11 @@ Auth::routes();
 
 Route::get('/', 'WelcomeController@index');
 
-Route::get('/files', 'FilesController@index');
-Route::post('/files/update', 'FilesController@update');
-Route::post('/files/upload', 'FilesController@upload');
-Route::get('/file', 'FilesController@file');
-
 Route::get('/dashboard', 'DashboardController@index')->name('home');
+
+Route::get('/files', 'FileController@index')->name('files');
+Route::post('/files/update', 'FileController@update');
+Route::post('/files/upload', 'FileController@upload');
+Route::get('/file', 'FileController@file');
+
+Route::get('/lists', 'SuppressionListController@index')->name('lists');

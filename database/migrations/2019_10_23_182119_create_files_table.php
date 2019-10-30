@@ -21,11 +21,11 @@ class CreateFilesTable extends Migration
             $table->text('name');
             $table->text('input_location')->nullable();
             $table->text('output_location')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
+            $table->integer('user_id')->unsigned();
             $table->json('input_settings')->nullable();
             $table->ipAddress('ip_address');
             $table->string('session_id');
-            $table->unsignedTinyInteger('status')->nullable();
+            $table->unsignedTinyInteger('status');
             $table->unsignedTinyInteger('mode');
             $table->string('type')->nullable();
             $table->json('columns')->nullable();

@@ -7,23 +7,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Redirect;
-use Maatwebsite\Excel\Excel;
 
-class FilesController extends Controller
+class FileController extends Controller
 {
-
-    /** @var Excel */
-    private $excel;
-
-    /**
-     * FilesController constructor.
-     *
-     * @param  Excel  $excel
-     */
-    public function __construct(Excel $excel)
-    {
-        $this->excel = $excel;
-    }
 
     /**
      * @param  Request  $request
@@ -47,6 +33,9 @@ class FilesController extends Controller
         return Redirect::to('files', 301);
     }
 
+    /**
+     * @param  Request  $request
+     */
     public function update(Request $request)
     {
         $tmp = 1;

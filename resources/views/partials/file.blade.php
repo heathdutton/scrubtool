@@ -24,7 +24,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
     $action = 'Complete';
 }
 ?>
-<div class="card border-{{ $class }} mb-3">
+<div class="card border-{{ $class }} mb-4">
 
     <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}" role="tab" id="heading{{ $file->id }}" data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="file{{ $file->id }}">
         {{ $file->name }}
