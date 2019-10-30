@@ -1,0 +1,29 @@
+@import "~dropzone/dist/dropzone";
+
+// Make the dropzone look friendly
+form#dropzone {
+    // border-radius: 2em;
+    border: .2rem dashed $gray-600;
+}
+form#dropzone .dz-message {
+    text-align: center;
+    margin: 2.8em 0 2em 0;
+    font-weight: bold;
+}
+
+// Position and rotate the chevrons
+.card-header .fa {
+    transition: .3s transform ease-in-out;
+    margin: 0.3em 0 0 1em;
+}
+.card-header.collapsed .fa {
+    transform: rotate(90deg);
+}
+
+// Don't underline headers of the cards, even though they are links.
+.card-header:hover {
+    text-decoration: none;
+}
+.card-header:hover {
+    color: inherit;
+}

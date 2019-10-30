@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "bootswatch": "^4.3.1",
-        "dropzone": "^5.5.1"
+        "dropzone": "^5.5.1",
+        "font-awesome-scss": "^1.0.0"
     }
 }

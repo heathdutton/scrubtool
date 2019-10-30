@@ -202,7 +202,7 @@ class File extends Model
         try {
             if ($this->status & self::STATUS_ADDED) {
                 $this->status  = self::STATUS_ANALYSIS;
-                $this->message = 'File contents are under analysis.';
+                $this->message = '';
                 $this->save();
 
                 $fileImportAnalysis = new FileImportAnalysis($this);
@@ -210,14 +210,14 @@ class File extends Model
 
                 $this->columns = $fileImportAnalysis->getAnalysis()['columns'];
                 $this->status  = self::STATUS_INPUT_NEEDED;
-                $this->message = 'Analysis complete. Need setting input to continue.';
+                $this->message = '';
                 $this->save();
                 // ProcessFile::dispatch($this->id)->onQueue($this->mode);
             }
 
             if ($this->status & self::STATUS_READY) {
                 $this->status  = self::STATUS_RUNNING;
-                $this->message = 'File is being processed.';
+                $this->message = '';
                 $this->save();
                 $fileImport = new FileImport($this);
                 Excel::import($fileImport, $this->input_location);

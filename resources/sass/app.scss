@@ -1,11 +1,13 @@
 // Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
-// Variables
-@import '~bootswatch/dist/materia/variables';
-// Variables
-@import 'variables';
+//@import url('https://fonts.googleapis.com/css?family=Nunito');
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
+// Bootswatch
+@import '~bootswatch/dist/lux/variables';
 @import "~bootswatch/dist/lux/bootswatch";
-
+// File Uploads
 @import 'fileupload';
+// Variables
+@import 'variables';
+// Font Awesome
+@import '~font-awesome-scss/scss/font-awesome';

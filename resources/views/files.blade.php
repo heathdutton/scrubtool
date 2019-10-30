@@ -6,10 +6,9 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="title m-b-md">
-                    Upload
-                </div>
                 @include('partials.filesupload')
+
+                <br/>
 
                 @include('partials.fileslist')
             </div>

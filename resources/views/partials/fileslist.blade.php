@@ -1,5 +1,5 @@
 <section id="fileslist">
-    <div class="card">
+    <div id="accordion" role="tablist" aria-multiselectable="true">
         @foreach($files as $file)
             @include('partials.file')
         @endforeach
