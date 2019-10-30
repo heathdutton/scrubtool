@@ -1,12 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Upload Files')
+@section('title', 'Files')
 
 @section('content')
-    <div class="title m-b-md">
-        Upload
-    </div>
-    @include('partials.filesupload')
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="title m-b-md">
+                    Upload
+                </div>
+                @include('partials.filesupload')
 
-    @include('partials.fileslist')
+                @include('partials.fileslist')
+            </div>
+        </div>
+    </div>
 @endsection

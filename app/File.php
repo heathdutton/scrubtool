@@ -70,16 +70,17 @@ class File extends Model
     ];
 
     /**
+     * Combine both session (no auth) files uploaded and user files (logged in).
+     *
      * @param  Request  $request
      *
      * @return mixed
      */
     public static function findByCurrentUser(Request $request)
     {
+        $qb = self::where('session_id', $request->getSession()->getId());
         if ($request->user()) {
-            $qb = self::where('user_id', $request->user()->id);
-        } elseif ($request->getSession()) {
-            $qb = self::where('session_id', $request->getSession()->getId());
+            $qb = self::orWhere('user_id', $request->user()->id);
         }
 
         return $qb->orderBy('created_at', 'desc')
@@ -224,7 +225,7 @@ class File extends Model
 
         } catch (Exception $e) {
             $this->status  = self::STATUS_STOPPED;
-            $this->message = 'An error was encountered while trying to import: '.$e->getMessage();
+            $this->message = 'An error was encountered while trying to import. '.$e->getMessage();
             $this->save();
         }
 

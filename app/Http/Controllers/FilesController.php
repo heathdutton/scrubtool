@@ -34,7 +34,7 @@ class FilesController extends Controller
     {
         $files = File::findByCurrentUser($request);
 
-        return view('files', ['files' => $files]);
+        return view('files')->with(['files' => collect($files)]);
     }
 
     /**
@@ -45,6 +45,11 @@ class FilesController extends Controller
     public function file()
     {
         return Redirect::to('files', 301);
+    }
+
+    public function update(Request $request)
+    {
+        $tmp = 1;
     }
 
     /**

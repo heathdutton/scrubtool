@@ -11,10 +11,13 @@
 |
 */
 
+Auth::routes();
+
 Route::get('/', 'WelcomeController@index');
 
 Route::get('/files', 'FilesController@index');
-
+Route::post('/files/update', 'FilesController@update');
 Route::post('/files/upload', 'FilesController@upload');
-
 Route::get('/file', 'FilesController@file');
+
+Route::get('/dashboard', 'DashboardController@index')->name('home');

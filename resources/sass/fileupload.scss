@@ -1,0 +1,15 @@
+@import "~dropzone/dist/dropzone";
+
+form#dropzone {
+    border-radius: 30px;
+    border: .4rem dashed #616778;
+}
+
+.dropzone .dz-message {
+    text-align: center;
+    margin: 2em 0;
+    top: 14px;
+    position: relative;
+    font-weight: bold;
+}
+
