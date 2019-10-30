@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Nova\Dashboards\Main;
+use App\Nova\Metrics\FilesPerDay;
+use App\Nova\Metrics\FilesQueued;
+use App\Nova\Metrics\NewFiles;
+use App\Nova\Metrics\NewUsers;
+use App\Nova\Metrics\UsersPerDay;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Cards\Help;
 use Illuminate\Support\Facades\Gate;
@@ -56,7 +62,12 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function cards()
     {
         return [
-            new Help,
+            new NewUsers,
+            new UsersPerDay,
+            new NewFiles,
+            new FilesPerDay,
+            // new FilesQueued,
+            // new Help,
         ];
     }
 
