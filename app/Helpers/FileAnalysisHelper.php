@@ -171,7 +171,7 @@ class FileAnalysisHelper
             $simple                = $this->simplify($value);
             if (isset($this->typeIdentifiers[$simple])) {
                 $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
-            } elseif (in_array($simple, $this->getHashHelper()->list(false, true))) {
+            } elseif (in_array($simple, $this->getHashHelper()->listSimple())) {
                 $this->columnTypes[$i] = self::MODE_HASH;
             }
         }

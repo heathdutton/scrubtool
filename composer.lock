@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "415a069e8cecc021b549bde7ec7861b7",
+    "content-hash": "8b5e079bb6d9eed6bd5ec2bf681cbfeb",
     "packages": [
         {
             "name": "cakephp/chronos",
@@ -938,6 +938,82 @@
             ],
             "description": "Highlight PHP code in terminal",
             "time": "2018-09-29T18:48:56+00:00"
+        },
+        {
+            "name": "kris/laravel-form-builder",
+            "version": "1.22.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kristijanhusak/laravel-form-builder.git",
+                "reference": "9090e0213fc785bf655934495666ba36d462b95a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/kristijanhusak/laravel-form-builder/zipball/9090e0213fc785bf655934495666ba36d462b95a",
+                "reference": "9090e0213fc785bf655934495666ba36d462b95a",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "5.*@dev|^6.0",
+                "illuminate/validation": "5.*@dev|^6.0",
+                "laravelcollective/html": "5.*|^6.0",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "~3.4",
+                "phpunit/phpunit": "~5.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.16.x-dev"
+                },
+                "laravel": {
+                    "providers": [
+                        "Kris\\LaravelFormBuilder\\FormBuilderServiceProvider"
+                    ],
+                    "aliases": {
+                        "FormBuilder": "Kris\\LaravelFormBuilder\\Facades\\FormBuilder"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Kris\\LaravelFormBuilder": "src/"
+                },
+                "classmap": [
+                    "tests/FormBuilderTestCase.php"
+                ],
+                "files": [
+                    "src/helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kristijan Husak",
+                    "email": "husakkristijan@gmail.com"
+                },
+                {
+                    "name": "Mike Erickson",
+                    "email": "codedungeon@gmail.com"
+                },
+                {
+                    "name": "Mike Erickson",
+                    "email": "mike.erickson@codedungeon.io"
+                }
+            ],
+            "description": "Laravel form builder - symfony like",
+            "keywords": [
+                "builder",
+                "form",
+                "laravel",
+                "symfony"
+            ],
+            "time": "2019-09-12T08:46:23+00:00"
         },
         {
             "name": "laravel/cashier",
@@ -4395,6 +4471,59 @@
                 "environment"
             ],
             "time": "2019-09-10T21:37:39+00:00"
+        },
+        {
+            "name": "ycs77/laravel-form-builder-bs4",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ycs77/laravel-form-builder-bs4.git",
+                "reference": "0d8687226eec8d7ee135a323fba916e218390275"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ycs77/laravel-form-builder-bs4/zipball/0d8687226eec8d7ee135a323fba916e218390275",
+                "reference": "0d8687226eec8d7ee135a323fba916e218390275",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~7.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ycs77\\LaravelFormBuilderBs4\\FormBuilderBs4ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ycs77\\LaravelFormBuilderBs4\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lucas Yang",
+                    "email": "yangchenshin77@gmail.com"
+                }
+            ],
+            "description": "The laravel-form-builder's bootstrap 4 template.",
+            "homepage": "https://github.com/ycs77/laravel-form-builder-bs4",
+            "keywords": [
+                "bootstrap",
+                "bootstrap 4",
+                "bs4",
+                "form",
+                "form-builder",
+                "laravel-form-builder",
+                "ycs77"
+            ],
+            "time": "2019-05-02T08:06:53+00:00"
         }
     ],
     "packages-dev": [
@@ -6574,7 +6703,8 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.2"
+        "php": "^7.2",
+        "ext-json": "^1.6"
     },
     "platform-dev": []
 }

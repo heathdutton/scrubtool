@@ -353,7 +353,25 @@ class HashHelper
     /** @var array */
     protected $simpleAgos = [];
 
-    public function list($regenerate = false, $simple = false)
+    /** @var array */
+    protected $choicesAlgos = [];
+
+    public function listSimple()
+    {
+        if (!$this->simpleAgos) {
+            $simpleAlgos = [];
+            foreach ($this->list() as $length => $algos) {
+                foreach ($algos as $algo) {
+                    $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
+                }
+            }
+            $this->simpleAgos = array_keys($simpleAlgos);
+        }
+
+        return $this->simpleAgos;
+    }
+
+    public function list($regenerate = false)
     {
         if ($regenerate) {
             $lengths = [];
@@ -378,20 +396,21 @@ class HashHelper
         } else {
             $result = self::ALGOS;
         }
-        if ($simple) {
-            if (!$this->simpleAgos) {
-                $simpleAlgos = [];
-                foreach ($result as $length => $algos) {
-                    foreach ($algos as $algo) {
-                        $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
-                    }
-                }
-                $this->simpleAgos = array_keys($simpleAlgos);
-            }
-            $result = $this->simpleAgos;
-        }
 
         return $result;
+    }
+
+    public function listChoices()
+    {
+        if (!$this->choicesAlgos) {
+            foreach ($this->list() as $length => $algos) {
+                foreach ($algos as $algo) {
+                    $this->choicesAlgos[$algo['id']] = $algo['name'];
+                }
+            }
+        }
+
+        return $this->choicesAlgos;
     }
 
     /**

@@ -3,24 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\File;
+use App\Forms\FileForm;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Redirect;
+use Kris\LaravelFormBuilder\FormBuilder;
 
 class FileController extends Controller
 {
 
     /**
      * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function index(Request $request)
+    public function index(Request $request, FormBuilder $formBuilder)
     {
         $files = File::findByCurrentUser($request);
 
-        return view('files')->with(['files' => collect($files)]);
+        /** @var File $file */
+        foreach ($files as $file) {
+            $file->form = $file->buildForm($formBuilder);
+        }
+
+        return view('files')->with([
+            'files' => collect($files),
+        ]);
     }
 
     /**
@@ -34,12 +44,37 @@ class FileController extends Controller
     }
 
     /**
-     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request)
+    public function store(FormBuilder $formBuilder)
     {
-        $tmp = 1;
+        /** @var FileForm $form */
+        $form = $formBuilder->create(FileForm::class);
+
+        if (!$form->isValid()) {
+            return redirect()->back()->withErrors($form->getErrors())->withInput();
+        }
+        $values = $form->getFieldValues();
+
+        // @todo - Update record
     }
+
+    // /**
+    //  * @param  FormBuilder  $formBuilder
+    //  *
+    //  * @return \Illuminate\Http\RedirectResponse
+    //  */
+    // public function update(FormBuilder $formBuilder)
+    // {
+    //     $form = $formBuilder->create(FileForm::class, [
+    //         'method' => 'POST',
+    //         'url'    => route('fileupdate'),
+    //     ]);
+    //
+    //     return view('fileupdate', compact('form'));
+    // }
 
     /**
      * upload a file and associate it to the db while copying it to a persistent location.

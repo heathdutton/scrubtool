@@ -18,8 +18,9 @@ Route::get('/', 'WelcomeController@index');
 Route::get('/dashboard', 'DashboardController@index')->name('home');
 
 Route::get('/files', 'FileController@index')->name('files');
-Route::post('/files/update', 'FileController@update');
 Route::post('/files/upload', 'FileController@upload');
+
 Route::get('/file', 'FileController@file');
+Route::post('/file', 'FileController@update')->name('file');
 
 Route::get('/lists', 'SuppressionListController@index')->name('lists');

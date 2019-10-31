@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Forms\FileForm;
 use App\Imports\FileImport;
 use App\Imports\FileImportAnalysis;
 use App\Jobs\ProcessFile;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Helpers\FileTypeDetector;
@@ -42,9 +44,11 @@ class File extends Model
 
     const MODE_LIST_APPEND    = 2;
 
-    const MODE_LIST_REPLACE   = 4;
+    const MODE_LIST_CREATE    = 4;
 
-    const MODE_SCRUB          = 8;
+    const MODE_LIST_REPLACE   = 8;
+
+    const MODE_SCRUB          = 16;
 
     const PRIVATE_STORAGE     = 'private';
 
@@ -71,6 +75,11 @@ class File extends Model
         'id',
     ];
 
+    protected $casts = [
+        'input_settings' => 'array',
+        'columns'        => 'array',
+    ];
+
     /**
      * Combine both session (no auth) files uploaded and user files (logged in).
      *
@@ -88,6 +97,21 @@ class File extends Model
         return $qb->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
+    }
+
+    /**
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return \Kris\LaravelFormBuilder\Form
+     */
+    public function buildForm(FormBuilder $formBuilder)
+    {
+        return $formBuilder->create(FileForm::class, [
+            'method' => 'POST',
+            'url'    => route('file'),
+        ], [
+            'file' => $this,
+        ]);
     }
 
     /**
@@ -138,6 +162,9 @@ class File extends Model
             'columns'              => null,
             'column_count'         => 0,
             'size'                 => $fileSize,
+            'message'              => null,
+            'crc32b'               => hash_file('crc32b', $uploadedFile->getRealPath()),
+            'md5'                  => hash_file('md5', $uploadedFile->getRealPath()),
             'rows_total'           => 0,
             'rows_processed'       => 0,
             'rows_scrubbed'        => 0,

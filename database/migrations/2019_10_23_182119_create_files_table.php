@@ -21,7 +21,7 @@ class CreateFilesTable extends Migration
             $table->text('name');
             $table->text('input_location')->nullable();
             $table->text('output_location')->nullable();
-            $table->integer('user_id')->unsigned();
+            $table->integer('user_id')->unsigned()->nullable();
             $table->json('input_settings')->nullable();
             $table->ipAddress('ip_address');
             $table->string('session_id');
@@ -32,6 +32,8 @@ class CreateFilesTable extends Migration
             $table->unsignedInteger('column_count');
             $table->unsignedBigInteger('size');
             $table->string('message')->nullable();
+            $table->string('crc32b');
+            $table->string('md5');
             $table->unsignedBigInteger('rows_total');
             $table->unsignedBigInteger('rows_processed');
             $table->unsignedBigInteger('rows_scrubbed');

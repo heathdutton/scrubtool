@@ -163,11 +163,6 @@ return [
         Illuminate\View\ViewServiceProvider::class,
 
         /*
-         * Package Service Providers...
-         */
-        Maatwebsite\Excel\ExcelServiceProvider::class,
-
-        /*
          * Application Service Providers...
          */
         App\Providers\AppServiceProvider::class,
@@ -178,7 +173,12 @@ return [
         App\Providers\NovaServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        /**
+         * Scrubtool specific
+         */
         // Collective\Html\HtmlServiceProvider::class,
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+        Kris\LaravelFormBuilder\FormBuilderServiceProvider::class
     ],
 
     /*
@@ -229,9 +229,14 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
+        // 'Form' => Collective\Html\FormFacade::class,
+        // 'HTML' => Collective\Html\HtmlFacade::class,
+
+        /**
+         * Scrubtool specific
+         */
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
-        'Form' => Collective\Html\FormFacade::class,
-        'HTML' => Collective\Html\HtmlFacade::class,
+        'FormBuilder' => Kris\LaravelFormBuilder\Facades\FormBuilder::class
     ],
 
 ];

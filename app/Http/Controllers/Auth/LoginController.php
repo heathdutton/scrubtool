@@ -36,4 +36,7 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    // @todo - After logging in assign all untethered session files to the current user.
+
 }
