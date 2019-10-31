@@ -22,8 +22,7 @@ return [
                 'field_class'   => 'custom-control-input',
             ],
         ],
-        // @todo - This appears to be getting ignored:
-        'select'            => [
+        'choice'            => [
             'choice_options' => [
                 'wrapper_class' => 'custom-control custom-select',
             ],
@@ -33,7 +32,7 @@ return [
             'field_class'    => 'form-check-input',
             'label_class'    => 'form-check-label',
             'choice_options' => [
-                'wrapper_class' => 'custom-control custom-radio ',
+                'wrapper_class' => 'custom-control custom-radio',
                 'label_class'   => 'custom-control-label',
                 'field_class'   => 'custom-control-input',
             ],

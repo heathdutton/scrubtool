@@ -20,6 +20,11 @@ class FileForm extends Form
      */
     public function buildForm()
     {
+        $this->formOptions = [
+            'method' => 'POST',
+            'url'    => route('file'),
+        ];
+
         /** @var File $file */
         $file = $this->getData('file');
 

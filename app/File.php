@@ -106,10 +106,7 @@ class File extends Model
      */
     public function buildForm(FormBuilder $formBuilder)
     {
-        return $formBuilder->create(FileForm::class, [
-            'method' => 'POST',
-            'url'    => route('file'),
-        ], [
+        return $formBuilder->create(FileForm::class, [], [
             'file' => $this,
         ]);
     }
