@@ -40465,8 +40465,12 @@ __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 __webpack_require__(/*! ./fileupload */ "./resources/js/fileupload.js");
 
-$(function () {
-  $('[data-toggle="tooltip"]').tooltip();
+var myDefaultWhiteList = $.fn.tooltip.Constructor.Default.whiteList;
+myDefaultWhiteList.dl = [];
+myDefaultWhiteList.dt = [];
+myDefaultWhiteList.dd = [];
+$('[data-toggle="tooltip"]').tooltip({
+  'html': true
 });
 
 /***/ }),

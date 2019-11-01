@@ -5,3 +5,12 @@
 @import 'fileupload';
 @import 'progressbar';
 @import '~font-awesome-scss/scss/font-awesome';
+
+// Tooltips shouldn't be centered.
+div.tooltip-inner {
+    text-align: left;
+    font-size: 14px;
+    white-space: nowrap;
+    width: auto;
+    min-width: 300px;
+}

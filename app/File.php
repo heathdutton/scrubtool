@@ -100,6 +100,27 @@ class File extends Model
     }
 
     /**
+     * Format bytes to kb, mb, gb, tb
+     *
+     * @param  integer  $precision
+     *
+     * @return integer
+     */
+    public function humanSize($precision = 1)
+    {
+        $size = $this->size ?? 0;
+        if ($size > 0) {
+            $size     = (int) $size;
+            $base     = log($size) / log(1024);
+            $suffixes = [' bytes', ' KB', ' MB', ' GB', ' TB'];
+
+            return round(pow(1024, $base - floor($base)), $precision).$suffixes[(int) floor($base)];
+        } else {
+            return $size;
+        }
+    }
+
+    /**
      * @param  FormBuilder  $formBuilder
      *
      * @return \Kris\LaravelFormBuilder\Form
@@ -242,9 +263,10 @@ class File extends Model
                 $fileImportAnalysis = new FileImportAnalysis($this);
                 Excel::import($fileImportAnalysis, $this->input_location, null, $this->type);
 
-                $this->columns = $fileImportAnalysis->getAnalysis()['columns'];
-                $this->status  = self::STATUS_INPUT_NEEDED;
-                $this->message = '';
+                $this->columns      = $fileImportAnalysis->getAnalysis()['columns'];
+                $this->column_count = count($this->columns);
+                $this->status       = self::STATUS_INPUT_NEEDED;
+                $this->message      = '';
                 $this->save();
                 // ProcessFile::dispatch($this->id)->onQueue($this->mode);
             }

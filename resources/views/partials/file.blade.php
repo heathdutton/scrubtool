@@ -26,7 +26,9 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
 }
 ?>
 <div class="card border-{{ $class }} mb-4 {{ $card }}" data-file-id="{{ $file->id }}" data-file-status="{{ $file->status }}">
-    <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}" role="tab" id="heading{{ $file->id }}" data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="file{{ $file->id }}">
+    <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}"
+       role="tab" id="heading{{ $file->id }}"
+       data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="file{{ $file->id }}">
         <div style="border-radius: 1.6em;
                     overflow: hidden;
                     display: inline-block;
@@ -51,7 +53,21 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                 />
             </div>
         </div>
-        {{ $file->name }}
+        <span data-toggle='tooltip' data-placement="top"
+              data-original-title='<dl>
+                                        <dt>{{ __('Size')  }}</dt>
+                                        <dd>{{ $file->humanSize() }}</dd>
+                                        <dt>{{ __('Added')  }}</dt>
+                                        <dd>{{ $file->created_at }}</dd>
+                                        <dt>{{ __('MD5')  }}</dt>
+                                        <dd>{{ $file->md5 }}</dd>
+                                        <dt>{{ __('CRC32b')  }}</dt>
+                                        <dd>{{ $file->crc32b }}</dd>
+                                        <dt>{{ __('Columns')  }}</dt>
+                                        <dd>{{ $file->column_count }}</dd>
+                                    </dl>'>
+            {{ $file->name }}
+        </span>
         <i class="fa fa-chevron-down pull-right"></i>
         <span class="pull-right">{{ $action }}</span>
     </a>
@@ -60,12 +76,14 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             @if($file->message)
                 <p class="card-text text-{{ $class }}">{{ $file->message }}</p>
             @endif
+
             @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS)
                 <div class="progress">
                     <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-10" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                         {{ $action }}
                     </div>
                 </div>
+            @else
             @endif
             {!! form($file->form) !!}
         </div>

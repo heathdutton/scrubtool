@@ -22,13 +22,13 @@ class FileForm extends Form
     {
         $this->formOptions = [
             'method' => 'POST',
-            'url'    => route('file'),
+            'url'    => route('file.store'),
         ];
 
         /** @var File $file */
         $file = $this->getData('file');
 
-        if ($file->status & File::STATUS_INPUT_NEEDED) {
+        if ($file && $file->status & File::STATUS_INPUT_NEEDED) {
             $this->add('file_'.$file->id.'_action', Field::STATIC, [
                 'tag'        => 'h5',
                 'label_show' => false,
@@ -76,12 +76,14 @@ class FileForm extends Form
                         'selected'      => $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN,
                         'default_value' => FileAnalysisHelper::TYPE_UNKNOWN,
                         'attr'          => [
-                            'class' => 'form-control col-md-3 pull-right',
+                            'class'               => 'form-control col-md-3 pull-right',
                         ],
-                        // @todo - Expand/collapse this to the side, otherwise it gets in the way.
-                        // 'help_block'     => [
-                        //     'text' => '<strong>'.__('Samples:').'</strong><br/>'.implode('<br/>', $column['samples']),
-                        // ],
+                        'label_attr' => [
+                            'data-toggle'         => 'tooltip',
+                            'data-placement'      => 'right',
+                            'data-original-title' => '<strong>'.__('Samples').':</strong><br/><br/>'.
+                                implode('<br/>', $column['samples']),
+                        ],
                     ]);
 
                     // Do not give hash input options if no hash was detected.
