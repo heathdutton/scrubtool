@@ -11,3 +11,33 @@
 @import 'variables';
 // Font Awesome
 @import '~font-awesome-scss/scss/font-awesome';
+
+
+@-webkit-keyframes pb1 {
+    0% {
+        width: 0%;
+    }
+    100% {
+        width: 100%
+    }
+}
+
+.progress-bar-auto-1 {
+    -webkit-animation: pb1 1s ease-in .5s forwards;
+    animation: pb1 1s ease-in .5s forwards;
+}
+
+.progress-bar-auto-2 {
+    -webkit-animation: pb1 2s ease-in .5s forwards;
+    animation: pb1 2s ease-in .5s forwards;
+}
+
+.progress-bar-auto-3 {
+    -webkit-animation: pb1 3s ease-in .5s forwards;
+    animation: pb1 3s ease-in .5s forwards;
+}
+
+.progress-bar-auto-4 {
+    -webkit-animation: pb1 4s ease-in .5s forwards;
+    animation: pb1 4s ease-in .5s forwards;
+}

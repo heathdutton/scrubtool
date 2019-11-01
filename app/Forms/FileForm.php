@@ -97,9 +97,6 @@ class FileForm extends Form
                         'wrapper'       => [
                             'class' => 'form-group'.($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
                         ],
-                        // 'help_block'    => [
-                        //     'text' => __('Samples:').'<br/>'.implode('<br/>', $column['samples']),
-                        // ],
                     ]);
                 }
             }
@@ -111,6 +108,13 @@ class FileForm extends Form
                 'attr'  => [
                     'class' => 'btn btn-primary pull-right',
                 ],
+            ]);
+
+            // Placeholder for now:
+            $this->add('file_'.$file->id.'_progress', Field::STATIC, [
+                'tag'        => 'span',
+                'label_show' => false,
+                'value'      => '',
             ]);
         }
     }

@@ -40465,6 +40465,20 @@ __webpack_require__(/*! ./bootstrap */ "./resources/js/bootstrap.js");
 
 __webpack_require__(/*! ./fileupload */ "./resources/js/fileupload.js");
 
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
+var fileProgress = function fileProgress(fileId) {
+  var total = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 100;
+  var delay = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 500;
+  $(function () {
+    setTimeout(function () {
+      $('#file-' + fileId + ':first .progress-bar:first').css('width', total + '%');
+    }, delay);
+  });
+};
+
 /***/ }),
 
 /***/ "./resources/js/bootstrap.js":
