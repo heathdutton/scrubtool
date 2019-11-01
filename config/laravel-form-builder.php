@@ -24,7 +24,7 @@ return [
         ],
         'choice'            => [
             'choice_options' => [
-                'wrapper_class' => 'custom-control custom-select',
+                'field_class'   => 'custom-select',
             ],
         ],
         'radio'               => [

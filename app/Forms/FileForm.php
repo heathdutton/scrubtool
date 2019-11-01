@@ -46,7 +46,7 @@ class FileForm extends Form
                     File::MODE_SCRUB        => __('Scrub'),
                 ],
                 'attr'          => [
-                    'class' => 'form-control col-md-5',
+                    'class' => 'form-control col-md-3',
                 ],
                 'selected'      => $file->mode ?? File::MODE_HASH,
                 'default_value' => File::MODE_HASH,
@@ -60,7 +60,7 @@ class FileForm extends Form
                     'value'      => __('Column Types'),
                 ]);
                 $hashHelper  = new HashHelper();
-                $hashOptions = [null => __('No Hash')] + $hashHelper->listChoices();
+                $hashOptions = [null => __('Plain Text')] + $hashHelper->listChoices();
                 foreach ($file->columns as $columnIndex => $column) {
                     $label = $this->columnName($column['name'], $columnIndex);
                     array_walk($column['samples'], 'strip_tags');
@@ -76,7 +76,7 @@ class FileForm extends Form
                         'selected'      => $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN,
                         'default_value' => FileAnalysisHelper::TYPE_UNKNOWN,
                         'attr'          => [
-                            'class' => 'form-control col-md-5',
+                            'class' => 'form-control col-md-3 pull-right',
                         ],
                         // @todo - Expand/collapse this to the side, otherwise it gets in the way.
                         // 'help_block'     => [
@@ -84,15 +84,33 @@ class FileForm extends Form
                         // ],
                     ]);
 
-                    // @todo - Only show this if the above is a known type.
-                    $this->add('file_'.$file->id.'_column_hash_'.$columnIndex, Field::CHOICE, [
-                        'label'         => $label.' '.__('Hash Used'),
+                    // Do not give hash input options if no hash was detected.
+                    if (!empty($column['hash'])) {
+                        // @todo - Only show this if the above is a known type.
+                        $this->add('file_'.$file->id.'_column_input_hash_'.$columnIndex, Field::CHOICE, [
+                            'label'         => $label.' '.__('Hash Used'),
+                            'label_show'    => false,
+                            'choices'       => $hashOptions,
+                            'selected'      => $column['hash'] ?? null,
+                            'default_value' => null,
+                            'attr'          => [
+                                'class' => 'form-control col-md-3 pull-right',
+                            ],
+                            'wrapper'       => [
+                                'class' => 'form-group'.($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
+                            ],
+                        ]);
+                    }
+
+                    // @todo - Only show this if Plain Text is selected above or there is no hash, and the field type is defined as phone or email.
+                    $this->add('file_'.$file->id.'_column_output_hash_'.$columnIndex, Field::CHOICE, [
+                        'label'         => $label.' '.__('Output Hash'),
                         'label_show'    => false,
                         'choices'       => $hashOptions,
                         'selected'      => $column['hash'] ?? null,
                         'default_value' => null,
                         'attr'          => [
-                            'class' => 'form-control col-md-5',
+                            'class' => 'form-control col-md-3 pull-right ml-4',
                         ],
                         'wrapper'       => [
                             'class' => 'form-group'.($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
@@ -106,16 +124,16 @@ class FileForm extends Form
             $this->add('submit', Field::BUTTON_SUBMIT, [
                 'label' => __('<i class="fa fa-check"></i> '.'Begin'),
                 'attr'  => [
-                    'class' => 'btn btn-primary pull-right',
+                    'class' => 'btn btn-primary pull-right clearfix mb-3',
                 ],
             ]);
 
             // Placeholder for now:
-            $this->add('file_'.$file->id.'_progress', Field::STATIC, [
-                'tag'        => 'span',
-                'label_show' => false,
-                'value'      => '',
-            ]);
+            // $this->add('file_'.$file->id.'_progress', Field::STATIC, [
+            //     'tag'        => 'span',
+            //     'label_show' => false,
+            //     'value'      => '',
+            // ]);
         }
     }
 

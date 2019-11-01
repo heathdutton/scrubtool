@@ -7,9 +7,9 @@ use libphonenumber\PhoneNumberUtil;
 
 class FileAnalysisHelper
 {
-    const TYPE_EMAIL   = 1;
-
     const MODE_HASH    = 2;
+
+    const TYPE_EMAIL   = 1;
 
     const TYPE_PHONE   = 4;
 
@@ -241,23 +241,32 @@ class FileAnalysisHelper
     /**
      * @param $value
      * @param  string  $countryCode
+     * @param  bool  $lenient
      *
      * @return bool
      */
-    private function isPhone($value, $countryCode = 'US')
+    private function isPhone($value, $countryCode = 'US', $lenient = false)
     {
+        if (!$lenient && ctype_alpha($value)) {
+            return false;
+        }
+        if (!$lenient && strpos($value, '/')) {
+            return false;
+        }
+        if (!$lenient && strpos($value, '\\')) {
+            return false;
+        }
         $numeric = preg_replace("/[^0-9]/", '', $value);
         $length  = strlen($numeric);
-        if ($length >= 7 && $length <= 15) {
+        if ($length >= ($lenient ? 7 : 10) && $length <= 15) {
             $util     = PhoneNumberUtil::getInstance();
-            $leniency = Leniency::VALID();
-            $matches  = $util->findNumbers($value, $countryCode, $leniency, 10000);
-            if (!$matches->current()) {
-                $matches = $util->findNumbers($numeric, $countryCode, $leniency, 10000);
+            $leniency = $lenient ? Leniency::POSSIBLE() : Leniency::EXACT_GROUPING();
+            $matches  = $util->findNumbers($value, $countryCode, $leniency, 1000);
+            if ($lenient && !$matches->current()) {
+                $matches = $util->findNumbers($numeric, $countryCode, $leniency, 1000);
             }
-            if ($matches) {
-                return true;
-            }
+
+            return (bool) $matches->current();
         }
 
         return false;

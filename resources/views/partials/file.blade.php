@@ -62,7 +62,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             @endif
             @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS)
                 <div class="progress">
-                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-{{ $class }} progress-bar-auto-4" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-10" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                         {{ $action }}
                     </div>
                 </div>

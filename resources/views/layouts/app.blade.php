@@ -67,7 +67,6 @@
                                         style="width: 1.6em; height: 1.6em; margin-top: -.3em;"
                                     />
                                 @endisset
-
                                 {{ Auth::user()->name }} <span class="caret"></span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
