@@ -31,23 +31,22 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <!-- Left Side Of Navbar -->
                 <ul class="navbar-nav mr-auto">
-                    @if(Auth::user() && Auth::user()->hasRole('admin'))
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('admin') }}">
-                                {{ __('Admin') }}
-                            </a>
-                        </li>
-                    @endif
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('files') }}">
+                            <i class="fa fa-files-o"></i>
+                            {{ __('Files') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('lists') }}">
+                            <i class="fa fa-list"></i>
+                            {{ __('Lists') }}
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Right Side Of Navbar -->
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('files') }}">{{ __('Files') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('lists') }}">{{ __('Lists') }}</a>
-                    </li>
                     <!-- Authentication Links -->
                     @guest
                         <li class="nav-item">
@@ -61,12 +60,27 @@
                     @else
                         <li class="nav-item dropdown">
                             <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                @isset(Auth::user()->email)
+                                    <img
+                                        src="https://secure.gravatar.com/avatar/{{ md5(strtolower(Auth::user()->email)) }}?size=512&d=mp"
+                                        class="rounded-full w-8 h-8 mr-2"
+                                        style="width: 1.6em; height: 1.6em; margin-top: -.3em;"
+                                    />
+                                @endisset
+
                                 {{ Auth::user()->name }} <span class="caret"></span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                @if(Auth::user()->hasRole('admin'))
+                                    <a class="dropdown-item" href="{{ url('admin') }}">
+                                        <i class="fa fa-cog"></i>
+                                        {{ __('Admin Panel') }}
+                                    </a>
+                                @endif
                                 <a class="dropdown-item" href="{{ route('logout') }}"
                                    onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
+                                    <i class="fa fa-key"></i>
                                     {{ __('Logout') }}
                                 </a>
 
