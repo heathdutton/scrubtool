@@ -21,6 +21,7 @@ Route::get('/files', 'FileController@index')->name('files');
 Route::post('/files/upload', 'FileController@upload');
 
 Route::get('/file', 'FileController@file');
-Route::post('/file', 'FileController@store')->name('file.store');
+Route::get('/files/{id}', 'FileController@file');
+Route::post('/files/{id}', 'FileController@store')->name('file.store');
 
 Route::get('/lists', 'SuppressionListController@index')->name('lists');

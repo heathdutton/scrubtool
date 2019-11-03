@@ -5,9 +5,12 @@
 @section('content')
     <div class="container">
         <div class="col-md-12">
-            <div class="justify-content-center mb-3">
-                @include('partials.upload')
-            </div>
+            @if ($upload)
+                <div class="justify-content-center mb-3">
+                    @include('partials.upload')
+                </div>
+                <h1>{{ __('Your Files') }}</h1>
+            @endif
             <div class="justify-content-center mt-3">
                 @include('partials.files')
             </div>

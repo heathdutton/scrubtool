@@ -9,11 +9,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
 } elseif ($file->status & \App\File::STATUS_INPUT_NEEDED) {
     $class  = 'info';
     $action = __('Input Needed');
-} elseif ($file->status & \App\File::STATUS_READY) {
-    $card   = 'file-refresh';
-    $class  = 'secondary';
-    $action = __('Ready');
-} elseif ($file->status & \App\File::STATUS_RUNNING) {
+} elseif ($file->status & \App\File::STATUS_READY || $file->status & \App\File::STATUS_RUNNING) {
     $card   = 'file-refresh';
     $class  = 'secondary';
     $action = __('Processing');
@@ -85,7 +81,9 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                 </div>
             @else
             @endif
-            {!! form($file->form) !!}
+            @if($file->form)
+                {!! form($file->form) !!}
+            @endif
         </div>
     </div>
 </div>

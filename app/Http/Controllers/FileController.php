@@ -9,9 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Redirect;
 use Kris\LaravelFormBuilder\FormBuilder;
+use Kris\LaravelFormBuilder\FormBuilderTrait;
 
 class FileController extends Controller
 {
+
+    use FormBuilderTrait;
 
     /**
      * @param  Request  $request
@@ -21,47 +24,66 @@ class FileController extends Controller
      */
     public function index(Request $request, FormBuilder $formBuilder)
     {
-        $files = File::findByCurrentUser($request);
-
-        /** @var File $file */
-        foreach ($files as $file) {
-            $file->form = $file->buildForm($formBuilder);
-        }
+        $files = File::findByCurrentUser($request, $formBuilder);
 
         return view('files')->with([
             'files' => collect($files),
+            'upload' => true,
         ]);
     }
 
     /**
      * Later can be a page for the results of a single file upload.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
      */
-    public function file()
+    public function file(Request $request, FormBuilder $formBuilder)
     {
-        return Redirect::to('files', 301);
+        if (empty($request->id) || (int) $request->id < 1) {
+            return redirect()->back();
+        }
+
+        /** @var File $file */
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id, 1)->first();
+
+        return view('files')->with([
+            'files' => [$file],
+            'upload' => false,
+        ]);
     }
 
     /**
+     * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(FormBuilder $formBuilder)
+    public function store(Request $request, FormBuilder $formBuilder)
     {
-        /** @var FileForm $form */
-        $form = $formBuilder->create(FileForm::class);
-
-        if (!$form->isValid()) {
-            return redirect()->back()->withErrors($form->getErrors())->withInput();
+        if (empty($request->id) || (int) $request->id < 1) {
+            return redirect()->back();
         }
-        $values = $form->getFieldValues();
 
-        // @todo - Update record
+        /** @var File $file */
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id)->first();
 
+        if (!$file || $file->status ^ File::STATUS_INPUT_NEEDED) {
+            return redirect()->back();
+        }
 
-        
+        if (!$file->form->isValid()) {
+            return redirect()->back()->withErrors($file->form->getErrors())->withInput();
+        }
+
+        $file->saveInputSettings($file->form->getFieldValues());
+
+        return view('files')->with([
+            'files' => [$file],
+            'upload' => false,
+        ]);
     }
 
     // /**

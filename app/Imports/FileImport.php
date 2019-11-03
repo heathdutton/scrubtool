@@ -43,6 +43,14 @@ class FileImport implements ToModel, WithChunkReading
     }
 
     /**
+     * @return FileExport
+     */
+    public function getExport()
+    {
+        return $this->export;
+    }
+
+    /**
      * @param  array  $row
      *
      * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Model[]|void|null

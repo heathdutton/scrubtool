@@ -84,19 +84,42 @@ class File extends Model
      * Combine both session (no auth) files uploaded and user files (logged in).
      *
      * @param  Request  $request
+     * @param  FormBuilder|null  $formBuilder
+     * @param  null  $fileId
+     * @param  int  $limit
      *
      * @return mixed
      */
-    public static function findByCurrentUser(Request $request)
-    {
-        $qb = self::where('session_id', $request->getSession()->getId());
-        if ($request->user()) {
-            $qb = self::orWhere('user_id', $request->user()->id);
+    public static function findByCurrentUser(
+        Request $request,
+        FormBuilder $formBuilder = null,
+        $fileId = null,
+        $limit = 20
+    ) {
+        $q = self::where(
+            function ($q) use ($request) {
+                $q->where('session_id', $request->getSession()->getId());
+                if ($request->user()) {
+                    $q->orWhere('user_id', $request->user()->id);
+                }
+            })
+            ->whereNull('deleted_at');
+
+        if ($fileId) {
+            $q->where('id', $fileId);
+            $limit = 1;
+        } else {
+            $q->orderBy('created_at', 'desc');
+        }
+        $files = $q->take((int) $limit)->get();
+        if ($formBuilder) {
+            foreach (collect($files) as $file) {
+                /** File $file */
+                $file->form = $file->buildForm($formBuilder);
+            }
         }
 
-        return $qb->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
+        return $files;
     }
 
     /**
@@ -268,7 +291,6 @@ class File extends Model
                 $this->status       = self::STATUS_INPUT_NEEDED;
                 $this->message      = '';
                 $this->save();
-                // ProcessFile::dispatch($this->id)->onQueue($this->mode);
             }
 
             if ($this->status & self::STATUS_READY) {
@@ -276,7 +298,13 @@ class File extends Model
                 $this->message = '';
                 $this->save();
                 $fileImport = new FileImport($this);
-                Excel::import($fileImport, $this->input_location);
+                Excel::import($fileImport, $this->input_location, null, $this->type);
+
+                // Save the result.
+                $fileImport->getExport()->store($this->output_location, null, $this->type);
+                $this->status  = self::STATUS_WHOLE;
+                $this->message = '';
+                $this->save();
             }
 
         } catch (Exception $e) {
@@ -294,5 +322,20 @@ class File extends Model
     public function getAttributesForOutput()
     {
         return array_diff_key($this->getAttributes(), array_flip(self::STAT_PROPERTY_BLACKLIST));
+    }
+
+    /**
+     * @param $values
+     */
+    public function saveInputSettings($values)
+    {
+        if ($this->id && $this->status & self::STATUS_INPUT_NEEDED) {
+            $this->status         = self::STATUS_READY;
+            $this->input_settings = (array) $values;
+            $this->message        = '';
+            unset($this->form);
+            $this->save();
+            ProcessFile::dispatch($this->id)->onQueue($this->mode);
+        }
     }
 }

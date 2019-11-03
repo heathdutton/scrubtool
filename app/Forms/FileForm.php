@@ -20,21 +20,22 @@ class FileForm extends Form
      */
     public function buildForm()
     {
-        $this->formOptions = [
-            'method' => 'POST',
-            'url'    => route('file.store'),
-        ];
-
         /** @var File $file */
         $file = $this->getData('file');
 
         if ($file && $file->status & File::STATUS_INPUT_NEEDED) {
-            $this->add('file_'.$file->id.'_action', Field::STATIC, [
+            $this->formOptions = [
+                'method' => 'POST',
+                'url'    => route('file.store', ['id' => $file->id]),
+            ];
+
+            $this->add('static_action', Field::STATIC, [
                 'tag'        => 'h5',
                 'label_show' => false,
                 'value'      => __('File Action'),
             ]);
-            $this->add('file_'.$file->id.'_mode', Field::CHOICE, [
+
+            $this->add('mode', Field::CHOICE, [
                 'rules'         => 'required',
                 'label'         => __('Action'),
                 'label_show'    => false,
@@ -54,7 +55,7 @@ class FileForm extends Form
             ]);
 
             if ($file->columns) {
-                $this->add('file_'.$file->id.'_columns', Field::STATIC, [
+                $this->add('static_columns', Field::STATIC, [
                     'tag'        => 'h5',
                     'label_show' => false,
                     'value'      => __('Column Types'),
@@ -65,7 +66,7 @@ class FileForm extends Form
                     $label = $this->columnName($column['name'], $columnIndex);
                     array_walk($column['samples'], 'strip_tags');
                     $fileType = $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN;
-                    $this->add('file_'.$file->id.'_column_type_'.$columnIndex, Field::CHOICE, [
+                    $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
                         'choices'       => [
@@ -76,9 +77,9 @@ class FileForm extends Form
                         'selected'      => $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN,
                         'default_value' => FileAnalysisHelper::TYPE_UNKNOWN,
                         'attr'          => [
-                            'class'               => 'form-control col-md-3 pull-right',
+                            'class' => 'form-control col-md-3 pull-right',
                         ],
-                        'label_attr' => [
+                        'label_attr'    => [
                             'data-toggle'         => 'tooltip',
                             'data-placement'      => 'right',
                             'data-original-title' => '<strong>'.__('Samples').':</strong><br/><br/>'.
@@ -89,7 +90,7 @@ class FileForm extends Form
                     // Do not give hash input options if no hash was detected.
                     if (!empty($column['hash'])) {
                         // @todo - Only show this if the above is a known type.
-                        $this->add('file_'.$file->id.'_column_input_hash_'.$columnIndex, Field::CHOICE, [
+                        $this->add('column_hash_input_'.$columnIndex, Field::CHOICE, [
                             'label'         => $label.' '.__('Hash Used'),
                             'label_show'    => false,
                             'choices'       => $hashOptions,
@@ -105,7 +106,7 @@ class FileForm extends Form
                     }
 
                     // @todo - Only show this if Plain Text is selected above or there is no hash, and the field type is defined as phone or email.
-                    $this->add('file_'.$file->id.'_column_output_hash_'.$columnIndex, Field::CHOICE, [
+                    $this->add('column_hash_output_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label.' '.__('Output Hash'),
                         'label_show'    => false,
                         'choices'       => $hashOptions,
@@ -120,8 +121,6 @@ class FileForm extends Form
                     ]);
                 }
             }
-
-            // $this->add('input_settings', Field::TEXTAREA);
 
             $this->add('submit', Field::BUTTON_SUBMIT, [
                 'label' => __('<i class="fa fa-check"></i> '.'Begin'),
