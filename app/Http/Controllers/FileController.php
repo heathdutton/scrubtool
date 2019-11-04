@@ -75,7 +75,8 @@ class FileController extends Controller
         } else {
             // File no longer exists.
 
-            return response()->isNotFound();
+            // return abort(404);
+            return response()->redirectTo('files');
         }
     }
 
