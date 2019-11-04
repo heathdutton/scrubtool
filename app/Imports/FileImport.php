@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Exports\FileExport;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
+use App\Helpers\FileHashHelper;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -20,11 +21,29 @@ class FileImport implements ToModel, WithChunkReading
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
 
+    protected $stats = [
+        'rows_total'           => 0,
+        'rows_processed'       => 0,
+        'rows_scrubbed'        => 0,
+        'rows_invalid'         => 0,
+        'rows_email_valid'     => 0,
+        'rows_email_invalid'   => 0,
+        'rows_email_duplicate' => 0,
+        'rows_email_dnc'       => 0,
+        'rows_phone_valid'     => 0,
+        'rows_phone_invalid'   => 0,
+        'rows_phone_duplicate' => 0,
+        'rows_phone_dnc'       => 0,
+    ];
+
     /** @var int */
     private $rowIndex = 0;
 
     /** @var FileAnalysisHelper */
     private $FileAnalysisHelper;
+
+    /** @var FileHashHelper */
+    private $FileHashHelper;
 
     /** @var FileExport export */
     private $export = null;
@@ -68,19 +87,30 @@ class FileImport implements ToModel, WithChunkReading
      */
     public function model(array $row)
     {
-        $data = $this->getFileAnalysisHelper()
+        $analysis = $this->getFileAnalysisHelper()
             ->parseRow($row, ++$this->rowIndex);
 
         if ($this->file->status & File::STATUS_ANALYSIS) {
-            // Running an analysis. No export needed.
-            if ($this->rowIndex <= 20 && !$data->getRowIsHeader()) {
-                $this->samples[] = $data->getRowData();
-            }
-        }
 
-        // Running an import/export process.
-        if ($this->file->status & File::STATUS_RUNNING) {
-            $this->appendRowToExport($data->getRowData());
+            // Running an analysis. No export needed.
+            if ($this->rowIndex <= 20 && !$analysis->getRowIsHeader()) {
+                $this->samples[] = $row;
+            }
+
+        } elseif ($this->file->status & File::STATUS_RUNNING) {
+
+            if ($analysis->rowIsValid()) {
+                if ($this->file->mode & File::MODE_HASH) {
+                    $this->getFileHashHelper()->hashRow($row);
+                }
+
+                $this->appendRowToExport($row);
+            } else {
+                $this->stats['rows_invalid']++;
+            }
+
+            $this->stats['rows_total']++;
+            $this->stats['rows_processed']++;
         }
     }
 
@@ -97,6 +127,18 @@ class FileImport implements ToModel, WithChunkReading
     }
 
     /**
+     * @return FileHashHelper
+     */
+    private function getFileHashHelper()
+    {
+        if (!$this->FileHashHelper) {
+            $this->FileHashHelper = new FileHashHelper($this->file->input_settings);
+        }
+
+        return $this->FileHashHelper;
+    }
+
+    /**
      * @param $row
      */
     private function appendRowToExport($row)
@@ -110,7 +152,7 @@ class FileImport implements ToModel, WithChunkReading
             $now = microtime(true);
             if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
 
-                // @todo - Persist stats.
+                $this->file->rows_processed = $this->rowIndex;
 
                 $this->timeOfLastSave = $now;
             }
