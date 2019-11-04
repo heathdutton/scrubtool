@@ -223,7 +223,7 @@ class FileAnalysisHelper
      */
     private function isPhone($value, $countryCode = 'US', $lenient = false)
     {
-        return (bool) $this->getPhone($value, $countryCode, $lenient);
+        return (bool) self::getPhone($value, $countryCode, $lenient);
     }
 
     /**
@@ -235,7 +235,7 @@ class FileAnalysisHelper
      *
      * @return string|null
      */
-    public function getPhone($value, $countryCode = 'US', $lenient = false)
+    public static function getPhone($value, $countryCode = 'US', $lenient = false)
     {
         $value = (string) $value;
         if (!$lenient && ctype_alpha($value)) {

@@ -244,6 +244,7 @@ class File extends Model
         /** @var File $file */
         $file = $this::create([
             'name'                 => $uploadedFile->getClientOriginalName() ?? 'na',
+            'available_till'       => null,
             'input_location'       => $uploadedFile->getRealPath(),
             'output_location'      => null,
             'user_id'              => $request->user() ? $request->user()->id : null,

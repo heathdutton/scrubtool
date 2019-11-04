@@ -73,9 +73,9 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                 <p class="card-text text-{{ $class }}">{{ $file->message }}</p>
             @endif
 
-            @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS)
+            @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS || $file->status & \App\File::STATUS_RUNNING)
                 <div class="progress">
-                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-10" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-1 progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                         {{ $action }}
                     </div>
                 </div>
@@ -85,7 +85,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                 {!! form($file->form) !!}
             @endif
             @if($file->status & \App\File::STATUS_WHOLE)
-                <a class="btn btn-success"
+                <a class="btn btn-{{ $class }} pull-right mb-3"
                    target="_blank"
                    href="{{ route('file.download', ['id' => $file->id]) }}"
                    onclick="
@@ -93,7 +93,15 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                        src: '{{ route('file.download', ['id' => $file->id]) }}',
                        style: 'visibility:hidden; display:none'
                        }).appendTo(body); return false;">
+                    <i class="fa fa-download"></i>
                     {{ __('Download') }}
+                    @if($file->available_till)
+                        <div>
+                            <small>
+                                <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
+                            </small>
+                        </div>
+                    @endif
                 </a>
             @endif
         </div>

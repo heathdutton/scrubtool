@@ -18,7 +18,7 @@ class FileProcess implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable;
 
     /** @var int */
-    const MINUTES_TILL_DELETION = 90;
+    const MINUTES_TILL_DELETION = 59;
 
     public $deleteWhenMissingModels = true;
 
@@ -78,29 +78,30 @@ class FileProcess implements ShouldQueue
 
                     $file->status  = File::STATUS_WHOLE;
                     $file->message = '';
-                    $file->save();
 
-                    $this->queueForDeletion($file, self::MINUTES_TILL_DELETION);
+                    $this->saveAndQueueForDelete($file, self::MINUTES_TILL_DELETION);
                 }
 
             } catch (Exception $exception) {
                 $file->status  = File::STATUS_STOPPED;
                 $file->message = 'An error was encountered while processing your file. '.$exception->getMessage();
-                $file->save();
 
-                $this->queueForDeletion($file, 1);
+                $this->saveAndQueueForDelete($file, 15);
             }
         }
     }
 
     /**
      * @param  File  $file
-     * @param $delayMinutes
+     * @param  int  $minTillDelete
      */
-    private function queueForDeletion(File $file, $delayMinutes)
+    private function saveAndQueueForDelete(File $file, $minTillDelete)
     {
+        $file->available_till = Carbon::now('UTC')->addMinutes($minTillDelete);
+        $file->save();
+
         FileDelete::dispatch($file->id)
-            ->delay(Carbon::now()->addMinutes($delayMinutes))
+            ->delay($file->available_till)
             ->onQueue('delete');
     }
 
@@ -113,9 +114,8 @@ class FileProcess implements ShouldQueue
         if ($file) {
             $file->status  = File::STATUS_STOPPED;
             $file->message = 'An error was encountered while processing your file. '.$exception->getMessage();
-            $file->save();
 
-            $this->queueForDeletion($file, 1);
+            $this->saveAndQueueForDelete($file, 15);
         }
     }
 }

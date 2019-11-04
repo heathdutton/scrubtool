@@ -18,6 +18,7 @@ class CreateFilesTable extends Migration
             $table->bigIncrements('id');
             $table->timestamps();
             $table->softDeletes();
+            $table->timestamp('available_till', 0)->nullable();
             $table->text('name');
             $table->text('input_location')->nullable();
             $table->text('output_location')->nullable();
@@ -38,15 +39,18 @@ class CreateFilesTable extends Migration
             $table->unsignedBigInteger('rows_total');
             $table->unsignedBigInteger('rows_processed');
             $table->unsignedBigInteger('rows_scrubbed');
+
             $table->unsignedBigInteger('rows_invalid');
             $table->unsignedBigInteger('rows_email_valid');
             $table->unsignedBigInteger('rows_email_invalid');
             $table->unsignedBigInteger('rows_email_duplicate');
             $table->unsignedBigInteger('rows_email_dnc');
+
             $table->unsignedBigInteger('rows_phone_valid');
             $table->unsignedBigInteger('rows_phone_invalid');
             $table->unsignedBigInteger('rows_phone_duplicate');
             $table->unsignedBigInteger('rows_phone_dnc');
+
             $table->unsignedInteger('download_count');
             $table->index(['user_id', 'created_at']);
             $table->index(['session_id', 'created_at']);

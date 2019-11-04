@@ -38,8 +38,10 @@ class FileHashHelper
                 if ($algo) {
                     $type = $this->file->input_settings['column_type_'.$rowIndex] ?? FileAnalysisHelper::TYPE_UNKNOWN;
                     if ($type & FileAnalysisHelper::TYPE_PHONE) {
+                        // Convert phone number to E.164 without + for deterministic hashing.
                         $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
                         $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
+                        $value       = preg_replace("/[^0-9]/", '', $value);
                     }
                     if ($type & FileAnalysisHelper::TYPE_EMAIL) {
                         $value = strtolower(trim($value));
