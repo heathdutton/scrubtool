@@ -220,6 +220,7 @@ class File extends Model
             'rows_phone_invalid'   => 0,
             'rows_phone_duplicate' => 0,
             'rows_phone_dnc'       => 0,
+            'download_count'       => 0,
         ]);
         $file->move($uploadedFile);
 
@@ -299,6 +300,9 @@ class File extends Model
                 $name .= $delim.'scrubbed';
             }
             $name .= '.'.pathinfo($this->name, PATHINFO_EXTENSION);
+
+            $this->download_count++;
+            $this->save();
 
             return response()->download($this->output_location, $name);
         } else {
