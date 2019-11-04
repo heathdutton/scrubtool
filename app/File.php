@@ -8,6 +8,7 @@ use App\Imports\FileImportAnalysis;
 use App\Jobs\ProcessFile;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -113,6 +114,7 @@ class File extends Model
         } else {
             $q->orderBy('created_at', 'desc');
         }
+        /** @var Collection $files */
         $files = $q->take((int) $limit)->get();
         if ($formBuilder) {
             foreach (collect($files) as $file) {

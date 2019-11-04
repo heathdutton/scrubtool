@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\File;
 use Exception;
-use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Kris\LaravelFormBuilder\FormBuilder;
@@ -48,10 +47,36 @@ class FileController extends Controller
         /** @var File $file */
         $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id, 1)->first();
 
+        if (!$file) {
+            return $this->forceLogin($request);
+        }
+
         return view('files')->with([
             'files'  => [$file],
             'upload' => false,
         ]);
+    }
+
+    /**
+     * @param  Request  $request
+     *
+     * @return bool|\Illuminate\Http\RedirectResponse
+     */
+    private function forceLogin(Request $request)
+    {
+        if (
+            !$request->user()
+            && $request->getRequestUri() !== $request->session()->get('url.intended')
+        ) {
+            // User likely needs to log in.
+            $request->session()->put('url.intended', $request->getRequestUri());
+
+            return response()->redirectTo('login');
+        } else {
+            // File no longer exists.
+
+            return response()->isNotFound();
+        }
     }
 
     public function download(Request $request)
@@ -62,6 +87,10 @@ class FileController extends Controller
 
         /** @var File $file */
         $file = File::findByCurrentUser($request, null, (int) $request->id, 1)->first();
+
+        if (!$file) {
+            return $this->forceLogin($request);
+        }
 
         return $file->download();
     }
@@ -81,8 +110,12 @@ class FileController extends Controller
         /** @var File $file */
         $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id)->first();
 
-        if (!$file || $file->status ^ File::STATUS_INPUT_NEEDED) {
+        if ($file->status ^ File::STATUS_INPUT_NEEDED) {
             return redirect()->back();
+        }
+
+        if (!$file) {
+            return $this->forceLogin($request);
         }
 
         if (!$file->form->isValid()) {
@@ -93,21 +126,6 @@ class FileController extends Controller
 
         return redirect('files/'.$file->id);
     }
-
-    // /**
-    //  * @param  FormBuilder  $formBuilder
-    //  *
-    //  * @return \Illuminate\Http\RedirectResponse
-    //  */
-    // public function update(FormBuilder $formBuilder)
-    // {
-    //     $form = $formBuilder->create(FileForm::class, [
-    //         'method' => 'POST',
-    //         'url'    => route('fileupdate'),
-    //     ]);
-    //
-    //     return view('fileupdate', compact('form'));
-    // }
 
     /**
      * upload a file and associate it to the db while copying it to a persistent location.
