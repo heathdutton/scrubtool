@@ -39,6 +39,7 @@ class CreateFilesTable extends Migration
             $table->unsignedBigInteger('rows_total');
             $table->unsignedBigInteger('rows_processed');
             $table->unsignedBigInteger('rows_scrubbed');
+            $table->unsignedBigInteger('rows_hashed');
 
             $table->unsignedBigInteger('rows_invalid');
             $table->unsignedBigInteger('rows_email_valid');

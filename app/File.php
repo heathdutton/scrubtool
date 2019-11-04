@@ -264,6 +264,7 @@ class File extends Model
             'rows_total'           => 0,
             'rows_processed'       => 0,
             'rows_scrubbed'        => 0,
+            'rows_hashed'          => 0,
             'rows_invalid'         => 0,
             'rows_email_valid'     => 0,
             'rows_email_invalid'   => 0,

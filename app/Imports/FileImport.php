@@ -25,6 +25,7 @@ class FileImport implements ToModel, WithChunkReading
         'rows_total'           => 0,
         'rows_processed'       => 0,
         'rows_scrubbed'        => 0,
+        'rows_hashed'          => 0,
         'rows_invalid'         => 0,
         'rows_email_valid'     => 0,
         'rows_email_invalid'   => 0,
@@ -100,9 +101,13 @@ class FileImport implements ToModel, WithChunkReading
         } elseif ($this->file->status & File::STATUS_RUNNING) {
 
             if ($analysis->rowIsValid()) {
-                if ($this->file->mode & File::MODE_HASH && !$analysis->getRowIsHeader()) {
-                    if ($this->getFileHashHelper()->hashRow($row)) {
-                        $this->stats['rows_hashed']++;
+                if (!$analysis->getRowIsHeader()) {
+                    $this->stats['rows_total']++;
+
+                    if ($this->file->mode & File::MODE_HASH) {
+                        if ($this->getFileHashHelper()->hashRow($row)) {
+                            $this->stats['rows_hashed']++;
+                        }
                     }
                 }
 
@@ -111,7 +116,6 @@ class FileImport implements ToModel, WithChunkReading
                 $this->stats['rows_invalid']++;
             }
 
-            $this->stats['rows_total']++;
             $this->stats['rows_processed']++;
         }
     }
