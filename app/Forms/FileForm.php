@@ -120,7 +120,8 @@ class FileForm extends Form
                             'class' => 'form-control col-md-3 pull-right ml-4',
                         ],
                         'wrapper'       => [
-                            'class' => 'form-group'.($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
+                            'class' => 'form-group'. ''
+                                // ($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
                         ],
                     ]);
                 }
