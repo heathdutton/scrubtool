@@ -26,8 +26,8 @@ class CreateFilesTable extends Migration
             $table->json('input_settings')->nullable();
             $table->ipAddress('ip_address');
             $table->string('session_id');
-            $table->unsignedTinyInteger('status');
-            $table->unsignedTinyInteger('mode');
+            $table->unsignedInteger('status');
+            $table->unsignedInteger('mode');
             $table->string('type')->nullable();
             $table->json('columns')->nullable();
             $table->unsignedInteger('column_count');
