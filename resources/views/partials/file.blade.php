@@ -84,6 +84,18 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             @if($file->form)
                 {!! form($file->form) !!}
             @endif
+            @if($file->status & \App\File::STATUS_WHOLE)
+                <a class="btn btn-success"
+                   target="_blank"
+                   href="{{ route('file.download', ['id' => $file->id]) }}"
+                   onclick="
+                       $('<iframe/>').attr({
+                       src: '{{ route('file.download', ['id' => $file->id]) }}',
+                       style: 'visibility:hidden; display:none'
+                       }).appendTo(body); return false;">
+                    {{ __('Download') }}
+                </a>
+            @endif
         </div>
     </div>
 </div>

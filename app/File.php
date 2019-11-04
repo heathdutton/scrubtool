@@ -38,6 +38,8 @@ use Maatwebsite\Excel\Helpers\FileTypeDetector;
  */
 class File extends Model
 {
+    const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
+
     const MIN_BYTES           = 10;
 
     const MODE_HASH           = 1;
@@ -245,7 +247,7 @@ class File extends Model
         $userId         = $this->user_id ?? $this->session_id;
         $mode           = $this->mode ?? 0;
         $directory      = self::PRIVATE_STORAGE.DIRECTORY_SEPARATOR.$date;
-        $extension      = pathinfo($this->name)['extension'] ?? 'tmp';
+        $extension      = pathinfo($this->name, PATHINFO_EXTENSION) ?? 'tmp';
         $inputFileName  = implode('-', [$date, $time, $mode, $userId, $fileId]).'-input.'.$extension;
         $outputFileName = implode('-', [$date, $time, $mode, $userId, $fileId]).'-output.'.$extension;
         if (!$storage->exists($directory)) {
@@ -270,6 +272,52 @@ class File extends Model
         $this->save();
 
         return $this;
+    }
+
+    /**
+     * @return bool|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function download()
+    {
+        $storage = Storage::disk(self::STORAGE);
+        if (
+            $this->status & self::STATUS_WHOLE
+            && $storage->exists($this->getRelativeOutputLocation())
+        ) {
+            // Use the original file name with a minor addition for clarity.
+            $name = pathinfo($this->name, PATHINFO_FILENAME);
+
+            // Try to re-use whatever delimiter the original file came with.
+            foreach (self::FILENAME_DELIMITERS as $delim) {
+                if (false !== stripos($name, $delim)) {
+                    break;
+                }
+            }
+            if ($this->mode & self::MODE_HASH) {
+                $name .= $delim.'hashed';
+            } elseif ($this->mode & self::MODE_HASH) {
+                $name .= $delim.'scrubbed';
+            }
+            $name .= '.'.pathinfo($this->name, PATHINFO_EXTENSION);
+
+            return response()->download($this->output_location, $name);
+        } else {
+            return response()->isNotFound();
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getRelativeOutputLocation()
+    {
+        $outputLocation = $this->output_location;
+        $remove         = storage_path('app');
+        if (substr($outputLocation, 0, strlen($remove)) === $remove) {
+            $outputLocation = substr($outputLocation, strlen($remove) + 1);
+        }
+
+        return $outputLocation;
     }
 
     /**
@@ -300,13 +348,7 @@ class File extends Model
                 $fileImport = new FileImport($this);
                 Excel::import($fileImport, $this->input_location, null, $this->type);
 
-                // In order for Excel to store it needs relative path.
-                $outputLocation = $this->output_location;
-                $remove         = storage_path('app');
-                if (substr($outputLocation, 0, strlen($remove)) === $remove) {
-                    $outputLocation = substr($outputLocation, strlen($remove) + 1);
-                }
-                Excel::store($fileImport->getExport(), $outputLocation, null, $this->type, [
+                Excel::store($fileImport->getExport(), $this->getRelativeOutputLocation(), null, $this->type, [
                     'visibility' => self::PRIVATE_STORAGE,
                 ]);
 

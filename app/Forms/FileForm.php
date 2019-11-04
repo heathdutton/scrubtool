@@ -23,7 +23,11 @@ class FileForm extends Form
         /** @var File $file */
         $file = $this->getData('file');
 
-        if ($file && $file->status & File::STATUS_INPUT_NEEDED) {
+        if (!$file || !empty($file->deleted_at)) {
+            return;
+        }
+
+        if ($file->status & File::STATUS_INPUT_NEEDED) {
             $this->formOptions = [
                 'method' => 'POST',
                 'url'    => route('file.store', ['id' => $file->id]),

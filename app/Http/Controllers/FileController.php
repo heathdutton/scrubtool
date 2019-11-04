@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\File;
 use Exception;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Kris\LaravelFormBuilder\FormBuilder;
@@ -51,6 +52,18 @@ class FileController extends Controller
             'files'  => [$file],
             'upload' => false,
         ]);
+    }
+
+    public function download(Request $request)
+    {
+        if (empty($request->id) || (int) $request->id < 1) {
+            return redirect()->back();
+        }
+
+        /** @var File $file */
+        $file = File::findByCurrentUser($request, null, (int) $request->id, 1)->first();
+
+        return $file->download();
     }
 
     /**
