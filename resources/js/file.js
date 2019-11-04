@@ -20,6 +20,10 @@ $(function () {
         if ($hrs.length && $hrs.text() === '0h') {
             $hrs.hide();
         }
+        var $min = $('time.countdown', $context).find('.item.item-mm');
+        if ($min.length && $min.text() === '0m') {
+            $min.hide();
+        }
     };
 
     st.fileLoaded($('body'));

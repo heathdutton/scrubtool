@@ -75,6 +75,7 @@ class FileProcess implements ShouldQueue
                         $file->type, [
                         'visibility' => File::PRIVATE_STORAGE,
                     ]);
+                    $fileImport->persistStats();
 
                     $file->status  = File::STATUS_WHOLE;
                     $file->message = '';

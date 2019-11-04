@@ -29,6 +29,7 @@ class FileHashHelper
      */
     public function hashRow(&$row)
     {
+        $result = false;
         foreach ($row as $rowIndex => &$value) {
             if (
                 !empty($value)
@@ -47,9 +48,12 @@ class FileHashHelper
                         $value = strtolower(trim($value));
                     }
                     $this->getHashHelper()->hash($value, $algo);
+                    $result = true;
                 }
             }
         }
+
+        return $result;
     }
 
     /**

@@ -75,7 +75,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
 
             @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS || $file->status & \App\File::STATUS_RUNNING)
                 <div class="progress">
-                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-1 progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-auto-10 progress-bar-striped" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
                         {{ $action }}
                     </div>
                 </div>
@@ -85,24 +85,86 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                 {!! form($file->form) !!}
             @endif
             @if($file->status & \App\File::STATUS_WHOLE)
-                <a class="btn btn-{{ $class }} pull-right mb-3"
-                   target="_blank"
-                   href="{{ route('file.download', ['id' => $file->id]) }}"
-                   onclick="
-                       $('<iframe/>').attr({
-                       src: '{{ route('file.download', ['id' => $file->id]) }}',
-                       style: 'visibility:hidden; display:none'
-                       }).appendTo(body); return false;">
-                    <i class="fa fa-download"></i>
-                    {{ __('Download') }}
-                    @if($file->available_till)
-                        <div>
-                            <small>
-                                <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
-                            </small>
+                <div class="row">
+                    <div class="col-xl-3 col-lg-6 col-12">
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="media d-flex">
+                                        <div class="align-self-center">
+                                            <i class="fa fa-database fa-4x pull-left"></i>
+                                        </div>
+                                        <div class="media-body text-right">
+                                            <h3>{{ $file->rows_total }}</h3>
+                                            <span>{{ __('Total Rows') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if($file->mode & \App\File::MODE_HASH)
+                    <div class="col-xl-3 col-lg-6 col-12">
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="media d-flex">
+                                        <div class="align-self-center">
+                                            <i class="fa fa-hashtag fa-4x pull-left"></i>
+                                        </div>
+                                        <div class="media-body text-right">
+                                            <h3>{{ $file->rows_processed }}</h3>
+                                            <span>{{ __('Rows Hashed') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @if($file->mode & \App\File::MODE_SCRUB)
+                        <div class="col-xl-3 col-lg-6 col-12">
+                            <div class="card">
+                                <div class="card-content">
+                                    <div class="card-body">
+                                        <div class="media d-flex">
+                                            <div class="align-self-center">
+                                                <i class="fa fa-remove fa-4x pull-left"></i>
+                                            </div>
+                                            <div class="media-body text-right">
+                                                <h3>{{ $file->rows_scrubbed }}</h3>
+                                                <span>{{ __('Rows Scrubbed') }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     @endif
-                </a>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mt-3 mb-1">
+                        <a class="btn btn-{{ $class }} pull-right"
+                           target="_blank"
+                           href="{{ route('file.download', ['id' => $file->id]) }}"
+                           onclick="
+                               $('<iframe/>').attr({
+                               src: '{{ route('file.download', ['id' => $file->id]) }}',
+                               style: 'visibility:hidden; display:none'
+                               }).appendTo(body); return false;">
+                            <i class="fa fa-download"></i>
+                            {{ __('Download') }}
+                            @if($file->available_till)
+                                <div>
+                                    <small>
+                                        <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
+                                    </small>
+                                </div>
+                            @endif
+                        </a>
+                    </div>
+                </div>
             @endif
         </div>
     </div>

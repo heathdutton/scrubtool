@@ -101,7 +101,9 @@ class FileImport implements ToModel, WithChunkReading
 
             if ($analysis->rowIsValid()) {
                 if ($this->file->mode & File::MODE_HASH && !$analysis->getRowIsHeader()) {
-                    $this->getFileHashHelper()->hashRow($row);
+                    if ($this->getFileHashHelper()->hashRow($row)) {
+                        $this->stats['rows_hashed']++;
+                    }
                 }
 
                 $this->appendRowToExport($row);
@@ -151,12 +153,18 @@ class FileImport implements ToModel, WithChunkReading
         if (0 == $this->rowIndex % 20) {
             $now = microtime(true);
             if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
-
-                $this->file->rows_processed = $this->rowIndex;
-
-                $this->timeOfLastSave = $now;
+                $this->persistStats();
             }
         }
+    }
+
+    public function persistStats()
+    {
+        foreach ($this->stats as $stat => $value) {
+            $this->file->setAttribute($stat, $value);
+        }
+        $this->file->save();
+        $this->timeOfLastSave = microtime(true);
     }
 
     /**
