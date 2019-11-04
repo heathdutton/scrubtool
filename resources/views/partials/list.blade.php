@@ -7,7 +7,7 @@ $action = '';
 
         <a href="#list{{ $list->id }}" class="card-header text-{{ $class }}" role="tab" id="heading{{ $list->id }}" data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="list{{ $list->id }}">
             {{ $list->name }}
-            <i class="fa fa-chevron-down pull-right"></i>
+            <i class="fa fa-chevron-down float-right"></i>
         </a>
 
         <div id="list{{ $list->id }}" class="collapse show" role="tabpanel" aria-labelledby="heading{{ $list->id }}">

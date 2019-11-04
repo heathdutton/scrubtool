@@ -18,7 +18,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
     $action = __('Cancelled');
 } elseif ($file->status & \App\File::STATUS_WHOLE) {
     $class  = 'success';
-    $action = __('Complete');
+    $action = __('Done');
 }
 ?>
 <div class="card border-{{ $class }} mb-4 {{ $card }}" data-file-id="{{ $file->id }}" data-file-status="{{ $file->status }}">
@@ -64,8 +64,8 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                                     </dl>'>
             {{ $file->name }}
         </span>
-        <i class="fa fa-chevron-down pull-right"></i>
-        <span class="pull-right">{{ $action }}</span>
+        <i class="fa fa-chevron-down float-right"></i>
+        <span class="float-right">{{ $action }}</span>
     </a>
     <div id="file{{ $file->id }}" class="collapse show" role="tabpanel" aria-labelledby="heading{{ $file->id }}">
         <div class="card-body">
@@ -162,24 +162,41 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
 
                 <div class="row">
                     <div class="col-12 mt-3 mb-1">
-                        <a class="btn btn-{{ $class }} pull-right"
-                           target="_blank"
-                           href="{{ route('file.download', ['id' => $file->id]) }}"
-                           onclick="
-                               $('<iframe/>').attr({
-                               src: '{{ route('file.download', ['id' => $file->id]) }}',
-                               style: 'visibility:hidden; display:none'
-                               }).appendTo(body); return false;">
-                            <i class="fa fa-download"></i>
-                            {{ __('Download') }}
-                            @if($file->available_till)
-                                <div>
-                                    <small>
-                                        <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
-                                    </small>
-                                </div>
-                            @endif
-                        </a>
+                        <div class="">
+                            <div class="input-group float-right" style="max-width: 480px;">
+                                {{-- @todo - This needs contextual awareness --}}
+                                <a class="btn btn-secondary"
+                                   href="{{ route('files') }}"
+                                   onclick="var $dropzone = $('#dropzone:first');
+                            if ($dropzone.length) {
+                                $dropzone.click();
+                                return false;
+                            }">
+                                    <i class="fa fa-plus"></i>
+                                    {{ __('Another') }}
+                                </a>
+                                @if($file->available_till)
+                                    <div class="input-group-prepend"
+                                         data-toggle='tooltip' data-placement="bottom"
+                                         data-original-title='{{ __('File is available till') }} {{ $file->available_till }} UTC'>
+                                        <span class="input-group-text" id="file-dl-{{ $file->id }}">
+                                            <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
+                                        </span>
+                                    </div>
+                                @endif
+                                <a class="form-control btn btn-{{ $class }}" aria-describedby="file-dl-{{ $file->id }}"
+                                   target="_blank"
+                                   href="{{ route('file.download', ['id' => $file->id]) }}"
+                                   onclick="
+                                       $('<iframe/>').attr({
+                                       src: '{{ route('file.download', ['id' => $file->id]) }}',
+                                       style: 'visibility:hidden; display:none'
+                                       }).appendTo(body); return false;">
+                                    <i class="fa fa-download"></i>
+                                    {{ __('Download') }}
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif
