@@ -32,13 +32,13 @@
                 <!-- Left Side Of Navbar -->
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('files') }}">
+                        <a class="nav-link {{ Request::segment(1) === 'files' ? 'active' : null }}" href="{{ route('files') }}">
                             <i class="fa fa-files-o"></i>
                             {{ __('Files') }}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('lists') }}">
+                        <a class="nav-link {{ Request::segment(1) === 'lists' ? 'active' : null }}" href="{{ route('lists') }}">
                             <i class="fa fa-list"></i>
                             {{ __('Lists') }}
                         </a>
