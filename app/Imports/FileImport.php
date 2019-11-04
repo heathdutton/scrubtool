@@ -100,7 +100,7 @@ class FileImport implements ToModel, WithChunkReading
         } elseif ($this->file->status & File::STATUS_RUNNING) {
 
             if ($analysis->rowIsValid()) {
-                if ($this->file->mode & File::MODE_HASH) {
+                if ($this->file->mode & File::MODE_HASH && !$analysis->getRowIsHeader()) {
                     $this->getFileHashHelper()->hashRow($row);
                 }
 
@@ -120,7 +120,7 @@ class FileImport implements ToModel, WithChunkReading
     private function getFileAnalysisHelper()
     {
         if (!$this->FileAnalysisHelper) {
-            $this->FileAnalysisHelper = new FileAnalysisHelper();
+            $this->FileAnalysisHelper = new FileAnalysisHelper($this->file->country ?? 'US');
         }
 
         return $this->FileAnalysisHelper;
@@ -132,7 +132,7 @@ class FileImport implements ToModel, WithChunkReading
     private function getFileHashHelper()
     {
         if (!$this->FileHashHelper) {
-            $this->FileHashHelper = new FileHashHelper($this->file->input_settings);
+            $this->FileHashHelper = new FileHashHelper($this->file);
         }
 
         return $this->FileHashHelper;

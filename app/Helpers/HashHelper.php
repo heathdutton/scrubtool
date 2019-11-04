@@ -467,7 +467,7 @@ class HashHelper
     public function hash(&$value, $algo = 'md5')
     {
         if (isset($this->listChoices()[$algo])) {
-            $value = hash($algo, trim(strtolower($value)));
+            $value = hash($algo, $value);
         }
     }
 

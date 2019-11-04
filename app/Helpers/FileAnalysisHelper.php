@@ -58,6 +58,9 @@ class FileAnalysisHelper
 
     protected $rowIndex = 0;
 
+    /** @var string */
+    protected $countryCode = 'US';
+
     /** @var array Simplified strings that indicate the row may be a header. */
     private $headerWhitelist = [
         'email',
@@ -115,6 +118,16 @@ class FileAnalysisHelper
         'mobile'      => self::TYPE_PHONE,
         'hash'        => self::TYPE_HASH,
     ];
+
+    /**
+     * FileAnalysisHelper constructor.
+     *
+     * @param $countryCode
+     */
+    public function __construct($countryCode)
+    {
+        $this->countryCode = $countryCode;
+    }
 
     /**
      * @param $row
