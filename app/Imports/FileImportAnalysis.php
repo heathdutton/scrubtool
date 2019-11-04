@@ -6,6 +6,10 @@ use Maatwebsite\Excel\Concerns\WithLimit;
 
 class FileImportAnalysis extends FileImport implements WithLimit
 {
+
+    /** @var int */
+    const CHUNK_SIZE = 101;
+
     /**
      * @return int
      */

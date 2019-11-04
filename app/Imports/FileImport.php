@@ -17,6 +17,9 @@ class FileImport implements ToModel, WithChunkReading
     /** @var int */
     const CHUNK_SIZE = 1009;
 
+    /** @var int Time between saves of processing statistics. */
+    const TIME_BETWEEN_SAVES = 1.0;
+
     /** @var int */
     private $rowIndex = 0;
 
@@ -32,6 +35,12 @@ class FileImport implements ToModel, WithChunkReading
     /** @var array */
     private $samples = [];
 
+    /** @var int */
+    private $timeOfStart;
+
+    /** @var int */
+    private $timeOfLastSave;
+
     /**
      * FileImport constructor.
      *
@@ -39,7 +48,9 @@ class FileImport implements ToModel, WithChunkReading
      */
     public function __construct(File $file)
     {
-        $this->file = $file;
+        $this->file           = $file;
+        $this->timeOfStart    = microtime(true);
+        $this->timeOfLastSave = $this->timeOfStart;
     }
 
     /**
@@ -94,6 +105,24 @@ class FileImport implements ToModel, WithChunkReading
             $this->export = new FileExport($this->file);
         }
         $this->export->appendRowToSheet($row);
+
+        if (0 == $this->rowIndex % 20) {
+            $now = microtime(true);
+            if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
+
+                // @todo - Persist stats.
+
+                $this->timeOfLastSave = $now;
+            }
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function chunkSize(): int
+    {
+        return self::CHUNK_SIZE;
     }
 
     /**
@@ -119,36 +148,4 @@ class FileImport implements ToModel, WithChunkReading
         ];
     }
 
-    /**
-     * @return int
-     */
-    public function chunkSize(): int
-    {
-        return self::CHUNK_SIZE;
-    }
-
-    /**
-     * @return bool|\Illuminate\Foundation\Bus\PendingDispatch
-     */
-    public function finish()
-    {
-        return $this->export->store($this->fileOutput, File::STORAGE);
-    }
-
-    /**
-     * @param $row
-     *
-     * @return bool
-     */
-    private function rowIsHeader($row)
-    {
-        foreach ($row as $value) {
-            $simple = strtolower(preg_replace('/[^a-z]/i', '', $value));
-            if (in_array($simple, $this->headerIdentifiers)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

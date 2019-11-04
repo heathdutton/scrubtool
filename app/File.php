@@ -300,8 +300,16 @@ class File extends Model
                 $fileImport = new FileImport($this);
                 Excel::import($fileImport, $this->input_location, null, $this->type);
 
-                // Save the result.
-                $fileImport->getExport()->store($this->output_location, null, $this->type);
+                // In order for Excel to store it needs relative path.
+                $outputLocation = $this->output_location;
+                $remove         = storage_path('app');
+                if (substr($outputLocation, 0, strlen($remove)) === $remove) {
+                    $outputLocation = substr($outputLocation, strlen($remove) + 1);
+                }
+                Excel::store($fileImport->getExport(), $outputLocation, null, $this->type, [
+                    'visibility' => self::PRIVATE_STORAGE,
+                ]);
+
                 $this->status  = self::STATUS_WHOLE;
                 $this->message = '';
                 $this->save();

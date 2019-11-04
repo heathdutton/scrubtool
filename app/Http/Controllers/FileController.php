@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\File;
-use App\Forms\FileForm;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Redirect;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Kris\LaravelFormBuilder\FormBuilderTrait;
 
@@ -27,7 +25,7 @@ class FileController extends Controller
         $files = File::findByCurrentUser($request, $formBuilder);
 
         return view('files')->with([
-            'files' => collect($files),
+            'files'  => collect($files),
             'upload' => true,
         ]);
     }
@@ -50,7 +48,7 @@ class FileController extends Controller
         $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id, 1)->first();
 
         return view('files')->with([
-            'files' => [$file],
+            'files'  => [$file],
             'upload' => false,
         ]);
     }
@@ -80,10 +78,7 @@ class FileController extends Controller
 
         $file->saveInputSettings($file->form->getFieldValues());
 
-        return view('files')->with([
-            'files' => [$file],
-            'upload' => false,
-        ]);
+        return redirect('files/'.$file->id);
     }
 
     // /**

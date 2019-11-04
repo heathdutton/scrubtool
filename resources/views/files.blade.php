@@ -9,7 +9,9 @@
                 <div class="justify-content-center mb-3">
                     @include('partials.upload')
                 </div>
-                <h1>{{ __('Your Files') }}</h1>
+                @if(count($files))
+                    <h1>{{ __('Your Files') }}</h1>
+                @endif
             @endif
             <div class="justify-content-center mt-3">
                 @include('partials.files')
