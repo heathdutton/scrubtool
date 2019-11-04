@@ -165,10 +165,22 @@ class FileAnalysisHelper
         ) {
             foreach ($this->rowData as $value) {
                 if ($this->isEmail($value)) {
+                    $this->rowIsHeader = false;
+                    break;
+                } elseif ($this->isPhone($value)) {
+                    $this->rowIsHeader = false;
                     break;
                 } elseif (in_array($this->simplify($value), $this->headerWhitelist)) {
                     $this->rowIsHeader = true;
                     break;
+                } elseif (
+                    1 === $this->rowIndex
+                    && is_string($value)
+                    && !is_numeric($value)
+                    && false !== strpos($value, ' ')
+                ) {
+                    // Extra lenient with first row.
+                    $this->rowIsHeader = true;
                 }
             }
         }
@@ -184,6 +196,40 @@ class FileAnalysisHelper
     private function isEmail($value)
     {
         return (bool) filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+    }
+
+    /**
+     * @param $value
+     * @param  string  $countryCode
+     * @param  bool  $lenient
+     *
+     * @return bool
+     */
+    private function isPhone($value, $countryCode = 'US', $lenient = false)
+    {
+        if (!$lenient && ctype_alpha($value)) {
+            return false;
+        }
+        if (!$lenient && strpos($value, '/')) {
+            return false;
+        }
+        if (!$lenient && strpos($value, '\\')) {
+            return false;
+        }
+        $numeric = preg_replace("/[^0-9]/", '', $value);
+        $length  = strlen($numeric);
+        if ($length >= ($lenient ? 7 : 10) && $length <= 15) {
+            $util     = PhoneNumberUtil::getInstance();
+            $leniency = $lenient ? Leniency::POSSIBLE() : Leniency::VALID();
+            $matches  = $util->findNumbers($value, $countryCode, $leniency, 10000);
+            if ($lenient && !$matches->current()) {
+                $matches = $util->findNumbers($numeric, $countryCode, $leniency, 10000);
+            }
+
+            return (bool) $matches->current();
+        }
+
+        return false;
     }
 
     /**
@@ -279,40 +325,6 @@ class FileAnalysisHelper
     private function isHash($value)
     {
         return (bool) $this->getHashHelper()->detectHash($value);
-    }
-
-    /**
-     * @param $value
-     * @param  string  $countryCode
-     * @param  bool  $lenient
-     *
-     * @return bool
-     */
-    private function isPhone($value, $countryCode = 'US', $lenient = false)
-    {
-        if (!$lenient && ctype_alpha($value)) {
-            return false;
-        }
-        if (!$lenient && strpos($value, '/')) {
-            return false;
-        }
-        if (!$lenient && strpos($value, '\\')) {
-            return false;
-        }
-        $numeric = preg_replace("/[^0-9]/", '', $value);
-        $length  = strlen($numeric);
-        if ($length >= ($lenient ? 7 : 10) && $length <= 15) {
-            $util     = PhoneNumberUtil::getInstance();
-            $leniency = $lenient ? Leniency::POSSIBLE() : Leniency::EXACT_GROUPING();
-            $matches  = $util->findNumbers($value, $countryCode, $leniency, 1000);
-            if ($lenient && !$matches->current()) {
-                $matches = $util->findNumbers($numeric, $countryCode, $leniency, 1000);
-            }
-
-            return (bool) $matches->current();
-        }
-
-        return false;
     }
 
     /**
