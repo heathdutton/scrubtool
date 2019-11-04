@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,8 @@ use Maatwebsite\Excel\Helpers\FileTypeDetector;
  */
 class File extends Model
 {
+    use SoftDeletes;
+
     const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
 
     const MIN_BYTES           = 10;
@@ -80,6 +83,9 @@ class File extends Model
         'columns'        => 'array',
     ];
 
+    /** @var Storage */
+    protected $storage;
+
     /**
      * Combine both session (no auth) files uploaded and user files (logged in).
      *
@@ -121,6 +127,52 @@ class File extends Model
         }
 
         return $files;
+    }
+
+    /**
+     * Deletes input and output files, then soft deletes the model.
+     *
+     * @return bool|mixed|null
+     */
+    public function delete()
+    {
+        $input = $this->getRelativeLocation($this->input_location);
+        if ($this->getStorage()->exists($input)) {
+            $this->getStorage()->delete($input);
+        }
+        $output = $this->getRelativeLocation($this->output_location);
+        if ($this->getStorage()->exists($output)) {
+            $this->getStorage()->delete($output);
+        }
+
+        return $this->performDeleteOnModel();
+    }
+
+    /**
+     * @param  string  $location
+     *
+     * @return false|string
+     */
+    public function getRelativeLocation($location = '')
+    {
+        $remove = storage_path('app');
+        if (substr($location, 0, strlen($remove)) === $remove) {
+            $location = substr($location, strlen($remove) + 1);
+        }
+
+        return $location;
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Filesystem\Filesystem|Storage
+     */
+    private function getStorage()
+    {
+        if (!$this->storage) {
+            $this->storage = Storage::disk(self::STORAGE);
+        }
+
+        return $this->storage;
     }
 
     /**
@@ -224,7 +276,7 @@ class File extends Model
         ]);
         $file->move($uploadedFile);
 
-        FileProcess::dispatch($file->id)->onQueue($mode);
+        FileProcess::dispatch($file->id)->onQueue('process');
 
         return $file;
     }
@@ -240,7 +292,6 @@ class File extends Model
      */
     private function move(UploadedFile $uploadedFile)
     {
-        $storage        = Storage::disk(self::STORAGE);
         $now            = Carbon::now('UTC');
         $date           = $now->format('Y-m-d');
         $time           = $now->format('H-i-s-v'); // Change timestamp format to control rate limit.
@@ -251,15 +302,15 @@ class File extends Model
         $extension      = pathinfo($this->name, PATHINFO_EXTENSION) ?? 'tmp';
         $inputFileName  = implode('-', [$date, $time, $mode, $userId, $fileId]).'-input.'.$extension;
         $outputFileName = implode('-', [$date, $time, $mode, $userId, $fileId]).'-output.'.$extension;
-        if (!$storage->exists($directory)) {
-            $storage->makeDirectory($directory);
+        if (!$this->getStorage()->exists($directory)) {
+            $this->getStorage()->makeDirectory($directory);
         }
         $realDir                   = storage_path('app'.DIRECTORY_SEPARATOR.$directory);
         $realInputFileDestination  = $realDir.DIRECTORY_SEPARATOR.$inputFileName;
         $realOutputFileDestination = $realDir.DIRECTORY_SEPARATOR.$outputFileName;
         if (
-            $storage->exists($realInputFileDestination)
-            || $storage->exists($realOutputFileDestination)
+            $this->getStorage()->exists($realInputFileDestination)
+            || $this->getStorage()->exists($realOutputFileDestination)
         ) {
             // More than one file by type, user and time. Likely DoS attack.
             throw new Exception('Too many files are being uploaded by the same user at once.');
@@ -280,10 +331,9 @@ class File extends Model
      */
     public function download()
     {
-        $storage = Storage::disk(self::STORAGE);
         if (
             $this->status & self::STATUS_WHOLE
-            && $storage->exists($this->getRelativeOutputLocation())
+            && $this->getStorage()->exists($this->getRelativeLocation($this->output_location))
         ) {
             // Use the original file name with a minor addition for clarity.
             $name = pathinfo($this->name, PATHINFO_FILENAME);
@@ -311,20 +361,6 @@ class File extends Model
     }
 
     /**
-     * @return string
-     */
-    public function getRelativeOutputLocation()
-    {
-        $outputLocation = $this->output_location;
-        $remove         = storage_path('app');
-        if (substr($outputLocation, 0, strlen($remove)) === $remove) {
-            $outputLocation = substr($outputLocation, strlen($remove) + 1);
-        }
-
-        return $outputLocation;
-    }
-
-    /**
      * @return array
      */
     public function getAttributesForOutput()
@@ -344,7 +380,7 @@ class File extends Model
             unset($this->form);
             $this->save();
 
-            FileProcess::dispatch($this->id)->onQueue($this->mode);
+            FileProcess::dispatch($this->id)->onQueue('process');
         }
     }
 }

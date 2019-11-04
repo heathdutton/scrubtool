@@ -14,5 +14,5 @@ A tool for helping manage a variety of suppression lists using a list file.
     npm install
     npm run development
     php artisan migrate
-    php artisan queue:work --queue=1,2,4 &
+    php artisan queue:work --queue=process,delete &
     php artisan serve
