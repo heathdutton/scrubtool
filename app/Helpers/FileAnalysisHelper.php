@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use libphonenumber\Leniency;
+use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
 
 class FileAnalysisHelper
@@ -108,6 +109,8 @@ class FileAnalysisHelper
         'home'        => self::TYPE_PHONE,
         'homephone'   => self::TYPE_PHONE,
         'ph'          => self::TYPE_PHONE,
+        'telephone'   => self::TYPE_PHONE,
+        'number'      => self::TYPE_PHONE,
         'cell'        => self::TYPE_PHONE,
         'mobile'      => self::TYPE_PHONE,
         'hash'        => self::TYPE_HASH,
@@ -207,14 +210,29 @@ class FileAnalysisHelper
      */
     private function isPhone($value, $countryCode = 'US', $lenient = false)
     {
+        return (bool) $this->getPhone($value, $countryCode, $lenient);
+    }
+
+    /**
+     * Gets the phone number out of a field in a universal E.164 format.
+     *
+     * @param $value
+     * @param  string  $countryCode
+     * @param  bool  $lenient
+     *
+     * @return string|null
+     */
+    public function getPhone($value, $countryCode = 'US', $lenient = false)
+    {
+        $value = (string) $value;
         if (!$lenient && ctype_alpha($value)) {
-            return false;
+            return null;
         }
         if (!$lenient && strpos($value, '/')) {
-            return false;
+            return null;
         }
         if (!$lenient && strpos($value, '\\')) {
-            return false;
+            return null;
         }
         $numeric = preg_replace("/[^0-9]/", '', $value);
         $length  = strlen($numeric);
@@ -222,14 +240,18 @@ class FileAnalysisHelper
             $util     = PhoneNumberUtil::getInstance();
             $leniency = $lenient ? Leniency::POSSIBLE() : Leniency::VALID();
             $matches  = $util->findNumbers($value, $countryCode, $leniency, 10000);
-            if ($lenient && !$matches->current()) {
+            $matches->rewind();
+            $match = $matches->current();
+            if ($lenient && !$match) {
                 $matches = $util->findNumbers($numeric, $countryCode, $leniency, 10000);
+                $matches->rewind();
+                $match = $matches->current();
             }
 
-            return (bool) $matches->current();
+            return $match ? $util->format($match->number(), PhoneNumberFormat::E164) : null;
         }
 
-        return false;
+        return null;
     }
 
     /**

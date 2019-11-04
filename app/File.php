@@ -3,9 +3,7 @@
 namespace App;
 
 use App\Forms\FileForm;
-use App\Imports\FileImport;
-use App\Imports\FileImportAnalysis;
-use App\Jobs\ProcessFile;
+use App\Jobs\FileProcess;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,7 +13,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Helpers\FileTypeDetector;
 
 /**
@@ -210,6 +207,7 @@ class File extends Model
             'message'              => null,
             'crc32b'               => hash_file('crc32b', $uploadedFile->getRealPath()),
             'md5'                  => hash_file('md5', $uploadedFile->getRealPath()),
+            'country'              => $request->header('CF-IPCountry', 'US'),
             'rows_total'           => 0,
             'rows_processed'       => 0,
             'rows_scrubbed'        => 0,
@@ -226,7 +224,7 @@ class File extends Model
         ]);
         $file->move($uploadedFile);
 
-        ProcessFile::dispatch($file->id)->onQueue($mode);
+        FileProcess::dispatch($file->id)->onQueue($mode);
 
         return $file;
     }
@@ -327,52 +325,6 @@ class File extends Model
     }
 
     /**
-     * Process an imported file into hashes.
-     */
-    public function process()
-    {
-        try {
-            if ($this->status & self::STATUS_ADDED) {
-                $this->status  = self::STATUS_ANALYSIS;
-                $this->message = '';
-                $this->save();
-
-                $fileImportAnalysis = new FileImportAnalysis($this);
-                Excel::import($fileImportAnalysis, $this->input_location, null, $this->type);
-
-                $this->columns      = $fileImportAnalysis->getAnalysis()['columns'];
-                $this->column_count = count($this->columns);
-                $this->status       = self::STATUS_INPUT_NEEDED;
-                $this->message      = '';
-                $this->save();
-            }
-
-            if ($this->status & self::STATUS_READY) {
-                $this->status  = self::STATUS_RUNNING;
-                $this->message = '';
-                $this->save();
-                $fileImport = new FileImport($this);
-                Excel::import($fileImport, $this->input_location, null, $this->type);
-
-                Excel::store($fileImport->getExport(), $this->getRelativeOutputLocation(), null, $this->type, [
-                    'visibility' => self::PRIVATE_STORAGE,
-                ]);
-
-                $this->status  = self::STATUS_WHOLE;
-                $this->message = '';
-                $this->save();
-            }
-
-        } catch (Exception $e) {
-            $this->status  = self::STATUS_STOPPED;
-            $this->message = 'An error was encountered while trying to import. '.$e->getMessage();
-            $this->save();
-        }
-
-        return $this;
-    }
-
-    /**
      * @return array
      */
     public function getAttributesForOutput()
@@ -391,7 +343,8 @@ class File extends Model
             $this->message        = '';
             unset($this->form);
             $this->save();
-            ProcessFile::dispatch($this->id)->onQueue($this->mode);
+
+            FileProcess::dispatch($this->id)->onQueue($this->mode);
         }
     }
 }
