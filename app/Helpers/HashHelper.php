@@ -12,6 +12,7 @@ class HashHelper
      *  - Official name.
      *  - Result of using the hash on an empty string.
      *  - Priority (Google Trends).
+     *  - Enabled/disabled by obscurity.
      *
      * @var array
      */
@@ -36,7 +37,7 @@ class HashHelper
                 'name'       => 'CRC-32b',
                 'empty'      => '00000000',
                 'popularity' => 1160000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'adler32' => [
                 'id'         => 'adler32',
@@ -50,14 +51,14 @@ class HashHelper
                 'name'       => 'Joaat',
                 'empty'      => '00000000',
                 'popularity' => 661000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'fnv1a32' => [
                 'id'         => 'fnv1a32',
                 'name'       => 'FNV-1a32',
                 'empty'      => '811c9dc5',
                 'popularity' => 100,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         16  => [
@@ -149,13 +150,6 @@ class HashHelper
                 'popularity' => 29800000,
                 'enabled'    => true,
             ],
-            'ripemd160'  => [
-                'id'         => 'ripemd160',
-                'name'       => 'RIPEMD-160',
-                'empty'      => '9c1185a5c5e9fc54612808977ee8f548b2258d31',
-                'popularity' => 1170000,
-                'enabled'    => true,
-            ],
             'tiger160,3' => [
                 'id'         => 'tiger160,3',
                 'name'       => 'Tiger-160 (3 passes)',
@@ -170,26 +164,33 @@ class HashHelper
                 'popularity' => 1300000,
                 'enabled'    => true,
             ],
+            'ripemd160'  => [
+                'id'         => 'ripemd160',
+                'name'       => 'RIPEMD-160',
+                'empty'      => '9c1185a5c5e9fc54612808977ee8f548b2258d31',
+                'popularity' => 1170000,
+                'enabled'    => true,
+            ],
             'haval160,3' => [
                 'id'         => 'haval160,3',
                 'name'       => 'HAVAL-160 (3 passes)',
                 'empty'      => 'd353c3ae22a25401d257643836d7231a9a95f953',
                 'popularity' => 94,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval160,4' => [
                 'id'         => 'haval160,4',
                 'name'       => 'HAVAL-160 (4 passes)',
                 'empty'      => '1d33aae1be4146dbaaca0b6e70d7a11f10801525',
                 'popularity' => 94,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval160,5' => [
                 'id'         => 'haval160,5',
                 'name'       => 'HAVAL 160 (5 passes)',
                 'empty'      => '255158cfc1eed1a7be7c55ddd64d9790415b933b',
                 'popularity' => 94,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         48  => [
@@ -212,21 +213,21 @@ class HashHelper
                 'name'       => 'HAVAL-192 (3 passes)',
                 'empty'      => 'e9c48d7903eaf2a91c5b350151efcb175c0fc82de2289a4e',
                 'popularity' => 99,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval192,4' => [
                 'id'         => 'haval192,4',
                 'name'       => 'HAVAL-192 (4 passes)',
                 'empty'      => '4a8372945afa55c7dead800311272523ca19d42ea47b72da',
                 'popularity' => 99,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval192,5' => [
                 'id'         => 'haval192,5',
                 'name'       => 'HAVAL-192 (5 passes)',
                 'empty'      => '4839d0626f95935e17ee2fc4509387bbe2cc46cb382ffe85',
                 'popularity' => 99,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         56  => [
@@ -270,7 +271,7 @@ class HashHelper
                 'name'       => 'SHA-3-224',
                 'empty'      => '6b4e03423667dbb73b6e15454f0eb1abd4597f9a1b078e3f5b5a6bc7',
                 'popularity' => 117000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         64  => [
@@ -328,28 +329,28 @@ class HashHelper
                 'name'       => 'SHA-3-256',
                 'empty'      => 'a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a',
                 'popularity' => 273000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval256,3'  => [
                 'id'         => 'haval256,3',
                 'name'       => 'HAVAL-256 (3 passes)',
                 'empty'      => '4f6938531f0bc8991f62da7bbd6f7de3fad44562b8c6f4ebf146d5b4e46f7c17',
                 'popularity' => 97,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval256,4'  => [
                 'id'         => 'haval256,4',
                 'name'       => 'HAVAL-256 (4 passes)',
                 'empty'      => 'c92b2e23091e80e375dadce26982482d197b1a2521be82da819f8ca2c579b99b',
                 'popularity' => 97,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
             'haval256,5'  => [
                 'id'         => 'haval256,5',
                 'name'       => 'HAVAL-256 (5 passes)',
                 'empty'      => 'be417bb4dd5cfb76c7126f4f8eeb1553a449039307b1a3cd451dbfdc0fbbe330',
                 'popularity' => 97,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         80  => [
@@ -374,7 +375,7 @@ class HashHelper
                 'name'       => 'SHA-3-384',
                 'empty'      => '0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713831264adb47fb6bd1e058d5f004',
                 'popularity' => 113000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
         128 => [
@@ -397,7 +398,7 @@ class HashHelper
                 'name'       => 'SHA-3-512',
                 'empty'      => 'a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26',
                 'popularity' => 178000,
-                'enabled'    => true,
+                'enabled'    => false,
             ],
         ],
     ];
@@ -409,15 +410,19 @@ class HashHelper
     protected $choicesAlgos = [];
 
     /**
+     * @param  bool  $includeDisabled
+     *
      * @return array
      */
-    public function listSimple()
+    public function listSimple($includeDisabled = false)
     {
         if (!$this->simpleAgos) {
             $simpleAlgos = [];
             foreach ($this->list() as $length => $algos) {
                 foreach ($algos as $algo) {
-                    $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
+                    if ($algo['enabled'] || $includeDisabled) {
+                        $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
+                    }
                 }
             }
             $this->simpleAgos = array_keys($simpleAlgos);
@@ -472,14 +477,16 @@ class HashHelper
     }
 
     /**
+     * @param  bool  $includeDisabled
+     *
      * @return array
      */
-    public function listChoices()
+    public function listChoices($includeDisabled = false)
     {
         if (!$this->choicesAlgos) {
             foreach ($this->list() as $length => $algos) {
                 foreach ($algos as $algo) {
-                    if ($algo['enabled']) {
+                    if ($algo['enabled'] || $includeDisabled) {
                         $this->choicesAlgos[$algo['id']] = $algo['name'];
                     }
                 }
@@ -496,10 +503,11 @@ class HashHelper
      *
      * @param $string
      * @param  string  $hashName  Possible hash name from column definition.
+     * @param  bool  $includeDisabled
      *
      * @return mixed|null
      */
-    public function detectHash($string, $hashName = '')
+    public function detectHash($string, $hashName = '', $includeDisabled = false)
     {
         $selection = null;
         $string    = strtolower($string);
@@ -524,21 +532,23 @@ class HashHelper
             $totalPopularity = 0;
             $certainty       = 0;
             foreach (self::ALGOS[$length] as $algo => $attributes) {
-                $totalPopularity += $attributes['popularity'];
-                if (!$selection) {
-                    $selection = $attributes;
-                } else {
-                    $alternatives[$algo] = $attributes;
-                }
-                if (
-                    $string === $attributes['empty']
-                    || $hashName == $attributes['name']
-                    || $hashName == $attributes['id']
-                ) {
-                    $selection    = $attributes;
-                    $certainty    = 100;
-                    $alternatives = [];
-                    break;
+                if ($attributes['enabled'] || $includeDisabled) {
+                    $totalPopularity += $attributes['popularity'];
+                    if (!$selection) {
+                        $selection = $attributes;
+                    } else {
+                        $alternatives[$algo] = $attributes;
+                    }
+                    if (
+                        $string === $attributes['empty']
+                        || $hashName == $attributes['name']
+                        || $hashName == $attributes['id']
+                    ) {
+                        $selection    = $attributes;
+                        $certainty    = 100;
+                        $alternatives = [];
+                        break;
+                    }
                 }
             }
             if (!$certainty) {
