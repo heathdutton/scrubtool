@@ -130,6 +130,19 @@ class File extends Model
     }
 
     /**
+     * @param $sessionId
+     * @param $userId
+     *
+     * @return mixed
+     */
+    public static function addUserToFilesBySessionId($sessionId, $userId)
+    {
+        return self::where('session_id', $sessionId)
+            ->whereNull('user_id')
+            ->update(['user_id' => (int) $userId]);
+    }
+
+    /**
      * Deletes input and output files, then soft deletes the model.
      *
      * @return bool|mixed|null
