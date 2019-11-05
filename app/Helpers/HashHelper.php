@@ -410,6 +410,26 @@ class HashHelper
     protected $choicesAlgos = [];
 
     /**
+     * Get the minimum binary size required to store a hash by the algorithm.
+     *
+     * @param $algo
+     *
+     * @return float|int
+     */
+    public static function hashSize($algo)
+    {
+        $hashLength = 128;
+        foreach (self::list() as $length => $algos) {
+            if (isset($algos[$algo])) {
+                $hashLength = $length;
+                break;
+            }
+        }
+
+        return ceil($hashLength / 2);
+    }
+
+    /**
      * @param  bool  $includeDisabled
      *
      * @return array
@@ -418,7 +438,7 @@ class HashHelper
     {
         if (!$this->simpleAgos) {
             $simpleAlgos = [];
-            foreach ($this->list() as $length => $algos) {
+            foreach (self::list() as $length => $algos) {
                 foreach ($algos as $algo) {
                     if ($algo['enabled'] || $includeDisabled) {
                         $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
@@ -436,7 +456,7 @@ class HashHelper
      *
      * @return array|string
      */
-    public function list($regenerate = false)
+    public static function list($regenerate = false)
     {
         if ($regenerate) {
             $lengths = [];
@@ -467,12 +487,13 @@ class HashHelper
 
     /**
      * @param $value
-     * @param $algo
+     * @param  string  $algo
+     * @param  bool  $raw
      */
-    public function hash(&$value, $algo = 'md5')
+    public function hash(&$value, $algo = 'md5', $raw = false)
     {
         if (isset($this->listChoices()[$algo])) {
-            $value = hash($algo, $value);
+            $value = hash($algo, $value, $raw);
         }
     }
 

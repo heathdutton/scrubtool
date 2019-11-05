@@ -14,14 +14,6 @@ class SuppressionList extends Model
 {
     use SoftDeletes;
 
-    const MODE_DO_NOT_EMAIL = 1;
-
-    const MODE_DO_NOT_PHONE = 2;
-
-    const STATUS_BUILDING   = 1;
-
-    const STATUS_READY      = 2;
-
     /** @var array */
     protected $guarded = [
         'id',

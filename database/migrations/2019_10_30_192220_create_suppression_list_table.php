@@ -17,9 +17,10 @@ class CreateSuppressionListTable extends Migration
             $table->bigIncrements('id');
             $table->timestamps();
             $table->softDeletes();
+            $table->text('name');
+            $table->text('description');
             $table->bigInteger('user_id')->unsigned();
             $table->unsignedTinyInteger('global');
-            $table->unsignedTinyInteger('status');
         });
     }
 

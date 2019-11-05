@@ -6,9 +6,8 @@ use App\Exports\FileExport;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
+use App\Helpers\FileSuppressionListHelper;
 use App\SuppressionList;
-use App\SuppressionListSupport;
-use Exception;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -39,6 +38,9 @@ class FileImport implements ToModel, WithChunkReading
         'rows_phone_duplicate' => 0,
         'rows_phone_dnc'       => 0,
     ];
+
+    /** @var FileSuppressionListHelper */
+    protected $fileSuppressionListHelper;
 
     /** @var int */
     private $rowIndex = 0;
@@ -113,7 +115,7 @@ class FileImport implements ToModel, WithChunkReading
                     }
 
                     if ($this->file->mode & File::MODE_LIST_CREATE) {
-                        $this->appendRowToList($row);
+                        $this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex);
                     }
                 }
             } else {
@@ -121,7 +123,13 @@ class FileImport implements ToModel, WithChunkReading
             }
 
             $this->stats['rows_processed']++;
-            $this->checkStats();
+
+            if (0 == $this->rowIndex % 20) {
+                $now = microtime(true);
+                if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
+                    $this->persistStats();
+                }
+            }
         }
 
         if ($this->rowIndex <= 20 && !$analysis->getRowIsHeader()) {
@@ -165,81 +173,43 @@ class FileImport implements ToModel, WithChunkReading
     }
 
     /**
-     * @param $row
-     *
-     * @throws Exception
+     * @return FileSuppressionListHelper
      */
-    private function appendRowToList($row)
+    private function getFileSuppressionListHelper()
     {
-        if (!$this->list) {
-            if ($this->file->mode & File::MODE_LIST_CREATE) {
-                if (!$this->file->user_id) {
-                    throw new Exception(__('The file must be associated with a logged in user in order to be associated with a suppression list. Please log in and try again.'));
-                }
-                $this->list          = new SuppressionList();
-                $this->list->user_id = $this->file->user_id;
-
-                // @todo - Making a suppression list global is an admin feature only, but could exist in this UI.
-                $this->list->global = 0;
-                $this->list->status = SuppressionList::STATUS_BUILDING;
-
-                // Suppression lists can contain email/phone/both at the moment.
-                $supports = [];
-                foreach ([FileAnalysisHelper::TYPE_EMAIL, FileAnalysisHelper::TYPE_PHONE] as $type) {
-                    $columns = $this->file->getColumnsWithInputHashes($type);
-                    if ($columns) {
-                        if (count(array_unique($columns)) > 1) {
-                            throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
-                        }
-                        // Should only have one hash type for this column type.
-                        $supports[] = new SuppressionListSupport([
-                            'column_type' => $type,
-                            'hash_type'   => array_values($columns)[0],
-                        ]);
-                    }
-                }
-                if (!$supports) {
-                    throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
-                }
-                $this->list->files()->attach($this->file->id);
-                $this->list->save();
-                $this->list->supports()->saveMany($supports);
-            }
-            if ($this->file->mode & File::MODE_LIST_APPEND || $this->file->mode & File::MODE_LIST_REPLACE) {
-                // @todo - Load and confirm existing list.
-                throw new Exception(__('List append function does not yet exist.'));
-            }
-            if ($this->file->mode & File::MODE_LIST_REPLACE) {
-                // @todo - Drop all tables associated with the list to start fresh.
-                throw new Exception(__('List replace function does not yet exist.'));
-            }
+        if (!$this->fileSuppressionListHelper) {
+            $this->fileSuppressionListHelper = new FileSuppressionListHelper($this->file);
         }
-        if ($this->list) {
-            $this->list->appendRowToList($row);
-        }
-    }
 
-    private function checkStats()
-    {
-        if (0 == $this->rowIndex % 20) {
-            $now = microtime(true);
-            if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
-                $this->persistStats();
-            }
-        }
+        return $this->fileSuppressionListHelper;
     }
 
     /**
-     * @return bool
+     * @return $this
      */
-    public function persistStats()
+    private function persistStats()
     {
         foreach ($this->stats as $stat => $value) {
             $this->file->setAttribute($stat, $value);
         }
         $this->timeOfLastSave = microtime(true);
 
-        return $this->file->save();
+        $this->file->save();
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function finish()
+    {
+        if ($this->fileSuppressionListHelper) {
+            $this->fileSuppressionListHelper->persistQueues();
+        }
+        $this->persistStats();
+
+        return $this;
     }
 
     /**
