@@ -18,7 +18,8 @@ Route::get('/', 'WelcomeController@index');
 Route::get('/dashboard', 'DashboardController@index')->name('home');
 
 Route::get('/files', 'FileController@index')->name('files');
-Route::post('/files/upload', 'FileController@upload');
+Route::get('/files/new/{mode}', 'FileController@index');
+Route::post('/files/new/upload', 'FileController@upload')->name('file.upload');
 
 Route::get('/file', 'FileController@file');
 

@@ -19,7 +19,7 @@
 </head>
 <body>
 <div id="app">
-    <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
                 {{ config('app.name', 'Laravel') }}
@@ -31,30 +31,36 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <!-- Left Side Of Navbar -->
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {{ Request::segment(1) === 'files' ? 'active' : null }}" href="{{ route('files') }}">
-                            <i class="fa fa-files-o"></i>
-                            {{ __('Files') }}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ Request::segment(1) === 'lists' ? 'active' : null }}" href="{{ route('lists') }}">
-                            <i class="fa fa-list"></i>
-                            {{ __('Lists') }}
-                        </a>
-                    </li>
+                    @if (Route::has('files'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::segment(1) === 'files' ? 'active' : null }}" href="{{ route('files') }}">
+                                <i class="fa fa-files-o"></i>
+                                {{ __('Files') }}
+                            </a>
+                        </li>
+                    @endif
+                    @if (Route::has('lists'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::segment(1) === 'lists' ? 'active' : null }}" href="{{ route('lists') }}">
+                                <i class="fa fa-list"></i>
+                                {{ __('Lists') }}
+                            </a>
+                        </li>
+                    @endif
                 </ul>
 
                 <!-- Right Side Of Navbar -->
                 <ul class="navbar-nav ml-auto">
                     <!-- Authentication Links -->
                     @guest
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                        </li>
                         @if (Route::has('register'))
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('register') }}">{{ __('Sign Up') }}</a>
+                                <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                            </li>
+                        @endif
+                        @if (Route::has('login'))
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
                             </li>
                         @endif
                     @else

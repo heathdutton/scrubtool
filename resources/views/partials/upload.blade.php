@@ -1,4 +1,4 @@
-<form method="post" action="{{url('files/upload')}}" enctype="multipart/form-data" class="dropzone card bg-light mb-3 col-md-12" id="dropzone">
+<form method="post" action="{{ route('file.upload') }}" enctype="multipart/form-data" class="dropzone card bg-light mb-3 col-md-12" id="dropzone">
     <div class="dz-message">
         <i class="fa fa-arrow-right"></i>
         <span class="p-3">
