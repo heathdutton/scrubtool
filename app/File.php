@@ -413,13 +413,9 @@ class File extends Model
     }
 
     /**
-     * Get columns that are confirmed to be in plaintext by type.
-     *
-     * @param $type
-     *
      * @return array
      */
-    public function getHashableColumnIds($type)
+    public function getColumnsWithInputHashes($mode)
     {
         $colTypePre = 'column_type_';
         $colHashPre = 'column_hash_input_';
@@ -429,11 +425,9 @@ class File extends Model
                 // Column has been configured by the user.
                 isset($this->input_settings[$colTypePre.$key])
                 // The user has confirmed the type as requested.
-                && ($type & $this->input_settings[$colTypePre.$key])
-                // The user has confirmed that the input is plain text.
-                && empty($this->input_settings[$colHashPre.$key])
+                && ($mode & $this->input_settings[$colTypePre.$key])
             ) {
-                $columns[] = $key;
+                $columns[] = $this->input_settings[$colHashPre.$key] ?? null;
             }
         }
 

@@ -9,6 +9,11 @@ class SuppressionListSupport extends Model
 {
     use SoftDeletes;
 
+    /** @var array */
+    protected $guarded = [
+        'id',
+    ];
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */

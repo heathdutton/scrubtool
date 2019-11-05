@@ -19,8 +19,6 @@ class CreateFileSuppressionListTable extends Migration
             $table->softDeletes();
             $table->bigInteger('file_id')->nullable();
             $table->bigInteger('suppression_list_id')->nullable();
-            $table->boolean('has_plain_text')->default(0);
-            $table->unsignedInteger('status');
         });
     }
 

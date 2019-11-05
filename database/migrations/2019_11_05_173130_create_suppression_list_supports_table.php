@@ -18,8 +18,8 @@ class CreateSuppressionListSupportsTable extends Migration
             $table->timestamps();
             $table->softDeletes();
             $table->bigInteger('suppression_list_id')->nullable();
-            $table->unsignedTinyInteger('mode');
-            $table->unsignedInteger('hash_type');
+            $table->unsignedInteger('column_type');
+            $table->unsignedInteger('hash_type')->nullable();
         });
     }
 

@@ -7,6 +7,7 @@ use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
 use App\SuppressionList;
+use App\SuppressionListSupport;
 use Exception;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -180,26 +181,29 @@ class FileImport implements ToModel, WithChunkReading
 
                 // @todo - Making a suppression list global is an admin feature only, but could exist in this UI.
                 $this->list->global = 0;
-                $this->list->mode   = 0;
+                $this->list->status = SuppressionList::STATUS_BUILDING;
 
                 // Suppression lists can contain email/phone/both at the moment.
-                $emailColumns = $this->file->getHashableColumnIds(FileAnalysisHelper::TYPE_EMAIL);
-                if ($emailColumns) {
-                    $this->has_plain_text = true;
-                    $this->list->mode += SuppressionList::MODE_DO_NOT_EMAIL;
+                $supports = [];
+                foreach ([FileAnalysisHelper::TYPE_EMAIL, FileAnalysisHelper::TYPE_PHONE] as $type) {
+                    $columns = $this->file->getColumnsWithInputHashes($type);
+                    if ($columns) {
+                        if (count(array_unique($columns)) > 1) {
+                            throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
+                        }
+                        // Should only have one hash type for this column type.
+                        $supports[] = new SuppressionListSupport([
+                            'column_type' => $type,
+                            'hash_type'   => array_values($columns)[0],
+                        ]);
+                    }
                 }
-                $phoneColumns = $this->file->getHashableColumnIds(FileAnalysisHelper::TYPE_PHONE);
-                if ($phoneColumns) {
-                    $this->has_plain_text = true;
-                    $this->list->mode += SuppressionList::MODE_DO_NOT_PHONE;
-                }
-
-                if (!$this->list->mode) {
+                if (!$supports) {
                     throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
                 }
-
-                $this->list->save();
                 $this->list->files()->attach($this->file->id);
+                $this->list->save();
+                $this->list->supports()->saveMany($supports);
             }
             if ($this->file->mode & File::MODE_LIST_APPEND || $this->file->mode & File::MODE_LIST_REPLACE) {
                 // @todo - Load and confirm existing list.
