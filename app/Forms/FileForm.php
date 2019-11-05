@@ -5,6 +5,7 @@ namespace App\Forms;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
+use App\SuppressionList;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -57,6 +58,25 @@ class FileForm extends Form
                 'default_value' => File::MODE_HASH,
                 'expanded'      => false,
             ]);
+
+            // @todo - Add select for suppression lists to replace/append.
+
+            // @todo - Add checkboxes for global and custom suppression lists to scrub against.
+            $lists = SuppressionList::all();
+            // $this->add('list_id_append', Field::CHOICE, [
+            //     'rules'      => 'required',
+            //     'label'      => __('List to Append'),
+            //     'label_show' => true,
+            //     'choices'    => [
+            //
+            //     ],
+            //     'attr'       => [
+            //         'class' => 'form-control col-md-3',
+            //     ],
+            //     // 'selected'      => $file->mode ?? File::MODE_HASH,
+            //     // 'default_value' => File::MODE_HASH,
+            //     'expanded'   => true,
+            // ]);
 
             if ($file->columns) {
                 $this->add('static_columns', Field::STATIC, [
@@ -120,8 +140,8 @@ class FileForm extends Form
                             'class' => 'form-control col-md-3 pull-right ml-4',
                         ],
                         'wrapper'       => [
-                            'class' => 'form-group'. ''
-                                // ($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
+                            'class' => 'form-group'.''
+                            // ($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
                         ],
                     ]);
                 }
@@ -130,7 +150,7 @@ class FileForm extends Form
             $this->add('submit', Field::BUTTON_SUBMIT, [
                 'label' => __('<i class="fa fa-check"></i> '.'Begin'),
                 'attr'  => [
-                    'class' => 'btn btn-primary pull-right clearfix mb-3',
+                    'class' => 'btn btn-info pull-right clearfix mb-3',
                 ],
             ]);
 
@@ -154,5 +174,20 @@ class FileForm extends Form
         }
 
         return __('Column '.$r);
+    }
+
+
+    /**
+     * Optionally change the validation result, and/or add error messages.
+     *
+     * @param  Form  $mainForm
+     * @param  bool  $isValid
+     *
+     * @return void|array
+     */
+    public function alterValid(Form $mainForm, &$isValid)
+    {
+        // @todo - Validation to ensure the user has rights to push to this list.
+        // return ['list_id' => ['Some other error about the Name field.']];
     }
 }
