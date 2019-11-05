@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use App\File;
 
-class FileHashHelper
+class FileSuppressionListHelper
 {
     /** @var File */
     protected $file;
@@ -29,7 +29,7 @@ class FileHashHelper
      *
      * @return bool
      */
-    public function hashRow(&$row)
+    public function importRow(&$row)
     {
         $result = false;
         foreach ($row as $rowIndex => &$value) {

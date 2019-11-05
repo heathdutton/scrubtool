@@ -6,6 +6,8 @@ use App\Exports\FileExport;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
+use App\SuppressionList;
+use Exception;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -61,6 +63,9 @@ class FileImport implements ToModel, WithChunkReading
     /** @var int */
     private $timeOfLastSave;
 
+    /** @var SuppressionList */
+    private $list;
+
     /**
      * FileImport constructor.
      *
@@ -92,12 +97,7 @@ class FileImport implements ToModel, WithChunkReading
             ->parseRow($row, ++$this->rowIndex);
 
         if ($this->file->status & File::STATUS_ANALYSIS) {
-
             // Running an analysis. No export needed.
-            if ($this->rowIndex <= 20 && !$analysis->getRowIsHeader()) {
-                $this->samples[] = $row;
-            }
-
         } elseif ($this->file->status & File::STATUS_RUNNING) {
 
             if ($analysis->rowIsValid()) {
@@ -108,15 +108,23 @@ class FileImport implements ToModel, WithChunkReading
                         if ($this->getFileHashHelper()->hashRow($row)) {
                             $this->stats['rows_hashed']++;
                         }
+                        $this->appendRowToExport($row);
+                    }
+
+                    if ($this->file->mode & File::MODE_LIST_CREATE) {
+                        $this->appendRowToList($row);
                     }
                 }
-
-                $this->appendRowToExport($row);
             } else {
                 $this->stats['rows_invalid']++;
             }
 
             $this->stats['rows_processed']++;
+            $this->checkStats();
+        }
+
+        if ($this->rowIndex <= 20 && !$analysis->getRowIsHeader()) {
+            $this->samples[] = $row;
         }
     }
 
@@ -153,7 +161,62 @@ class FileImport implements ToModel, WithChunkReading
             $this->export = new FileExport($this->file);
         }
         $this->export->appendRowToSheet($row);
+    }
 
+    /**
+     * @param $row
+     *
+     * @throws Exception
+     */
+    private function appendRowToList($row)
+    {
+        if (!$this->list) {
+            if ($this->file->mode & File::MODE_LIST_CREATE) {
+                if (!$this->file->user_id) {
+                    throw new Exception(__('The file must be associated with a logged in user in order to be associated with a suppression list. Please log in and try again.'));
+                }
+                $this->list          = new SuppressionList();
+                $this->list->user_id = $this->file->user_id;
+
+                // @todo - Making a suppression list global is an admin feature only, but could exist in this UI.
+                $this->list->global = 0;
+                $this->list->mode   = 0;
+
+                // Suppression lists can contain email/phone/both at the moment.
+                $emailColumns = $this->file->getHashableColumnIds(FileAnalysisHelper::TYPE_EMAIL);
+                if ($emailColumns) {
+                    $this->has_plain_text = true;
+                    $this->list->mode += SuppressionList::MODE_DO_NOT_EMAIL;
+                }
+                $phoneColumns = $this->file->getHashableColumnIds(FileAnalysisHelper::TYPE_PHONE);
+                if ($phoneColumns) {
+                    $this->has_plain_text = true;
+                    $this->list->mode += SuppressionList::MODE_DO_NOT_PHONE;
+                }
+
+                if (!$this->list->mode) {
+                    throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
+                }
+
+                $this->list->save();
+                $this->list->files()->attach($this->file->id);
+            }
+            if ($this->file->mode & File::MODE_LIST_APPEND || $this->file->mode & File::MODE_LIST_REPLACE) {
+                // @todo - Load and confirm existing list.
+                throw new Exception(__('List append function does not yet exist.'));
+            }
+            if ($this->file->mode & File::MODE_LIST_REPLACE) {
+                // @todo - Drop all tables associated with the list to start fresh.
+                throw new Exception(__('List replace function does not yet exist.'));
+            }
+        }
+        if ($this->list) {
+            $this->list->appendRowToList($row);
+        }
+    }
+
+    private function checkStats()
+    {
         if (0 == $this->rowIndex % 20) {
             $now = microtime(true);
             if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
@@ -162,13 +225,17 @@ class FileImport implements ToModel, WithChunkReading
         }
     }
 
+    /**
+     * @return bool
+     */
     public function persistStats()
     {
         foreach ($this->stats as $stat => $value) {
             $this->file->setAttribute($stat, $value);
         }
-        $this->file->save();
         $this->timeOfLastSave = microtime(true);
+
+        return $this->file->save();
     }
 
     /**

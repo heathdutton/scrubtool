@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSuppressionListTable extends Migration
+class CreateFileSuppressionListTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,14 @@ class CreateSuppressionListTable extends Migration
      */
     public function up()
     {
-        Schema::create('suppression_lists', function (Blueprint $table) {
+        Schema::create('file_suppression_list', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->timestamps();
             $table->softDeletes();
-            $table->bigInteger('user_id')->unsigned();
-            $table->unsignedTinyInteger('global');
+            $table->bigInteger('file_id')->nullable();
+            $table->bigInteger('suppression_list_id')->nullable();
+            $table->boolean('has_plain_text')->default(0);
+            $table->unsignedInteger('status');
         });
     }
 
@@ -29,6 +31,6 @@ class CreateSuppressionListTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('suppression_list');
+        Schema::dropIfExists('file_suppression_list');
     }
 }

@@ -224,9 +224,18 @@ class File extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function users()
+    public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function lists()
+    {
+        return $this->belongsToMany(SuppressionList::class)
+            ->using(FileSuppressionList::class);
     }
 
     /**
@@ -392,10 +401,42 @@ class File extends Model
             $this->status         = self::STATUS_READY;
             $this->input_settings = (array) $values;
             $this->message        = '';
+            $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
+
+            // @todo - Associate lists via pivot.
+
             unset($this->form);
             $this->save();
 
             FileProcess::dispatch($this->id)->onQueue('process');
         }
+    }
+
+    /**
+     * Get columns that are confirmed to be in plaintext by type.
+     *
+     * @param $type
+     *
+     * @return array
+     */
+    public function getHashableColumnIds($type)
+    {
+        $colTypePre = 'column_type_';
+        $colHashPre = 'column_hash_input_';
+        $columns    = [];
+        foreach ($this->columns as $key => $column) {
+            if (
+                // Column has been configured by the user.
+                isset($this->input_settings[$colTypePre.$key])
+                // The user has confirmed the type as requested.
+                && ($type & $this->input_settings[$colTypePre.$key])
+                // The user has confirmed that the input is plain text.
+                && empty($this->input_settings[$colHashPre.$key])
+            ) {
+                $columns[] = $key;
+            }
+        }
+
+        return $columns;
     }
 }
