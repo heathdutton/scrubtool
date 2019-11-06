@@ -85,6 +85,8 @@ class FileProcess implements ShouldQueue
                 }
 
             } catch (Exception $exception) {
+                report($exception);
+
                 $file->status  = File::STATUS_STOPPED;
                 $file->message = 'An error was encountered while processing your file. '.$exception->getMessage();
 

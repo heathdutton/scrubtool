@@ -21,8 +21,8 @@ class FileSuppressionListHelper
     /** @var SuppressionList */
     protected $list;
 
-    /** @var HashHelper */
-    protected $hashHelper;
+    /** @var FileHashHelper */
+    protected $fileHashHelper;
 
     /** @var array */
     private $columnSupports = [];
@@ -43,12 +43,12 @@ class FileSuppressionListHelper
     }
 
     /**
-     * @param  SuppressionList  $list
+     * @param  SuppressionList|null  $list
      *
      * @return $this
      * @throws Exception
      */
-    private function setList(SuppressionList $list)
+    private function setList(SuppressionList $list = null)
     {
         $this->list = $list;
         if (!$this->list) {
@@ -56,12 +56,8 @@ class FileSuppressionListHelper
                 if (!$this->file->user_id) {
                     throw new Exception(__('The file must be associated with a logged in user in order to be associated with a suppression list. Please log in and try again.'));
                 }
-                $this->list          = new SuppressionList();
-                $this->list->user_id = $this->file->user_id;
-                $this->list->name    = $this->choseListNameFromFileName($this->file->name);
 
-                // @todo - Making a suppression list global is an admin feature only, but could exist in this UI.
-                $this->list->global = 0;
+                $this->list = new SuppressionList([], $this->file);
 
                 // Suppression lists can contain email/phone/both at the moment.
                 $supports             = [];
@@ -79,7 +75,7 @@ class FileSuppressionListHelper
                             'status'      => SuppressionListSupport::STATUS_BUILDING,
                         ]);
                         foreach (array_keys($columns) as $columnIndex) {
-                            $columnSupports[$columnIndex] = $support;
+                            $this->columnSupports[$columnIndex] = $support;
                         }
                         $supports[] = $support;
                     }
@@ -104,20 +100,6 @@ class FileSuppressionListHelper
         return $this;
     }
 
-    /**
-     * @param $fileName
-     *
-     * @return string|string[]|null
-     */
-    private function choseListNameFromFileName($fileName)
-    {
-        $fileName = trim($fileName);
-        $fileName = preg_replace('/[^a-z0-9 ]/i', '', $fileName);
-        $fileName = preg_replace('/\s+/', ' ', $fileName);
-        $fileName = ucwords($fileName);
-
-        return $fileName;
-    }
 
     /**
      * @param $row
@@ -128,16 +110,31 @@ class FileSuppressionListHelper
      */
     public function appendRowToList($row, $rowIndex = 0)
     {
-        $result = false;
+        $valid = false;
         if ($this->list && $this->columnSupports) {
             foreach ($this->columnSupports as $columnIndex => $support) {
-                if (!empty($row[$columnIndex])) {
-                    $support->addContentToQueue($row[$columnIndex], $rowIndex);
+                // Validate/sanitize/hash before insertion.
+                $value = $row[$columnIndex];
+                if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
+                    $support->addContentToQueue($value, $rowIndex);
+                    $valid = true;
                 }
             }
         }
 
-        return $result;
+        return $valid;
+    }
+
+    /**
+     * @return FileHashHelper
+     */
+    private function getFileHashHelper()
+    {
+        if (!$this->fileHashHelper) {
+            $this->fileHashHelper = new FileHashHelper($this->file);
+        }
+
+        return $this->fileHashHelper;
     }
 
     /**
@@ -150,53 +147,5 @@ class FileSuppressionListHelper
         }
 
         return $this;
-    }
-
-    /**
-     * @param $row
-     *
-     * @return bool
-     * @deprecated
-     *
-     */
-    private function importRow(&$row)
-    {
-        $result = false;
-        foreach ($row as $rowIndex => &$value) {
-            if (
-                !empty($value)
-                && isset($this->file->input_settings['column_hash_output_'.$rowIndex])
-            ) {
-                $algo = $this->file->input_settings['column_hash_output_'.$rowIndex] ?? null;
-                if ($algo) {
-                    $type = $this->file->input_settings['column_type_'.$rowIndex] ?? FileAnalysisHelper::TYPE_UNKNOWN;
-                    if ($type & FileAnalysisHelper::TYPE_PHONE) {
-                        // Convert phone number to E.164 without + for deterministic hashing.
-                        $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
-                        $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
-                        $value       = preg_replace("/[^0-9]/", '', $value);
-                    }
-                    if ($type & FileAnalysisHelper::TYPE_EMAIL) {
-                        $value = strtolower(trim($value));
-                    }
-                    $this->getHashHelper()->hash($value, $algo);
-                    $result = true;
-                }
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @return HashHelper
-     */
-    private function getHashHelper()
-    {
-        if (!$this->hashHelper) {
-            $this->hashHelper = new HashHelper();
-        }
-
-        return $this->hashHelper;
     }
 }

@@ -36,14 +36,24 @@ class FileExport implements WithMultipleSheets
         $this->sheets[$this->sheetId] = new FileExportSheet();
     }
 
+    /**
+     * @return array
+     */
     public function sheets(): array
     {
         return $this->sheets;
     }
 
+    /**
+     * @param $row
+     *
+     * @return $this
+     */
     public function appendRowToSheet($row)
     {
-        return $this->sheet()->appendRow($row);
+        $this->sheet()->appendRow($row);
+
+        return $this;
     }
 
     /**

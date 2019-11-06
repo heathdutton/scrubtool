@@ -25,7 +25,7 @@ class FileImport implements ToModel, WithChunkReading
 
     protected $stats = [
         'rows_total'           => 0,
-        'rows_processed'       => 0,
+        'rows_imported'        => 0,
         'rows_scrubbed'        => 0,
         'rows_hashed'          => 0,
         'rows_invalid'         => 0,
@@ -93,6 +93,7 @@ class FileImport implements ToModel, WithChunkReading
      * @param  array  $row
      *
      * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Model[]|void|null
+     * @throws \Exception
      */
     public function model(array $row)
     {
@@ -104,25 +105,31 @@ class FileImport implements ToModel, WithChunkReading
         } elseif ($this->file->status & File::STATUS_RUNNING) {
 
             if ($analysis->rowIsValid()) {
-                if (!$analysis->getRowIsHeader()) {
+                if ($analysis->getRowIsHeader()) {
+                    $this->appendRowToExport($row);
+                } else {
                     $this->stats['rows_total']++;
 
                     if ($this->file->mode & File::MODE_HASH) {
-                        if ($this->getFileHashHelper()->hashRow($row)) {
+                        if ($this->getFileHashHelper()->modifyRowForOutput($row)) {
+                            $this->appendRowToExport($row);
                             $this->stats['rows_hashed']++;
+                        } else {
+                            $this->stats['rows_invalid']++;
                         }
-                        $this->appendRowToExport($row);
                     }
 
                     if ($this->file->mode & File::MODE_LIST_CREATE) {
-                        $this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex);
+                        if ($this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex)) {
+                            $this->stats['rows_imported']++;
+                        } else {
+                            $this->stats['rows_invalid']++;
+                        }
                     }
                 }
             } else {
                 $this->stats['rows_invalid']++;
             }
-
-            $this->stats['rows_processed']++;
 
             if (0 == $this->rowIndex % 20) {
                 $now = microtime(true);
@@ -143,10 +150,25 @@ class FileImport implements ToModel, WithChunkReading
     private function getFileAnalysisHelper()
     {
         if (!$this->FileAnalysisHelper) {
-            $this->FileAnalysisHelper = new FileAnalysisHelper($this->file->country ?? 'US');
+            $this->FileAnalysisHelper = new FileAnalysisHelper($this->file);
         }
 
         return $this->FileAnalysisHelper;
+    }
+
+    /**
+     * @param $row
+     *
+     * @return $this
+     */
+    private function appendRowToExport($row)
+    {
+        if (!$this->export) {
+            $this->export = new FileExport($this->file);
+        }
+        $this->export->appendRowToSheet($row);
+
+        return $this;
     }
 
     /**
@@ -162,18 +184,8 @@ class FileImport implements ToModel, WithChunkReading
     }
 
     /**
-     * @param $row
-     */
-    private function appendRowToExport($row)
-    {
-        if (!$this->export) {
-            $this->export = new FileExport($this->file);
-        }
-        $this->export->appendRowToSheet($row);
-    }
-
-    /**
      * @return FileSuppressionListHelper
+     * @throws \Exception
      */
     private function getFileSuppressionListHelper()
     {

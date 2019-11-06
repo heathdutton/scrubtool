@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
 use App\Schema\MySqlGrammar;
 use Illuminate\Database\Eloquent\Model;
@@ -40,9 +41,6 @@ class SuppressionListSupportContent extends Model
     /** @var SuppressionListSupport */
     private $support;
 
-    /** @var bool */
-    private $customBinarySize = 0;
-
     /** @var array */
     private $queue = [];
 
@@ -76,33 +74,45 @@ class SuppressionListSupportContent extends Model
      */
     public function createTableIfNotExists()
     {
-        if (!Schema::hasTable($this->getTable()) && isset($this->support->id)) {
+        if (isset($this->support->id) && !Schema::hasTable($this->getTable())) {
+
+            $isMySQL    = false;
+            $hashType   = $this->support->hash_type;
+            $columnType = $this->support->column_type;
+            $binarySize = HashHelper::hashSize($hashType);
 
             // If MySQL is in use, we can customize the binary column to be as tight as possible.
             $connection = DB::connection();
             if ($connection instanceof MySqlConnection) {
+                $isMySQL = true;
                 $connection->setSchemaGrammar(new MySqlGrammar());
                 Blueprint::macro('customBinary', function ($column, $length) {
                     return $this->addColumn('customBinary', $column, compact('length'));
                 });
-                $this->customBinarySize = HashHelper::hashSize($this->support->hash_type);
             }
 
-            Schema::create($this->getTable(), function (Blueprint $table) {
-                // Id is only kept in this table for correlation back to plaintext equivalents.
-                $table->bigIncrements('id');
-                if ($this->support->hash_type) {
-                    // A hash is best stored as binary (faster to generate, faster to store, faster to index).
-                    if ($this->customBinarySize) {
-                        $table->customBinary(self::CONTENT_COLUMN, $this->customBinarySize)->unique();
+            Schema::create($this->getTable(),
+                function (Blueprint $table) use ($binarySize, $hashType, $columnType, $isMySQL) {
+                    // Id is only kept in this table for correlation back to plaintext equivalents.
+                    $table->bigIncrements('id');
+                    if ($hashType) {
+                        // A hash is best stored as binary (faster to generate, faster to store, faster to index).
+                        if ($binarySize && $isMySQL) {
+                            $table->customBinary(self::CONTENT_COLUMN, $binarySize);
+                            // Unique constraints on a binary field require tightly defined size.
+                            $table->unique([DB::raw(self::CONTENT_COLUMN.'('.$binarySize.')')]);
+                        } else {
+                            $table->binary(self::CONTENT_COLUMN)->unique();
+                        }
                     } else {
-                        $table->binary(self::CONTENT_COLUMN)->unique();
+                        if ($columnType % FileAnalysisHelper::TYPE_PHONE) {
+                            $table->unsignedBigInteger(self::CONTENT_COLUMN);
+                        } else {
+                            $table->string(self::CONTENT_COLUMN, $binarySize * 2);
+                        }
+                        $table->unique(self::CONTENT_COLUMN);
                     }
-                } else {
-                    // Plain text will be placed here.
-                    $table->text(self::CONTENT_COLUMN)->unique();
-                }
-            });
+                });
         }
 
         return $this;

@@ -51,10 +51,19 @@ class FileController extends Controller
             return $this->forceLogin($request);
         }
 
-        return view('files')->with([
-            'files'  => [$file],
-            'upload' => false,
-        ]);
+        if ($request->ajax()) {
+            return response()->json([
+                'html'    => view('partials.file')->with([
+                    'file' => $file,
+                ]),
+                'success' => true,
+            ]);
+        } else {
+            return view('files')->with([
+                'files'  => [$file],
+                'upload' => false,
+            ]);
+        }
     }
 
     /**
@@ -64,19 +73,27 @@ class FileController extends Controller
      */
     private function forceLogin(Request $request)
     {
+        $redirectPath = null;
         if (
             !$request->user()
             && $request->getRequestUri() !== $request->session()->get('url.intended')
         ) {
             // User likely needs to log in.
             $request->session()->put('url.intended', $request->getRequestUri());
-
-            return response()->redirectTo('login');
+            $redirectPath = 'login';
         } else {
             // File no longer exists.
-
-            // return abort(404);
-            return response()->redirectTo('files');
+            $redirectPath = 'files';
+        }
+        if ($redirectPath) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success'  => true,
+                    'redirect' => route($redirectPath),
+                ]);
+            } else {
+                return response()->redirectTo($redirectPath);
+            }
         }
     }
 

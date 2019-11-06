@@ -37,7 +37,8 @@ class CreateFilesTable extends Migration
             $table->string('md5');
             $table->string('country');
             $table->unsignedBigInteger('rows_total');
-            $table->unsignedBigInteger('rows_processed');
+
+            $table->unsignedBigInteger('rows_imported');
             $table->unsignedBigInteger('rows_scrubbed');
             $table->unsignedBigInteger('rows_hashed');
 

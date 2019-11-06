@@ -21,9 +21,9 @@ class FileExportSheet implements FromArray, ShouldAutoSize, WithStrictNullCompar
         return $this->rows;
     }
 
-    public function appendRow($rows)
+    public function appendRow($row)
     {
-        $this->rows[] = $rows;
+        $this->rows[] = $row;
     }
 
     public function appendRows($rows = [])

@@ -284,7 +284,7 @@ class File extends Model
             'md5'                  => hash_file('md5', $uploadedFile->getRealPath()),
             'country'              => $request->header('CF-IPCountry', 'US'),
             'rows_total'           => 0,
-            'rows_processed'       => 0,
+            'rows_imported'       => 0,
             'rows_scrubbed'        => 0,
             'rows_hashed'          => 0,
             'rows_invalid'         => 0,

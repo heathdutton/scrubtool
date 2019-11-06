@@ -56,7 +56,7 @@ class File extends Resource
             Number::make('size')->sortable(),
             Text::make('message'),
             Number::make('rows_total'),
-            Number::make('rows_processed'),
+            Number::make('rows_imported'),
             Number::make('rows_scrubbed'),
             Number::make('rows_invalid'),
             Number::make('rows_email_valid'),

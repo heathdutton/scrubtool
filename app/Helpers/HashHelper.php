@@ -416,39 +416,23 @@ class HashHelper
      *
      * @return float|int
      */
-    public static function hashSize($algo)
+    public static function hashSize($algo = null)
     {
-        $hashLength = 128;
+        if (!$algo) {
+            // Plain text, no hash in use, longest possible string would be email for uniqueness.
+            $stringLength = 320;
+        } else {
+            // Longest possible hash.
+            $stringLength = 128;
+        }
         foreach (self::list() as $length => $algos) {
             if (isset($algos[$algo])) {
-                $hashLength = $length;
+                $stringLength = $length;
                 break;
             }
         }
 
-        return ceil($hashLength / 2);
-    }
-
-    /**
-     * @param  bool  $includeDisabled
-     *
-     * @return array
-     */
-    public function listSimple($includeDisabled = false)
-    {
-        if (!$this->simpleAgos) {
-            $simpleAlgos = [];
-            foreach (self::list() as $length => $algos) {
-                foreach ($algos as $algo) {
-                    if ($algo['enabled'] || $includeDisabled) {
-                        $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
-                    }
-                }
-            }
-            $this->simpleAgos = array_keys($simpleAlgos);
-        }
-
-        return $this->simpleAgos;
+        return ceil($stringLength / 2);
     }
 
     /**
@@ -486,14 +470,36 @@ class HashHelper
     }
 
     /**
+     * @param  bool  $includeDisabled
+     *
+     * @return array
+     */
+    public function listSimple($includeDisabled = false)
+    {
+        if (!$this->simpleAgos) {
+            $simpleAlgos = [];
+            foreach (self::list() as $length => $algos) {
+                foreach ($algos as $algo) {
+                    if ($algo['enabled'] || $includeDisabled) {
+                        $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
+                    }
+                }
+            }
+            $this->simpleAgos = array_keys($simpleAlgos);
+        }
+
+        return $this->simpleAgos;
+    }
+
+    /**
      * @param $value
      * @param  string  $algo
-     * @param  bool  $raw
+     * @param  bool  $binary
      */
-    public function hash(&$value, $algo = 'md5', $raw = false)
+    public function hash(&$value, $algo = 'md5', $binary = false)
     {
         if (isset($this->listChoices()[$algo])) {
-            $value = hash($algo, $value, $raw);
+            $value = hash($algo, $value, $binary);
         }
     }
 

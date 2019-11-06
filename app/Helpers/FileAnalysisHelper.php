@@ -2,45 +2,63 @@
 
 namespace App\Helpers;
 
+use App\File;
 use libphonenumber\Leniency;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
 
 class FileAnalysisHelper
 {
-    const TYPE_AGE        = 1;
+    /** @var array Simplified strings that indicate the row may be a header. */
+    const HEADER_KEYWORDS = [
+        'mail',
+        'phone',
+        'mobile',
+        'cell',
+        'name',
+        'ip',
+        'id',
+        'date',
+        'url',
+        'time',
+        'customer',
+        'dob',
+        'age',
+    ];
 
-    const TYPE_DATETIME   = 2;
+    const TYPE_AGE         = 1;
 
-    const TYPE_DOB        = 4;
+    const TYPE_DATETIME    = 2;
 
-    const TYPE_EMAIL      = 8;
+    const TYPE_DOB         = 4;
 
-    const TYPE_FLOAT      = 16;
+    const TYPE_EMAIL       = 8;
 
-    const TYPE_HASH       = 32;
+    const TYPE_FLOAT       = 16;
 
-    const TYPE_INTEGER    = 64;
+    const TYPE_HASH        = 32;
 
-    const TYPE_L_ADDRESS1 = 128;
+    const TYPE_INTEGER     = 64;
 
-    const TYPE_L_ADDRESS2 = 256;
+    const TYPE_L_ADDRESS1  = 128;
 
-    const TYPE_L_CITY     = 512;
+    const TYPE_L_ADDRESS2  = 256;
 
-    const TYPE_L_COUNTRY  = 1024;
+    const TYPE_L_CITY      = 512;
 
-    const TYPE_L_ZIP      = 2048;
+    const TYPE_L_COUNTRY   = 1024;
 
-    const TYPE_NAME_FIRST = 4096;
+    const TYPE_L_ZIP       = 2048;
 
-    const TYPE_NAME_LAST  = 8192;
+    const TYPE_NAME_FIRST  = 4096;
 
-    const TYPE_PHONE      = 16384;
+    const TYPE_NAME_LAST   = 8192;
 
-    const TYPE_STRING     = 32768;
+    const TYPE_PHONE       = 16384;
 
-    const TYPE_UNKNOWN    = 65536;
+    const TYPE_STRING      = 32768;
+
+    const TYPE_UNKNOWN     = 65536;
 
     protected $columnCount = 0;
 
@@ -57,31 +75,6 @@ class FileAnalysisHelper
     protected $rowData = [];
 
     protected $rowIndex = 0;
-
-    /** @var string */
-    protected $countryCode = 'US';
-
-    /** @var array Simplified strings that indicate the row may be a header. */
-    private $headerWhitelist = [
-        'email',
-        'phone',
-        'mobile',
-        'cell',
-        'firstname',
-        'fname',
-        'lastname',
-        'lname',
-        'ip',
-        'ipaddress',
-        'id',
-        'date',
-        'dateadded',
-        'datecreated',
-        'dateidentified',
-        'url',
-        'timestamp',
-        'time',
-    ];
 
     /** @var array Simplified strings that identify the column type with fair certainty. */
     private $typeIdentifiers = [
@@ -119,14 +112,17 @@ class FileAnalysisHelper
         'hash'        => self::TYPE_HASH,
     ];
 
+    /** @var File */
+    private $file;
+
     /**
      * FileAnalysisHelper constructor.
      *
-     * @param $countryCode
+     * @param $file
      */
-    public function __construct($countryCode)
+    public function __construct($file)
     {
-        $this->countryCode = $countryCode;
+        $this->file = $file;
     }
 
     /**
@@ -174,19 +170,30 @@ class FileAnalysisHelper
     {
         $this->rowIsHeader = false;
 
+        // We may have already evaluated the file's header row.
+        if (1 === $this->rowIndex && !empty($this->file->columns)) {
+            foreach ($this->file->columns as $columnIndex => $column) {
+                if (!empty($column['name']) && $this->rowData[$columnIndex] === $column['name']) {
+                    $this->rowIsHeader = true;
+
+                    return $this->rowIsHeader;
+                }
+            }
+        }
+
         if (
-            !count(array_filter($this->columnNames))
-            && $this->rowIndex < 5
+            $this->rowIndex < 5
+            && !count(array_filter($this->columnNames))
             && count(array_filter($this->rowData))
         ) {
             foreach ($this->rowData as $value) {
-                if ($this->isEmail($value)) {
+                if (self::isEmail($value)) {
                     $this->rowIsHeader = false;
                     break;
                 } elseif ($this->isPhone($value)) {
                     $this->rowIsHeader = false;
                     break;
-                } elseif (in_array($this->simplify($value), $this->headerWhitelist)) {
+                } elseif (self::isHeaderByKeywords($value)) {
                     $this->rowIsHeader = true;
                     break;
                 } elseif (
@@ -209,9 +216,19 @@ class FileAnalysisHelper
      *
      * @return bool
      */
-    private function isEmail($value)
+    public static function isEmail($value)
     {
-        return (bool) filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+        return (bool) self::getEmail($value);
+    }
+
+    /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public static function getEmail($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
     }
 
     /**
@@ -221,7 +238,7 @@ class FileAnalysisHelper
      *
      * @return bool
      */
-    private function isPhone($value, $countryCode = 'US', $lenient = false)
+    public static function isPhone($value, $countryCode = 'US', $lenient = false)
     {
         return (bool) self::getPhone($value, $countryCode, $lenient);
     }
@@ -268,13 +285,33 @@ class FileAnalysisHelper
     }
 
     /**
+     * @param $string
+     *
+     * @return bool
+     */
+    private static function isHeaderByKeywords($string)
+    {
+        $simple = self::simplify($string);
+        if (in_array($simple, self::HEADER_KEYWORDS)) {
+            return true;
+        }
+        foreach (self::HEADER_KEYWORDS as $item) {
+            if (false !== strpos($simple, $item)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Simplify a column header/value for faster comparisons.
      *
      * @param $value
      *
      * @return string
      */
-    private function simplify($value)
+    private static function simplify($value)
     {
         return strtolower(preg_replace('/[^a-z]/i', '', $value));
     }
@@ -344,13 +381,13 @@ class FileAnalysisHelper
      */
     private function getType($value, $columnIndex)
     {
-        if ($this->isEmail($value)) {
+        if (self::isEmail($value)) {
             return self::TYPE_EMAIL;
         }
         if ($this->isHash($value)) {
             return self::TYPE_HASH;
         }
-        if ($this->isPhone($value)) {
+        if (self::isPhone($value, $this->file->country ?? 'US')) {
             return self::TYPE_PHONE;
         }
 
@@ -363,10 +400,6 @@ class FileAnalysisHelper
     }
 
     /**
-     * Gives us an opportunity to sanitize input in the same class that performs the column analysis later.
-     *
-     * @param $row
-     *
      * @return array
      */
     private function getRowData()

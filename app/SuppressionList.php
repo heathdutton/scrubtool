@@ -19,6 +19,45 @@ class SuppressionList extends Model
         'id',
     ];
 
+    /** @var File */
+    private $file;
+
+    /**
+     * SuppressionList constructor.
+     *
+     * @param  array  $attributes
+     * @param  File|null  $file
+     */
+    public function __construct($attributes = [], File $file = null)
+    {
+        if ($file) {
+            $attributes['user_id']     = $this->file->user_id ?? null;
+            $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
+            $attributes['description'] = $attributes['description'] ?? '';
+            $attributes['global']      = $attributes['global'] ?? 0;
+            $this->file                = $file;
+        }
+
+        parent::__construct($attributes);
+    }
+
+    /**
+     * @return string|string[]|null
+     */
+    private function choseListNameFromFileName()
+    {
+        $fileName = trim($this->file->name);
+        $fileName = substr($fileName, 0, strrpos($fileName, '.'));
+        $fileName = preg_replace('/[^a-z0-9\-\.]/i', ' ', $fileName);
+        $fileName = preg_replace('/\s+/', ' ', $fileName);
+        $fileName = ucwords($fileName);
+        if (empty($fileName)) {
+            $fileName = __('Untitled');
+        }
+
+        return $fileName;
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */

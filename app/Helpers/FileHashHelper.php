@@ -29,33 +29,52 @@ class FileHashHelper
      *
      * @return bool
      */
-    public function hashRow(&$row)
+    public function modifyRowForOutput(&$row)
     {
-        $result = false;
-        foreach ($row as $rowIndex => &$value) {
-            if (
-                !empty($value)
-                && isset($this->file->input_settings['column_hash_output_'.$rowIndex])
-            ) {
-                $algo = $this->file->input_settings['column_hash_output_'.$rowIndex] ?? null;
+        $valid = false;
+        foreach ($row as $columnIndex => &$value) {
+            if ($this->sanitizeColumn($value, $columnIndex, 'output')) {
+                $valid = true;
+            }
+        }
+
+        return $valid;
+    }
+
+    /**
+     * @param $value
+     * @param $columnIndex
+     * @param  string  $mode
+     * @param  null  $algo
+     * @param  bool  $binary
+     *
+     * @return string|string[]|null
+     */
+    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $algo = null, $binary = false)
+    {
+        if (!empty($value)) {
+            $type = $this->file->input_settings['column_type_'.$columnIndex] ?? FileAnalysisHelper::TYPE_UNKNOWN;
+
+            if ($type & FileAnalysisHelper::TYPE_PHONE) {
+                $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
+                $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
+                $value       = preg_replace("/[^0-9]/", '', $value);
+            }
+
+            if ($type & FileAnalysisHelper::TYPE_EMAIL) {
+                $value = strtolower(trim($value));
+                $value = FileAnalysisHelper::getEmail($value);
+            }
+
+            if ($value) {
+                $algo = $algo ?? $this->file->input_settings['column_hash_'.$mode.'_'.$columnIndex] ?? null;
                 if ($algo) {
-                    $type = $this->file->input_settings['column_type_'.$rowIndex] ?? FileAnalysisHelper::TYPE_UNKNOWN;
-                    if ($type & FileAnalysisHelper::TYPE_PHONE) {
-                        // Convert phone number to E.164 without + for deterministic hashing.
-                        $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
-                        $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
-                        $value       = preg_replace("/[^0-9]/", '', $value);
-                    }
-                    if ($type & FileAnalysisHelper::TYPE_EMAIL) {
-                        $value = strtolower(trim($value));
-                    }
-                    $this->getHashHelper()->hash($value, $algo);
-                    $result = true;
+                    $this->getHashHelper()->hash($value, $algo, $binary);
                 }
             }
         }
 
-        return $result;
+        return (bool) $value;
     }
 
     /**
