@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Schema;
 class SuppressionListSupportContent extends Model
 {
     /** @var int */
-    const BATCH_INSERT_SIZE = 500;
+    const BATCH_SIZE = 500;
 
     /** @var string */
     const CONTENT_COLUMN = 'content';
@@ -137,7 +137,7 @@ class SuppressionListSupportContent extends Model
             ];
         }
         $this->queueCount++;
-        if (0 == $this->queueCount % self::BATCH_INSERT_SIZE) {
+        if (0 == $this->queueCount % self::BATCH_SIZE) {
             $this->persistQueue();
         }
 
@@ -157,4 +157,13 @@ class SuppressionListSupportContent extends Model
         return $this;
     }
 
+    /**
+     * @return $this
+     */
+    public function finish()
+    {
+        $this->persistQueue();
+
+        return $this;
+    }
 }

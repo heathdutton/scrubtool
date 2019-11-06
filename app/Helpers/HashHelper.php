@@ -518,6 +518,7 @@ class HashHelper
                     }
                 }
             }
+            asort($this->choicesAlgos, SORT_NATURAL);
         }
 
         return $this->choicesAlgos;

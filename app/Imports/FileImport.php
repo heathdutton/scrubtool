@@ -106,11 +106,13 @@ class FileImport implements ToModel, WithChunkReading
 
             if ($analysis->rowIsValid()) {
                 if ($analysis->getRowIsHeader()) {
-                    $this->appendRowToExport($row);
+                    if ($this->file->mode & (File::MODE_HASH | File::MODE_SCRUB)) {
+                        $this->appendRowToExport($row);
+                    }
                 } else {
                     $this->stats['rows_total']++;
 
-                    if ($this->file->mode & File::MODE_HASH) {
+                    if ($this->file->mode & (File::MODE_HASH | File::MODE_SCRUB)) {
                         if ($this->getFileHashHelper()->modifyRowForOutput($row)) {
                             $this->appendRowToExport($row);
                             $this->stats['rows_hashed']++;
@@ -217,7 +219,7 @@ class FileImport implements ToModel, WithChunkReading
     public function finish()
     {
         if ($this->fileSuppressionListHelper) {
-            $this->fileSuppressionListHelper->persistQueues();
+            $this->fileSuppressionListHelper->finish();
         }
         $this->persistStats();
 

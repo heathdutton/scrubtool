@@ -145,37 +145,40 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                     <div class="col-12 mt-3 mb-1">
                         <div class="">
                             <div class="input-group float-right" style="max-width: 480px;">
-                                {{-- @todo - This needs contextual awareness --}}
-                                <a class="btn btn-secondary"
-                                   href="{{ route('files') }}"
-                                   onclick="var $dropzone = $('#dropzone:first');
-                            if ($dropzone.length) {
-                                $dropzone.click();
-                                return false;
-                            }">
-                                    <i class="fa fa-plus"></i>
-                                    {{ __('Another') }}
-                                </a>
-                                @if($file->available_till)
-                                    <div class="input-group-prepend"
-                                         data-toggle='tooltip' data-placement="bottom"
-                                         data-original-title='{{ __('File is available till') }} {{ $file->available_till }} UTC'>
+                                @if($file->mode & (\App\File::MODE_SCRUB | \App\File::MODE_HASH))
+                                    {{-- @todo - This needs contextual awareness --}}
+                                    <a class="btn btn-secondary"
+                                       href="{{ route('files') }}"
+                                       onclick="
+                                        var $dropzone = $('#dropzone:first');
+                                        if ($dropzone.length) {
+                                            $dropzone.click();
+                                            return false;
+                                        }">
+                                        <i class="fa fa-plus"></i>
+                                        {{ __('Another') }}
+                                    </a>
+                                    @if($file->available_till)
+                                        <div class="input-group-prepend"
+                                             data-toggle='tooltip' data-placement="bottom"
+                                             data-original-title='{{ __('File is available till') }} {{ $file->available_till }} UTC'>
                                         <span class="input-group-text" id="file-dl-{{ $file->id }}">
                                             <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
                                         </span>
-                                    </div>
+                                        </div>
+                                    @endif
+                                    <a class="form-control btn btn-{{ $class }}" aria-describedby="file-dl-{{ $file->id }}"
+                                       target="_blank"
+                                       href="{{ route('file.download', ['id' => $file->id]) }}"
+                                       onclick="
+                                           $('<iframe/>').attr({
+                                           src: '{{ route('file.download', ['id' => $file->id]) }}',
+                                           style: 'visibility:hidden; display:none'
+                                           }).appendTo(body); return false;">
+                                        <i class="fa fa-download"></i>
+                                        {{ __('Download') }}
+                                    </a>
                                 @endif
-                                <a class="form-control btn btn-{{ $class }}" aria-describedby="file-dl-{{ $file->id }}"
-                                   target="_blank"
-                                   href="{{ route('file.download', ['id' => $file->id]) }}"
-                                   onclick="
-                                       $('<iframe/>').attr({
-                                       src: '{{ route('file.download', ['id' => $file->id]) }}',
-                                       style: 'visibility:hidden; display:none'
-                                       }).appendTo(body); return false;">
-                                    <i class="fa fa-download"></i>
-                                    {{ __('Download') }}
-                                </a>
                             </div>
                         </div>
                     </div>

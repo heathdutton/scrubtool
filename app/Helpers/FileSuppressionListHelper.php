@@ -87,7 +87,7 @@ class FileSuppressionListHelper
                 $this->list->save();
                 $this->list->supports()->saveMany($supports);
             }
-            if ($this->file->mode & File::MODE_LIST_APPEND || $this->file->mode & File::MODE_LIST_REPLACE) {
+            if ($this->file->mode & (File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
                 // @todo - Load and confirm existing list.
                 throw new Exception(__('List append function does not yet exist.'));
             }
@@ -112,6 +112,10 @@ class FileSuppressionListHelper
     {
         $valid = false;
         if ($this->list && $this->columnSupports) {
+            /**
+             * @var int $columnIndex
+             * @var SuppressionListSupport $support
+             */
             foreach ($this->columnSupports as $columnIndex => $support) {
                 // Validate/sanitize/hash before insertion.
                 $value = $row[$columnIndex];
@@ -140,10 +144,12 @@ class FileSuppressionListHelper
     /**
      * @return $this
      */
-    public function persistQueues()
+    public function finish()
     {
         foreach ($this->columnSupports as $columnIndex => $support) {
+            /** @var SuppressionListSupport $support */
             $support->persistQueue();
+            $support->finish();
         }
 
         return $this;

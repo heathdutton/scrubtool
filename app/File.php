@@ -284,7 +284,7 @@ class File extends Model
             'md5'                  => hash_file('md5', $uploadedFile->getRealPath()),
             'country'              => $request->header('CF-IPCountry', 'US'),
             'rows_total'           => 0,
-            'rows_imported'       => 0,
+            'rows_imported'        => 0,
             'rows_scrubbed'        => 0,
             'rows_hashed'          => 0,
             'rows_invalid'         => 0,
@@ -355,10 +355,7 @@ class File extends Model
      */
     public function download()
     {
-        if (
-            $this->status & self::STATUS_WHOLE
-            && $this->getStorage()->exists($this->getRelativeLocation($this->output_location))
-        ) {
+        if ($this->status & self::STATUS_WHOLE) {
             // Use the original file name with a minor addition for clarity.
             $name = pathinfo($this->name, PATHINFO_FILENAME);
 
@@ -369,19 +366,26 @@ class File extends Model
                 }
             }
             if ($this->mode & self::MODE_HASH) {
-                $name .= $delim.'hashed';
-            } elseif ($this->mode & self::MODE_HASH) {
-                $name .= $delim.'scrubbed';
+                $name     .= $delim.'hashed';
+                $location = $this->output_location;
+            } elseif ($this->mode & self::MODE_SCRUB) {
+                $name     .= $delim.'scrubbed';
+                $location = $this->output_location;
+            } else {
+                // For all other types, download the original file since there is no output.
+                $location = $this->input_location;
             }
             $name .= '.'.pathinfo($this->name, PATHINFO_EXTENSION);
 
-            $this->download_count++;
-            $this->save();
+            if ($this->getStorage()->exists($this->getRelativeLocation($location))) {
+                $this->download_count++;
+                $this->save();
 
-            return response()->download($this->output_location, $name);
-        } else {
-            return response()->isNotFound();
+                return response()->download($location, $name);
+            }
         }
+
+        return response()->isNotFound();
     }
 
     /**
