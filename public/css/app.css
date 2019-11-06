@@ -11626,7 +11626,8 @@ th {
 }
 
 form#dropzone {
-  border: 0.2rem dashed #919aa1;
+  border: 0.1rem dashed #919aa1;
+  box-shadow: inset 0 0 10px #ced4da;
 }
 
 form#dropzone .dz-message {
@@ -11654,6 +11655,37 @@ form#dropzone .dz-message {
 
 .card-header:hover {
   color: inherit;
+}
+
+.file-icon {
+  border-radius: 1.6em;
+  overflow: hidden;
+  display: inline-block;
+  width: 1.6em;
+  height: 1.6em;
+  margin: -0.5em 0.3em -0.5em -0.5em;
+  padding: 0;
+}
+
+.file-icon > div {
+  border-radius: 1.4em;
+  overflow: hidden;
+  display: inline-block;
+  width: 1.6em;
+  height: 1.6em;
+  margin: 0;
+  padding: 0;
+}
+
+.file-icon.altered > div img {
+  -webkit-filter: grayscale(1) saturate(1.2);
+          filter: grayscale(1) saturate(1.2);
+  -webkit-transform: rotate(135deg);
+          transform: rotate(135deg);
+  vertical-align: top;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
 }
 
 @-webkit-keyframes pb {

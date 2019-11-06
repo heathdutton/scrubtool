@@ -2,9 +2,12 @@
 
 // Make the dropzone look friendly
 form#dropzone {
-    // border-radius: 2em;
-    border: .2rem dashed $gray-600;
+    border: 0.1rem dashed $gray-600;
+    -moz-box-shadow: inset 0 0 10px $gray-400;
+    -webkit-box-shadow: inset 0 0 10px $gray-400;
+    box-shadow: inset 0 0 10px $gray-400;
 }
+
 form#dropzone .dz-message {
     text-align: center;
     margin: 2.8em 0 2em 0;
@@ -16,6 +19,7 @@ form#dropzone .dz-message {
     transition: .3s transform ease-in-out;
     margin: 0.3em 0 0 1em;
 }
+
 .card-header.collapsed .fa {
     transform: rotate(90deg);
 }
@@ -24,6 +28,36 @@ form#dropzone .dz-message {
 .card-header:hover {
     text-decoration: none;
 }
+
 .card-header:hover {
     color: inherit;
+}
+
+.file-icon {
+    border-radius: 1.6em;
+    overflow: hidden;
+    display: inline-block;
+    width: 1.6em;
+    height: 1.6em;
+    margin: -0.5em .3em -.5em -.5em;
+    padding: 0;
+}
+
+.file-icon > div {
+    border-radius: 1.4em;
+    overflow: hidden;
+    display: inline-block;
+    width: 1.6em;
+    height: 1.6em;
+    margin: 0;
+    padding: 0;
+}
+
+.file-icon.altered > div img {
+    filter: grayscale(1) saturate(1.2);
+    transform: rotate(135deg);
+    vertical-align: top;
+    width: 100%;
+    height: 100%;
+    opacity: .9;
 }
