@@ -8,7 +8,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
     $action = __('Analyzing');
 } elseif ($file->status & \App\File::STATUS_INPUT_NEEDED) {
     $class  = 'info';
-    $action = __('Input Needed');
+    $action = __('Ready');
 } elseif ($file->status & \App\File::STATUS_READY || $file->status & \App\File::STATUS_RUNNING) {
     $card   = 'file-refresh';
     $class  = 'secondary';

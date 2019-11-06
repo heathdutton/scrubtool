@@ -62,7 +62,7 @@ class FileForm extends Form
             // @todo - Add select for suppression lists to replace/append.
 
             // @todo - Add checkboxes for global and custom suppression lists to scrub against.
-            $lists = SuppressionList::all();
+            // $lists = SuppressionList::all();
             // $this->add('list_id_append', Field::CHOICE, [
             //     'rules'      => 'required',
             //     'label'      => __('List to Append'),

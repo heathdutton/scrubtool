@@ -105,7 +105,7 @@ class SuppressionListSupportContent extends Model
                             $table->binary(self::CONTENT_COLUMN)->unique();
                         }
                     } else {
-                        if ($columnType % FileAnalysisHelper::TYPE_PHONE) {
+                        if ($columnType & FileAnalysisHelper::TYPE_PHONE) {
                             $table->unsignedBigInteger(self::CONTENT_COLUMN);
                         } else {
                             $table->string(self::CONTENT_COLUMN, $binarySize * 2);

@@ -30,12 +30,13 @@ class SuppressionList extends Model
      */
     public function __construct($attributes = [], File $file = null)
     {
-        if ($file) {
+        $this->file = $file;
+
+        if (!empty($this->file->id)) {
             $attributes['user_id']     = $this->file->user_id ?? null;
             $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
             $attributes['description'] = $attributes['description'] ?? '';
             $attributes['global']      = $attributes['global'] ?? 0;
-            $this->file                = $file;
         }
 
         parent::__construct($attributes);
