@@ -77,7 +77,24 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                                         </div>
                                         <div class="media-body text-right">
                                             <h3>{{ $file->rows_total }}</h3>
-                                            <span>{{ __('Records') }}</span>
+                                            <span>{{ __('Total Records') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-6 col-12">
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="media d-flex">
+                                        <div class="align-self-center">
+                                            <i class="fa fa-bug fa-4x pull-left"></i>
+                                        </div>
+                                        <div class="media-body text-right">
+                                            <h3>{{ $file->rows_invalid }}</h3>
+                                            <span>{{ __('Invalid') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -122,23 +139,6 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                             </div>
                         </div>
                     @endif
-                    <div class="col-xl-3 col-lg-6 col-12">
-                        <div class="card">
-                            <div class="card-content">
-                                <div class="card-body">
-                                    <div class="media d-flex">
-                                        <div class="align-self-center">
-                                            <i class="fa fa-bug fa-4x pull-left"></i>
-                                        </div>
-                                        <div class="media-body text-right">
-                                            <h3>{{ $file->rows_invalid }}</h3>
-                                            <span>{{ __('Invalid') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="row">

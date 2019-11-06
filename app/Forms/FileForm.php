@@ -116,7 +116,7 @@ class FileForm extends Form
                         // @todo - Only show this if the above is a known type.
                         $this->add('column_hash_input_'.$columnIndex, Field::CHOICE, [
                             'label'         => $label.' '.__('Hash Used'),
-                            'label_show'    => false,
+                            'label_show'    => true,
                             'choices'       => $hashOptions,
                             'selected'      => $column['hash'] ?? null,
                             'default_value' => null,
@@ -132,7 +132,7 @@ class FileForm extends Form
                     // @todo - Only show this if Plain Text is selected above or there is no hash, and the field type is defined as phone or email.
                     $this->add('column_hash_output_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label.' '.__('Output Hash'),
-                        'label_show'    => false,
+                        'label_show'    => true,
                         'choices'       => $hashOptions,
                         'selected'      => $column['hash'] ?? null,
                         'default_value' => null,
