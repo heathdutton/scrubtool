@@ -100,6 +100,48 @@ class FileSuppressionListHelper
         return $this;
     }
 
+    /**
+     * Returns true if the row was scrubbed.
+     *
+     * @param $row
+     *
+     * @return bool
+     */
+    public function scrubRow(&$row)
+    {
+        $scrub = false;
+        if ($this->list && $this->columnSupports) {
+            /**
+             * @var int $columnIndex
+             * @var SuppressionListSupport $support
+             */
+            foreach ($this->columnSupports as $columnIndex => $support) {
+                // Validate/sanitize/hash before attempting a scrub.
+                $value = $row[$columnIndex];
+                if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
+                    $scrub = (bool) $support->where('content', $value)->first();
+                    if ($scrub) {
+                        $row = [];
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $scrub;
+    }
+
+    /**
+     * @return FileHashHelper
+     */
+    private function getFileHashHelper()
+    {
+        if (!$this->fileHashHelper) {
+            $this->fileHashHelper = new FileHashHelper($this->file);
+        }
+
+        return $this->fileHashHelper;
+    }
 
     /**
      * @param $row
@@ -127,18 +169,6 @@ class FileSuppressionListHelper
         }
 
         return $valid;
-    }
-
-    /**
-     * @return FileHashHelper
-     */
-    private function getFileHashHelper()
-    {
-        if (!$this->fileHashHelper) {
-            $this->fileHashHelper = new FileHashHelper($this->file);
-        }
-
-        return $this->fileHashHelper;
     }
 
     /**

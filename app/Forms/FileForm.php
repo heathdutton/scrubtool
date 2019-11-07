@@ -5,6 +5,8 @@ namespace App\Forms;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
+use App\SuppressionList;
+use App\User;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -28,6 +30,8 @@ class FileForm extends Form
         }
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
+            $user = $file->user()->getRelated()->first();
+
             $this->formOptions = [
                 'method' => 'POST',
                 'url'    => route('file.store', ['id' => $file->id]),
@@ -39,44 +43,60 @@ class FileForm extends Form
                 'value'      => __('File Action'),
             ]);
 
+            // @todo - Add select for suppression lists to replace/append.
+            /** @var User $user */
+            $listChoices                     = [];
+            $actionChoices                   = [];
+            $actionChoices[File::MODE_HASH]  = __('Hash');
+            $actionChoices[File::MODE_SCRUB] = __('Scrub');
+            if ($user) {
+                $actionChoices[File::MODE_LIST_CREATE] = __('New suppression list');
+                // @todo - Add these when functionality is done.
+                // $actionChoices[File::MODE_LIST_APPEND]  = __('Add to an existing list');
+                // $actionChoices[File::MODE_LIST_REPLACE] = __('Replace a suppression list');
+            }
             $this->add('mode', Field::CHOICE, [
                 'rules'         => 'required',
                 'label'         => __('Action'),
                 'label_show'    => false,
-                'choices'       => [
-                    File::MODE_HASH        => __('Hash'),
-                    File::MODE_LIST_CREATE => __('New suppression list'),
-                    // @todo - Add these when functionality is done.
-                    // File::MODE_LIST_APPEND  => __('Add to an existing list'),
-                    // File::MODE_LIST_REPLACE => __('Replace a suppression list'),
-                    File::MODE_SCRUB       => __('Scrub'),
-                ],
-                // 'attr'          => [
-                //     'class' => 'form-control col-md-3',
-                // ],
+                'choices'       => $actionChoices,
                 'selected'      => $file->mode ?? File::MODE_HASH,
                 'default_value' => File::MODE_HASH,
-                'expanded'      => false,
             ]);
 
-            // @todo - Add select for suppression lists to replace/append.
+            // Get user's own suppression lists as options to scrub against.
+            if ($user) {
+                $lists = $user->lists()->getRelated()->all();
+                if ($lists) {
+                    // @todo - Provide a selection option for the user's current self-owned suppression lists.
+                    foreach ($lists as $list) {
+                        $listChoices[$list->id] = $list->name ?? $list->id;
+                    }
+                }
+            }
+            asort($listChoices);
 
-            // @todo - Add checkboxes for global and custom suppression lists to scrub against.
-            // $lists = SuppressionList::all();
-            // $this->add('list_id_append', Field::CHOICE, [
-            //     'rules'      => 'required',
-            //     'label'      => __('List to Append'),
-            //     'label_show' => true,
-            //     'choices'    => [
-            //
-            //     ],
-            //     'attr'       => [
-            //         'class' => 'form-control col-md-3',
-            //     ],
-            //     // 'selected'      => $file->mode ?? File::MODE_HASH,
-            //     // 'default_value' => File::MODE_HASH,
-            //     'expanded'   => true,
-            // ]);
+            $this->add('suppression_list_append', Field::CHOICE, [
+                'label'      => __('List to Append'),
+                'label_show' => true,
+                'choices'    => $listChoices,
+            ]);
+
+            // Add global suppression list options for scrubbing.
+            foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
+                $listChoices[$list->id] = $list->name ?? $list->id;
+            }
+            asort($listChoices);
+
+            if ($listChoices) {
+                $this->add('suppression_list_use', Field::CHOICE, [
+                    'label'      => __('List/s to use for scrubbing'),
+                    'label_show' => true,
+                    'choices'    => $listChoices,
+                    'multiple'   => true,
+                    'expanded'   => true,
+                ]);
+            }
 
             if ($file->columns) {
                 $this->add('static_columns', Field::STATIC, [
