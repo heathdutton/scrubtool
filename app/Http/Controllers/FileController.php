@@ -6,6 +6,7 @@ use App\File;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Kris\LaravelFormBuilder\FormBuilderTrait;
 
@@ -48,7 +49,7 @@ class FileController extends Controller
         $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id, 1)->first();
 
         if (!$file) {
-            return $this->forceLogin($request);
+            return $this->forceLogin($request) ?? response()->isNotFound();
         }
 
         if ($request->ajax()) {
@@ -97,6 +98,12 @@ class FileController extends Controller
         }
     }
 
+    /**
+     * @param  Request  $request
+     *
+     * @return bool|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @throws Exception
+     */
     public function download(Request $request)
     {
         if (empty($request->id) || (int) $request->id < 1) {
@@ -107,7 +114,14 @@ class FileController extends Controller
         $file = File::findByCurrentUser($request, null, (int) $request->id, 1)->first();
 
         if (!$file) {
-            return $this->forceLogin($request);
+            return $this->forceLogin($request) ?? response()->isNotFound();
+        }
+
+        if (Carbon::now() > new Carbon($file->available_til ?? '', 'UTC')) {
+            // The file should have been deleted by now, likely the job failed.
+            $file->delete();
+
+            return response()->isNotFound();
         }
 
         return $file->download();
@@ -133,7 +147,7 @@ class FileController extends Controller
         }
 
         if (!$file) {
-            return $this->forceLogin($request);
+            return $this->forceLogin($request) ?? response()->isNotFound();
         }
 
         if (!$file->form->isValid()) {

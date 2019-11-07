@@ -5,7 +5,6 @@ namespace App\Forms;
 use App\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
-use App\SuppressionList;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -47,8 +46,9 @@ class FileForm extends Form
                 'choices'       => [
                     File::MODE_HASH         => __('Hash'),
                     File::MODE_LIST_CREATE  => __('New suppression list'),
-                    File::MODE_LIST_APPEND  => __('Add to an existing list'),
-                    File::MODE_LIST_REPLACE => __('Replace a suppression list'),
+                    // @todo - Add these when functionality is done.
+                    // File::MODE_LIST_APPEND  => __('Add to an existing list'),
+                    // File::MODE_LIST_REPLACE => __('Replace a suppression list'),
                     File::MODE_SCRUB        => __('Scrub'),
                 ],
                 'attr'          => [
@@ -148,9 +148,9 @@ class FileForm extends Form
             }
 
             $this->add('submit', Field::BUTTON_SUBMIT, [
-                'label' => __('<i class="fa fa-check"></i> '.'Begin'),
+                'label' => '<i class="fa fa-check"></i> '.__('Begin'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right clearfix mb-3',
+                    'class' => 'btn btn-info pull-right mb-3',
                 ],
             ]);
 

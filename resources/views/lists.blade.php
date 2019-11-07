@@ -5,7 +5,7 @@
 @section('content')
     <div class="container">
         <div class="col-md-12">
-            <div class="row justify-content-center">
+            <div class="justify-content-center mt-3">
                 @include('partials.lists')
             </div>
         </div>
