@@ -16,7 +16,7 @@ class File extends Resource
      *
      * @var string
      */
-    public static $model = 'App\File';
+    public static $model = \App\File::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -47,7 +47,7 @@ class File extends Resource
         return [
             ID::make()->sortable(),
             Text::make('name')->sortable(),
-            // BelongsTo::make('user'),
+            BelongsTo::make('user'),
             Text::make('ip_address'),
             DateTime::make('updated_at'),
             Number::make('mode'),

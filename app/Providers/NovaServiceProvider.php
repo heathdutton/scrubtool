@@ -4,14 +4,18 @@ namespace App\Providers;
 
 use App\Nova\Dashboards\Main;
 use App\Nova\Metrics\FilesPerDay;
-use App\Nova\Metrics\FilesQueued;
 use App\Nova\Metrics\NewFiles;
 use App\Nova\Metrics\NewUsers;
 use App\Nova\Metrics\UsersPerDay;
 use App\User;
-use Laravel\Nova\Nova;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;
+use Marianvlad\NovaSslCard\NovaSslCard;
+use NovaCards\SystemInformationCard\SystemInformationCard;
+use PhpJunior\NovaLogViewer\Tool as NovaLogViewerTool;
+use Radermacher\NovaCurrentEnvironmentCard\NovaCurrentEnvironmentCard;
+use Themsaid\CashierTool\CashierTool;
 
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
@@ -26,6 +30,29 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     }
 
     /**
+     * Get the tools that should be listed in the Nova sidebar.
+     *
+     * @return array
+     */
+    public function tools()
+    {
+        return [
+            new NovaLogViewerTool,
+            new CashierTool,
+        ];
+    }
+
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+    }
+
+    /**
      * Register the Nova routes.
      *
      * @return void
@@ -33,9 +60,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function routes()
     {
         Nova::routes()
-                ->withAuthenticationRoutes()
-                ->withPasswordResetRoutes()
-                ->register();
+            ->withAuthenticationRoutes()
+            ->withPasswordResetRoutes()
+            ->register();
     }
 
     /**
@@ -66,6 +93,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
             new FilesPerDay,
             // new FilesQueued,
             // new Help,
+            new NovaCurrentEnvironmentCard,
+            new NovaSslCard,
+            new SystemInformationCard,
         ];
     }
 
@@ -77,25 +107,5 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function dashboards()
     {
         return [];
-    }
-
-    /**
-     * Get the tools that should be listed in the Nova sidebar.
-     *
-     * @return array
-     */
-    public function tools()
-    {
-        return [];
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
     }
 }

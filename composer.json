@@ -19,12 +19,17 @@
         "fideloper/proxy": "^4.0",
         "giggsey/libphonenumber-for-php": "^8.10",
         "kris/laravel-form-builder": "^1.22",
-        "laravel/cashier": "^10.3",
+        "laravel/cashier": "^10.4",
         "laravel/framework": "^6.0",
         "laravel/nova": "~2.0",
         "laravel/tinker": "^1.0",
         "laravelcollective/html": "^6.0",
         "maatwebsite/excel": "^3.1",
+        "marianvlad/nova-ssl-card": "^1.0",
+        "nova-cards/system-information-card": "^1.0",
+        "php-junior/nova-logs": "^1.0",
+        "radermacher/nova-current-environment-card": "^2.0",
+        "themsaid/nova-cashier-manager": "^0.2.1",
         "ycs77/laravel-form-builder-bs4": "^1.0"
     },
     "require-dev": {

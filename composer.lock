@@ -4,8 +4,132 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f66c3e88fae3a403a3ba630eface83a1",
+    "content-hash": "bb719ae3035e468ac9bdc6aa1073ca11",
     "packages": [
+        {
+            "name": "arcanedev/log-viewer",
+            "version": "5.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ARCANEDEV/LogViewer.git",
+                "reference": "451dbec9cdf7e6034be53730537ee9324a167a30"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ARCANEDEV/LogViewer/zipball/451dbec9cdf7e6034be53730537ee9324a167a30",
+                "reference": "451dbec9cdf7e6034be53730537ee9324a167a30",
+                "shasum": ""
+            },
+            "require": {
+                "arcanedev/support": "^5.0",
+                "ext-json": "*",
+                "php": ">=7.2.0",
+                "psr/log": "^1.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "^1.0",
+                "orchestra/testbench": "^4.0",
+                "phpunit/phpcov": "^6.0",
+                "phpunit/phpunit": "^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Arcanedev\\LogViewer\\LogViewerServiceProvider",
+                        "Arcanedev\\LogViewer\\Providers\\DeferredServicesProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Arcanedev\\LogViewer\\": "src/"
+                },
+                "files": [
+                    "constants.php",
+                    "helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "ARCANEDEV",
+                    "email": "arcanedev.maroc@gmail.com",
+                    "homepage": "https://github.com/arcanedev-maroc",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Provides a Log Viewer for Laravel 5/6",
+            "homepage": "https://github.com/ARCANEDEV/LogViewer",
+            "keywords": [
+                "arcanedev",
+                "arcanesoft",
+                "laravel",
+                "log",
+                "log viewer",
+                "log-viewer",
+                "logviewer"
+            ],
+            "time": "2019-10-22T21:21:41+00:00"
+        },
+        {
+            "name": "arcanedev/support",
+            "version": "5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ARCANEDEV/Support.git",
+                "reference": "cf731be18e7d0138223bd8e134f623a9d8c674d7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ARCANEDEV/Support/zipball/cf731be18e7d0138223bd8e134f623a9d8c674d7",
+                "reference": "cf731be18e7d0138223bd8e134f623a9d8c674d7",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/filesystem": "^6.0",
+                "illuminate/support": "^6.0",
+                "php": ">=7.2.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^4.0",
+                "phpunit/phpcov": "^6.0",
+                "phpunit/phpunit": "^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Arcanedev\\Support\\": "src/"
+                },
+                "files": [
+                    "constants.php",
+                    "helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "ARCANEDEV",
+                    "email": "arcanedev.maroc@gmail.com",
+                    "homepage": "https://github.com/arcanedev-maroc"
+                }
+            ],
+            "description": "ARCANEDEV Support Helpers",
+            "homepage": "https://github.com/ARCANEDEV/Support",
+            "keywords": [
+                "arcanedev",
+                "arcanesoft",
+                "laravel",
+                "support"
+            ],
+            "time": "2019-10-02T18:20:38+00:00"
+        },
         {
             "name": "cakephp/chronos",
             "version": "1.2.8",
@@ -1017,16 +1141,16 @@
         },
         {
             "name": "laravel/cashier",
-            "version": "v10.3.0",
+            "version": "v10.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/cashier.git",
-                "reference": "f9253296c0299d9474f1bf7ae62c0b6eaa1d4ce6"
+                "reference": "f56ff47a602028fb8988f90645c57ff9b097627e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/cashier/zipball/f9253296c0299d9474f1bf7ae62c0b6eaa1d4ce6",
-                "reference": "f9253296c0299d9474f1bf7ae62c0b6eaa1d4ce6",
+                "url": "https://api.github.com/repos/laravel/cashier/zipball/f56ff47a602028fb8988f90645c57ff9b097627e",
+                "reference": "f56ff47a602028fb8988f90645c57ff9b097627e",
                 "shasum": ""
             },
             "require": {
@@ -1087,7 +1211,7 @@
                 "laravel",
                 "stripe"
             ],
-            "time": "2019-10-01T17:08:54+00:00"
+            "time": "2019-10-29T15:47:44+00:00"
         },
         {
             "name": "laravel/framework",
@@ -1589,6 +1713,58 @@
             "time": "2019-09-04T19:28:20+00:00"
         },
         {
+            "name": "marianvlad/nova-ssl-card",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/marianvlad/nova-ssl-card.git",
+                "reference": "7dcd82844f577285f99189109b193e4f472c6d66"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/marianvlad/nova-ssl-card/zipball/7dcd82844f577285f99189109b193e4f472c6d66",
+                "reference": "7dcd82844f577285f99189109b193e4f472c6d66",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": "*",
+                "php": ">=7.1.0",
+                "spatie/ssl-certificate": "^1.12"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Marianvlad\\NovaSslCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Marianvlad\\NovaSslCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marian Gabriel",
+                    "email": "vladmariang@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova card for SSL certificates.",
+            "homepage": "https://github.com/marianvlad/nova-ssl-card",
+            "keywords": [
+                "laravel",
+                "nova",
+                "ssl"
+            ],
+            "time": "2018-08-24T19:31:01+00:00"
+        },
+        {
             "name": "markbaker/complex",
             "version": "1.4.7",
             "source": {
@@ -2083,6 +2259,47 @@
             "time": "2019-09-01T07:51:21+00:00"
         },
         {
+            "name": "nova-cards/system-information-card",
+            "version": "v1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nova-cards/system-information-card.git",
+                "reference": "5645ffc900769298b174e0cdd251d6ab394de36c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nova-cards/system-information-card/zipball/5645ffc900769298b174e0cdd251d6ab394de36c",
+                "reference": "5645ffc900769298b174e0cdd251d6ab394de36c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "NovaCards\\SystemInformationCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "NovaCards\\SystemInformationCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Laravel Nova card.",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "time": "2018-12-10T07:22:25+00:00"
+        },
+        {
             "name": "opis/closure",
             "version": "3.4.1",
             "source": {
@@ -2264,6 +2481,58 @@
             "description": "A library to read, parse and export to PDF SVG files.",
             "homepage": "https://github.com/PhenX/php-svg-lib",
             "time": "2019-09-11T20:02:13+00:00"
+        },
+        {
+            "name": "php-junior/nova-logs",
+            "version": "v1.0.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPJunior/nova-logs.git",
+                "reference": "e5bc157bbbe680ff6537c9a166a0d0629e4f4c73"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPJunior/nova-logs/zipball/e5bc157bbbe680ff6537c9a166a0d0629e4f4c73",
+                "reference": "e5bc157bbbe680ff6537c9a166a0d0629e4f4c73",
+                "shasum": ""
+            },
+            "require": {
+                "arcanedev/log-viewer": "*",
+                "php": "^7.1.3"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^3.6",
+                "phpunit/phpunit": "7.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "PhpJunior\\NovaLogViewer\\ToolServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpJunior\\NovaLogViewer\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nyi Nyi Lwin",
+                    "email": "nyinyilwin1992@hotmail.com"
+                }
+            ],
+            "description": "Provides a Log Viewer for Laravel Nova",
+            "keywords": [
+                "laravel",
+                "nova"
+            ],
+            "time": "2018-11-02T07:46:39+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -2627,6 +2896,58 @@
             "time": "2018-10-13T15:16:03+00:00"
         },
         {
+            "name": "radermacher/nova-current-environment-card",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/radermacher/nova-current-environment-card.git",
+                "reference": "f81b9eaece298bc3ab1c3913296a959c5d04e45e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/radermacher/nova-current-environment-card/zipball/f81b9eaece298bc3ab1c3913296a959c5d04e45e",
+                "reference": "f81b9eaece298bc3ab1c3913296a959c5d04e45e",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/nova": ">=2.1",
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Radermacher\\NovaCurrentEnvironmentCard\\CardServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Radermacher\\NovaCurrentEnvironmentCard\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Richard Radermacher",
+                    "email": "richard@radermacher.io",
+                    "homepage": "https://radermacher.io",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A Laravel Nova card to see current environment.",
+            "homepage": "https://github.com/radermacher/nova-current-environment-card",
+            "keywords": [
+                "card",
+                "laravel",
+                "nova"
+            ],
+            "time": "2019-08-25T17:43:49+00:00"
+        },
+        {
             "name": "ramsey/uuid",
             "version": "3.8.0",
             "source": {
@@ -2754,6 +3075,52 @@
             "time": "2019-02-22T07:42:52+00:00"
         },
         {
+            "name": "spatie/macroable",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/macroable.git",
+                "reference": "74b0d189ce75142f1706aad834d5a428dfc7c3c3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/macroable/zipball/74b0d189ce75142f1706aad834d5a428dfc7c3c3",
+                "reference": "74b0d189ce75142f1706aad834d5a428dfc7c3c3",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\Macroable\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A trait to dynamically add methods to a class",
+            "homepage": "https://github.com/spatie/macroable",
+            "keywords": [
+                "macroable",
+                "spatie"
+            ],
+            "time": "2017-09-18T09:51:20+00:00"
+        },
+        {
             "name": "spatie/once",
             "version": "1.1.0",
             "source": {
@@ -2805,6 +3172,60 @@
                 "spatie"
             ],
             "time": "2017-08-24T21:16:25+00:00"
+        },
+        {
+            "name": "spatie/ssl-certificate",
+            "version": "1.16.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/ssl-certificate.git",
+                "reference": "c70217ba6c9ef9fe359de703e7dc92a9a4b12387"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/ssl-certificate/zipball/c70217ba6c9ef9fe359de703e7dc92a9a4b12387",
+                "reference": "c70217ba6c9ef9fe359de703e7dc92a9a4b12387",
+                "shasum": ""
+            },
+            "require": {
+                "ext-intl": "*",
+                "ext-json": "*",
+                "nesbot/carbon": "^1.15|^2.0",
+                "php": "^7.2",
+                "spatie/macroable": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.0",
+                "spatie/phpunit-snapshot-assertions": "^2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Spatie\\SslCertificate\\": "src"
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Freek Van der Herten",
+                    "email": "freek@spatie.be",
+                    "homepage": "https://spatie.be",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A class to easily query the properties of an ssl certificate",
+            "homepage": "https://github.com/spatie/ssl-certificate",
+            "keywords": [
+                "spatie",
+                "ssl-certificate"
+            ],
+            "time": "2019-09-30T20:34:10+00:00"
         },
         {
             "name": "stripe/stripe-php",
@@ -4369,6 +4790,55 @@
             "time": "2019-10-04T19:48:13+00:00"
         },
         {
+            "name": "themsaid/nova-cashier-manager",
+            "version": "v0.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/themsaid/nova-cashier-manager.git",
+                "reference": "f9a48bdd3fa84d498221bdc534e928542f639e11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/themsaid/nova-cashier-manager/zipball/f9a48bdd3fa84d498221bdc534e928542f639e11",
+                "reference": "f9a48bdd3fa84d498221bdc534e928542f639e11",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Themsaid\\CashierTool\\CashierToolServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Themsaid\\CashierTool\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mohamed Said",
+                    "email": "mohamed@laravel.com"
+                }
+            ],
+            "description": "Managing Stripe subscriptions inside the incredible Laravel Nova admin panel.",
+            "keywords": [
+                "cashier",
+                "laravel",
+                "nova",
+                "stripe"
+            ],
+            "time": "2018-09-03T19:00:16+00:00"
+        },
+        {
             "name": "tijsverkoyen/css-to-inline-styles",
             "version": "2.2.1",
             "source": {
@@ -4471,77 +4941,6 @@
                 "environment"
             ],
             "time": "2019-09-10T21:37:39+00:00"
-        },
-        {
-            "name": "yajra/laravel-datatables-oracle",
-            "version": "v9.7.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/yajra/laravel-datatables.git",
-                "reference": "787eb04e59d754c453e6ed4185073195bc01d967"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/787eb04e59d754c453e6ed4185073195bc01d967",
-                "reference": "787eb04e59d754c453e6ed4185073195bc01d967",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/database": "5.8.*|^6.0",
-                "illuminate/filesystem": "5.8.*|^6.0",
-                "illuminate/http": "5.8.*|^6.0",
-                "illuminate/support": "5.8.*|^6.0",
-                "illuminate/view": "5.8.*|^6.0",
-                "php": "^7.1.3"
-            },
-            "require-dev": {
-                "orchestra/testbench": "^3.8"
-            },
-            "suggest": {
-                "yajra/laravel-datatables-buttons": "Plugin for server-side exporting of dataTables.",
-                "yajra/laravel-datatables-editor": "Plugin to use DataTables Editor (requires a license).",
-                "yajra/laravel-datatables-fractal": "Plugin for server-side response using Fractal.",
-                "yajra/laravel-datatables-html": "Plugin for server-side HTML builder of dataTables."
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "9.0-dev"
-                },
-                "laravel": {
-                    "providers": [
-                        "Yajra\\DataTables\\DataTablesServiceProvider"
-                    ],
-                    "aliases": {
-                        "DataTables": "Yajra\\DataTables\\Facades\\DataTables"
-                    }
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Yajra\\DataTables\\": "src/"
-                },
-                "files": [
-                    "src/helper.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Arjay Angeles",
-                    "email": "aqangeles@gmail.com"
-                }
-            ],
-            "description": "jQuery DataTables API for Laravel 4|5",
-            "keywords": [
-                "datatables",
-                "jquery",
-                "laravel"
-            ],
-            "time": "2019-10-24T03:50:05+00:00"
         },
         {
             "name": "ycs77/laravel-form-builder-bs4",
@@ -6766,6 +7165,77 @@
                 "validate"
             ],
             "time": "2019-08-24T08:43:50+00:00"
+        },
+        {
+            "name": "yajra/laravel-datatables-oracle",
+            "version": "v9.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yajra/laravel-datatables.git",
+                "reference": "787eb04e59d754c453e6ed4185073195bc01d967"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/787eb04e59d754c453e6ed4185073195bc01d967",
+                "reference": "787eb04e59d754c453e6ed4185073195bc01d967",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "5.8.*|^6.0",
+                "illuminate/filesystem": "5.8.*|^6.0",
+                "illuminate/http": "5.8.*|^6.0",
+                "illuminate/support": "5.8.*|^6.0",
+                "illuminate/view": "5.8.*|^6.0",
+                "php": "^7.1.3"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^3.8"
+            },
+            "suggest": {
+                "yajra/laravel-datatables-buttons": "Plugin for server-side exporting of dataTables.",
+                "yajra/laravel-datatables-editor": "Plugin to use DataTables Editor (requires a license).",
+                "yajra/laravel-datatables-fractal": "Plugin for server-side response using Fractal.",
+                "yajra/laravel-datatables-html": "Plugin for server-side HTML builder of dataTables."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "9.0-dev"
+                },
+                "laravel": {
+                    "providers": [
+                        "Yajra\\DataTables\\DataTablesServiceProvider"
+                    ],
+                    "aliases": {
+                        "DataTables": "Yajra\\DataTables\\Facades\\DataTables"
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Yajra\\DataTables\\": "src/"
+                },
+                "files": [
+                    "src/helper.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Arjay Angeles",
+                    "email": "aqangeles@gmail.com"
+                }
+            ],
+            "description": "jQuery DataTables API for Laravel 4|5",
+            "keywords": [
+                "datatables",
+                "jquery",
+                "laravel"
+            ],
+            "time": "2019-10-24T03:50:05+00:00"
         }
     ],
     "aliases": [],

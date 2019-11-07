@@ -17,7 +17,8 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    // Enforced daily so that the admin can view them.
+    'default' => 'daily',
 
     /*
     |--------------------------------------------------------------------------
