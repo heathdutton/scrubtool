@@ -51,9 +51,9 @@ class FileForm extends Form
                     // File::MODE_LIST_REPLACE => __('Replace a suppression list'),
                     File::MODE_SCRUB       => __('Scrub'),
                 ],
-                'attr'          => [
-                    'class' => 'form-control col-md-3',
-                ],
+                // 'attr'          => [
+                //     'class' => 'form-control col-md-3',
+                // ],
                 'selected'      => $file->mode ?? File::MODE_HASH,
                 'default_value' => File::MODE_HASH,
                 'expanded'      => false,
@@ -84,11 +84,18 @@ class FileForm extends Form
                     'label_show' => false,
                     'value'      => __('Column Types'),
                 ]);
-                $hashHelper  = new HashHelper();
-                $hashOptions = [null => __('Plain Text')] + $hashHelper->listChoices();
+                $hashHelper    = new HashHelper();
+                $hashOptions   = [null => __('Plain Text')] + $hashHelper->listChoices();
+                $hiddenColumns = 0;
                 foreach ($file->columns as $columnIndex => $column) {
-                    $label = $this->columnName($column['name'], $columnIndex);
+                    $column['filled']  = $column['filled'] ?? false;
+                    $class             = !empty($column['filled']) ? 'column-filled' : 'column-empty';
+                    $label             = $this->columnName($column['name'], $columnIndex);
+                    $column['samples'] = $column['samples'] ?? [__('None')];
                     array_walk($column['samples'], 'strip_tags');
+                    if (!$column['filled']) {
+                        $hiddenColumns++;
+                    }
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
@@ -99,14 +106,17 @@ class FileForm extends Form
                         ],
                         'selected'      => $column['type'] ?? null,
                         'default_value' => null,
-                        'attr'          => [
-                            'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
-                        ],
+                        // 'attr'          => [
+                        //     'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
+                        // ],
                         'label_attr'    => [
                             'data-toggle'         => 'tooltip',
                             'data-placement'      => 'right',
                             'data-original-title' => '<strong>'.__('Samples').':</strong><br/><br/>'.
                                 implode('<br/>', $column['samples']),
+                        ],
+                        'wrapper'       => [
+                            'class' => 'form-group '.$class,
                         ],
                     ]);
 
@@ -119,11 +129,11 @@ class FileForm extends Form
                             'choices'       => $hashOptions,
                             'selected'      => $column['hash'] ?? null,
                             'default_value' => null,
-                            'attr'          => [
-                                'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
-                            ],
+                            // 'attr'          => [
+                            //     'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
+                            // ],
                             'wrapper'       => [
-                                'class' => 'form-group '.($column['type'] ? '' : ' invisible'),
+                                'class' => 'form-group '.($column['type'] ? '' : ' d-none').' '.$class,
                             ],
                         ]);
                     }
@@ -135,12 +145,17 @@ class FileForm extends Form
                         'choices'       => $hashOptions,
                         'selected'      => $column['hash'] ?? null,
                         'default_value' => null,
-                        'attr'          => [
-                            'class' => 'form-control col-md-3 pull-right ml-4 '.(empty($column['filled']) ? 'filled' : 'empty'),
-                        ],
+                        // 'attr'          => [
+                        //     'class' => 'form-control col-md-3 pull-right ml-4 '.(empty($column['filled']) ? 'filled' : 'empty'),
+                        // ],
                         'wrapper'       => [
-                            'class' => 'form-group',
+                            'class' => 'form-group '.$class,
                         ],
+                    ]);
+                }
+                if (count($file->columns) && $hiddenColumns) {
+                    $this->add('show_all', Field::CHECKBOX, [
+                        'label' => __('Show other columns').' ('.$hiddenColumns.')',
                     ]);
                 }
             }

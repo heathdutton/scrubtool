@@ -11688,6 +11688,10 @@ form#dropzone .dz-message {
   opacity: 0.9;
 }
 
+.card-file form .column-empty {
+  display: none;
+}
+
 @-webkit-keyframes pb {
   0% {
     width: 0%;

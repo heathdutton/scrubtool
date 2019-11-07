@@ -41092,6 +41092,10 @@ $(function () {
     if ($min.length && $min.text() === '0m') {
       $min.hide();
     }
+
+    $(':checkbox[name=show_all]', $context).bind('change', function () {
+      $(this).parent().parent().find('.column-empty').toggle();
+    });
   };
 
   st.fileLoaded($('body'));

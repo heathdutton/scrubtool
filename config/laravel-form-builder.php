@@ -13,18 +13,20 @@ return [
             'field_class' => 'form-control-plaintext',
         ],
         'checkbox'            => [
-            'wrapper_class'  => 'form-check',
-            'field_class'    => 'form-check-input',
-            'label_class'    => 'form-check-label',
-            'choice_options' => [
-                'wrapper_class' => 'custom-control custom-checkbox',
-                'label_class'   => 'custom-control-label',
-                'field_class'   => 'custom-control-input',
-            ],
+            'wrapper_class'  => 'form-check custom-control custom-checkbox',
+            'field_class'    => 'form-check-input custom-control-input',
+            'label_class'    => 'form-check-label custom-control-label',
+            // 'choice_options' => [
+            //     'wrapper_class' => 'custom-control custom-checkbox',
+            //     'label_class'   => 'custom-control-label',
+            //     'field_class'   => 'custom-control-input',
+            // ],
         ],
         'choice'            => [
+            // 'wrapper_class'  => 'custom-control',
             'choice_options' => [
                 'field_class'   => 'custom-select',
+                'label_class'    => 'custom-control-label',
             ],
         ],
         'radio'               => [

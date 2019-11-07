@@ -259,16 +259,17 @@ class FileImport implements ToModel, WithChunkReading
         // Get column analysis from the helper.
         $columns = $this->getFileAnalysisHelper()->getColumnAnalysis();
 
-        // Append column examples.
+        // Add samples collected after parsing.
         foreach ($this->samples as $rowIndex => $sample) {
             foreach ($columns as $columnIndex => $column) {
-                if (!isset($column[$columnIndex]['samples'])) {
-                    $column[$columnIndex]['samples'] = [];
+                if (!isset($columns[$columnIndex]['samples'])) {
+                    $columns[$columnIndex]['samples'] = [];
                 }
-                $column[$columnIndex]['samples'][$rowIndex] = $sample[$columnIndex] ?? null;
+                $columns[$columnIndex]['samples'][$rowIndex] = $sample[$columnIndex] ?? null;
             }
         }
 
+        // Add boolean to indicate that the
         foreach ($columns as $columnIndex => $column) {
             $columns[$columnIndex]['filled'] = $this->columnsFilled[$columnIndex] ?? false;
         }
