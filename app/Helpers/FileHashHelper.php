@@ -53,7 +53,7 @@ class FileHashHelper
     public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $algo = null, $binary = false)
     {
         if (!empty($value)) {
-            $type = $this->file->input_settings['column_type_'.$columnIndex] ?? FileAnalysisHelper::TYPE_UNKNOWN;
+            $type = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
 
             if ($type & FileAnalysisHelper::TYPE_PHONE) {
                 $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';

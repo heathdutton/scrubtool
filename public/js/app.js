@@ -41126,8 +41126,9 @@ $(function () {
       addRemoveLinks: false,
       timeout: 899,
       success: function success(file, response) {
-        // $(file.previewElement).hide();
         console.log(file, response);
+        $(file.previewElement).hide();
+        location.reload();
       }
     });
   }

@@ -44,12 +44,12 @@ class FileForm extends Form
                 'label'         => __('Action'),
                 'label_show'    => false,
                 'choices'       => [
-                    File::MODE_HASH         => __('Hash'),
-                    File::MODE_LIST_CREATE  => __('New suppression list'),
+                    File::MODE_HASH        => __('Hash'),
+                    File::MODE_LIST_CREATE => __('New suppression list'),
                     // @todo - Add these when functionality is done.
                     // File::MODE_LIST_APPEND  => __('Add to an existing list'),
                     // File::MODE_LIST_REPLACE => __('Replace a suppression list'),
-                    File::MODE_SCRUB        => __('Scrub'),
+                    File::MODE_SCRUB       => __('Scrub'),
                 ],
                 'attr'          => [
                     'class' => 'form-control col-md-3',
@@ -89,19 +89,18 @@ class FileForm extends Form
                 foreach ($file->columns as $columnIndex => $column) {
                     $label = $this->columnName($column['name'], $columnIndex);
                     array_walk($column['samples'], 'strip_tags');
-                    $fileType = $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN;
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
                         'choices'       => [
-                            FileAnalysisHelper::TYPE_EMAIL   => __('Email Address'),
-                            FileAnalysisHelper::TYPE_PHONE   => __('Phone Number'),
-                            FileAnalysisHelper::TYPE_UNKNOWN => __('Other'),
+                            FileAnalysisHelper::TYPE_EMAIL => __('Email Address'),
+                            FileAnalysisHelper::TYPE_PHONE => __('Phone Number'),
+                            null                           => __('Other'),
                         ],
-                        'selected'      => $column['type'] ?? FileAnalysisHelper::TYPE_UNKNOWN,
-                        'default_value' => FileAnalysisHelper::TYPE_UNKNOWN,
+                        'selected'      => $column['type'] ?? null,
+                        'default_value' => null,
                         'attr'          => [
-                            'class' => 'form-control col-md-3 pull-right',
+                            'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
                         ],
                         'label_attr'    => [
                             'data-toggle'         => 'tooltip',
@@ -121,10 +120,10 @@ class FileForm extends Form
                             'selected'      => $column['hash'] ?? null,
                             'default_value' => null,
                             'attr'          => [
-                                'class' => 'form-control col-md-3 pull-right',
+                                'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
                             ],
                             'wrapper'       => [
-                                'class' => 'form-group'.($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
+                                'class' => 'form-group '.($column['type'] ? '' : ' invisible'),
                             ],
                         ]);
                     }
@@ -137,11 +136,10 @@ class FileForm extends Form
                         'selected'      => $column['hash'] ?? null,
                         'default_value' => null,
                         'attr'          => [
-                            'class' => 'form-control col-md-3 pull-right ml-4',
+                            'class' => 'form-control col-md-3 pull-right ml-4 '.(empty($column['filled']) ? 'filled' : 'empty'),
                         ],
                         'wrapper'       => [
-                            'class' => 'form-group'.''
-                            // ($fileType & FileAnalysisHelper::TYPE_UNKNOWN ? ' invisible' : ''),
+                            'class' => 'form-group',
                         ],
                     ]);
                 }

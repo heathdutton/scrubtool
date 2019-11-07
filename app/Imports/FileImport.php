@@ -69,6 +69,9 @@ class FileImport implements ToModel, WithChunkReading
     /** @var SuppressionList */
     private $list;
 
+    /** @var array */
+    private $columnsFilled = [];
+
     /**
      * FileImport constructor.
      *
@@ -102,8 +105,10 @@ class FileImport implements ToModel, WithChunkReading
 
         if ($this->file->status & File::STATUS_ANALYSIS) {
             // Running an analysis. No export needed.
+            if ($analysis->rowIsValid() && !$analysis->getRowIsHeader()) {
+                $this->setColumnsFilled($row);
+            }
         } elseif ($this->file->status & File::STATUS_RUNNING) {
-
             if ($analysis->rowIsValid()) {
                 if ($analysis->getRowIsHeader()) {
                     if ($this->file->mode & (File::MODE_HASH | File::MODE_SCRUB)) {
@@ -156,6 +161,18 @@ class FileImport implements ToModel, WithChunkReading
         }
 
         return $this->FileAnalysisHelper;
+    }
+
+    /**
+     * @param $row
+     */
+    private function setColumnsFilled($row)
+    {
+        foreach ($row as $columnIndex => $value) {
+            if (!isset($this->columnsFilled[$columnIndex]) && !empty($value)) {
+                $this->columnsFilled[$columnIndex] = true;
+            }
+        }
     }
 
     /**
@@ -244,12 +261,16 @@ class FileImport implements ToModel, WithChunkReading
 
         // Append column examples.
         foreach ($this->samples as $rowIndex => $sample) {
-            foreach ($columns as $columnIndex => &$column) {
-                if (!isset($column['samples'])) {
-                    $column['samples'] = [];
+            foreach ($columns as $columnIndex => $column) {
+                if (!isset($column[$columnIndex]['samples'])) {
+                    $column[$columnIndex]['samples'] = [];
                 }
-                $column['samples'][$rowIndex] = $sample[$columnIndex] ?? null;
+                $column[$columnIndex]['samples'][$rowIndex] = $sample[$columnIndex] ?? null;
             }
+        }
+
+        foreach ($columns as $columnIndex => $column) {
+            $columns[$columnIndex]['filled'] = $this->columnsFilled[$columnIndex] ?? false;
         }
 
         return [

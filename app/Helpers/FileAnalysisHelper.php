@@ -60,8 +60,6 @@ class FileAnalysisHelper
 
     const TYPE_STRING     = 32768;
 
-    const TYPE_UNKNOWN    = 65536;
-
     protected $columnCount = 0;
 
     protected $columnNames = [];
@@ -160,7 +158,7 @@ class FileAnalysisHelper
         if ($this->columnCount < $count) {
             $this->columnNames  = array_pad($this->columnNames, $count, null);
             $this->columnHashes = array_pad($this->columnHashes, $count, null);
-            $this->columnTypes  = array_pad($this->columnTypes, $count, self::TYPE_UNKNOWN);
+            $this->columnTypes  = array_pad($this->columnTypes, $count, null);
             $this->columnCount  = $count;
         }
     }
@@ -328,17 +326,17 @@ class FileAnalysisHelper
             $this->columnNames[$i] = trim((string) $value);
 
             // Assume type based on header contents (can be overridden later).
-            $this->columnTypes[$i] = self::TYPE_UNKNOWN;
+            $this->columnTypes[$i] = null;
             $simple                = $this->simplify($value);
-            if (isset($this->typeIdentifiers[$simple])) {
-                $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
-            } elseif (
-                isset($this->typeIdentifiers['hash'.$simple])
-                || isset($this->typeIdentifiers[$simple.'hash'])
-            ) {
-                $this->columnTypes[$i] = $this->typeIdentifiers[$simple] & self::TYPE_HASH;
-            } elseif (in_array($simple, $this->getHashHelper()->listSimple())) {
-                $this->columnTypes[$i] = self::TYPE_HASH;
+            if ($simple) {
+                if (isset($this->typeIdentifiers[$simple])) {
+                    $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
+                }
+                foreach ($this->getHashHelper()->listSimple() as $hashSimple) {
+                    if (strpos($simple, $hashSimple)) {
+                        $this->columnTypes[$i] += self::TYPE_HASH;
+                    }
+                }
             }
         }
         $this->columnCount = count($this->columnNames);
@@ -362,10 +360,10 @@ class FileAnalysisHelper
         if ($this->rowIndex < 101) { // } || 0 === $rowIndex % 997) {
             foreach ($this->columnTypes as $i => &$type) {
                 if ($value = trim((string) $this->rowData[$i] ?? '')) {
-                    if ($type & self::TYPE_UNKNOWN) {
+                    if (!$type) {
                         $type = $this->getType($value, $i);
                     }
-                    if ($type ^ self::TYPE_UNKNOWN && !$this->columnHashes[$i]) {
+                    if ($type && !$this->columnHashes[$i]) {
                         $this->columnHashes[$i] = $this->getHashHelper()->detectHash($value);
                     }
                 }
@@ -393,7 +391,7 @@ class FileAnalysisHelper
             return self::TYPE_PHONE;
         }
 
-        return self::TYPE_UNKNOWN;
+        return null;
     }
 
     private function isHash($value)
