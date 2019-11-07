@@ -102,14 +102,14 @@ class File extends Model
         $fileId = null,
         $limit = 20
     ) {
-        $q = self::where(
-            function ($q) use ($request) {
-                $q->where('session_id', $request->getSession()->getId());
-                if ($request->user()) {
-                    $q->orWhere('user_id', $request->user()->id);
-                }
-            })
-            ->whereNull('deleted_at');
+        $q = self::withoutTrashed()
+            ->where(
+                function ($q) use ($request) {
+                    $q->where('session_id', $request->getSession()->getId());
+                    if ($request->user()) {
+                        $q->orWhere('user_id', $request->user()->id);
+                    }
+                });
 
         if ($fileId) {
             $q->where('id', $fileId);

@@ -20,7 +20,7 @@ class SuppressionListSupport extends Model
         'id',
     ];
 
-    /** @var SuppressionListSupportContent */
+    /** @var SuppressionListContent */
     private $content;
 
     /** @var array */
@@ -42,12 +42,13 @@ class SuppressionListSupport extends Model
     }
 
     /**
-     * @return SuppressionListSupportContent
+     * @return SuppressionListContent
+     * @throws \Exception
      */
     private function getContent()
     {
         if (!$this->content) {
-            $this->content = new SuppressionListSupportContent([], $this);
+            $this->content = new SuppressionListContent([], $this);
             $this->content->createTableIfNotExists();
         }
 
@@ -68,17 +69,20 @@ class SuppressionListSupport extends Model
 
             // Build support for additional hash types.
             if (null === $this->hash_type) {
+                $list = $this->list()->getRelated()->withoutTrashed()->first();
+                if (!$list) {
+                    throw new Exception(__('Suppression list no longer exists.'));
+                }
                 foreach ((new HashHelper())->listChoices() as $algo => $name) {
                     // Create new support if it doesn't already exist.
                     $newSupport = self::withoutTrashed()
-                        ->where('suppression_list_id', $this->list()->id)
+                        ->where('suppression_list_id', $list->id)
                         ->where('column_type', $this->column_type)
-                        ->where('hash_type', $this->hash_type)
-                        ->first()
-                        ->get();
+                        ->where('hash_type', $algo)
+                        ->first();
                     if (!$newSupport) {
                         $newSupport = new self([
-                            'suppression_list_id' => $this->list()->id,
+                            'suppression_list_id' => $list->id,
                             'status'              => self::STATUS_BUILDING,
                             'column_type'         => $this->column_type,
                             'hash_type'           => $algo,

@@ -5,6 +5,7 @@ namespace App;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
 use App\Schema\MySqlGrammar;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\MySqlConnection;
 use Illuminate\Database\Schema\Blueprint;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Schema;
  *
  * @package App
  */
-class SuppressionListSupportContent extends Model
+class SuppressionListContent extends Model
 {
     /** @var int */
     const BATCH_SIZE = 500;
@@ -27,7 +28,7 @@ class SuppressionListSupportContent extends Model
     const CONTENT_COLUMN = 'content';
 
     /** @var string */
-    const TABLE_PREFIX = 'suppression_list_support_content';
+    const TABLE_PREFIX = 'suppression_list_content';
 
     /** @var bool */
     public $timestamps = false;
@@ -51,20 +52,27 @@ class SuppressionListSupportContent extends Model
      * SuppressionListSupportContent constructor.
      *
      * @param  array  $attributes
-     * @param  SuppressionListSupport  $support
+     * @param  SuppressionListSupport|null  $support
+     *
+     * @throws Exception
      */
     public function __construct(array $attributes = [], SuppressionListSupport $support = null)
     {
         $this->support = $support;
 
-        // Dynamic table name based on the column type, and hash type.
-        $pieces = [self::TABLE_PREFIX, $support->column_type];
-        if ($support->hash_type) {
-            $pieces[] = str_replace(',', '_', $support->hash_type);
+        if ($this->support) {
+            $list = $this->support->list()->getRelated()->withoutTrashed()->first();
+            // Dynamic table name based on the column type, and hash type.
+            $pieces = [self::TABLE_PREFIX, $list->id, $support->column_type];
+            if ($support->hash_type) {
+                $pieces[] = $support->hash_type;
+            }
+            $this->setTable(implode('_', $pieces));
         }
-        $this->setTable(implode('_', $pieces));
 
-        return parent::__construct($attributes);
+        parent::__construct($attributes);
+
+        return $this;
     }
 
     /**
