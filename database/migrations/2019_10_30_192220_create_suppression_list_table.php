@@ -21,6 +21,7 @@ class CreateSuppressionListTable extends Migration
             $table->text('description');
             $table->bigInteger('user_id')->unsigned();
             $table->unsignedTinyInteger('global');
+            $table->unsignedTinyInteger('required');
         });
     }
 
