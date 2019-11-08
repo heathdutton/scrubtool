@@ -4,18 +4,20 @@ require('./fileupload');
 require('./tooltips');
 require('./file');
 
-st.animationSpeed = 'slow';
+st.animationSpeed = '900';
+
 st.loadContent = function (url, $destination, prepend, callback) {
     $.getJSON(url, function (data) {
         if (typeof data.success !== 'undefined' && data.html.length) {
+            $result = $(data.html);
             if (prepend) {
-                $destination.prepend($(data.html));
+                $destination.prepend($result);
             }
             else {
-                $destination.replaceWith(data.html);
+                $destination.replaceWith($result);
             }
             if (typeof callback == 'function') {
-                callback();
+                callback($result);
             }
         }
     });

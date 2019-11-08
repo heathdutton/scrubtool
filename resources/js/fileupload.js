@@ -24,39 +24,46 @@ $(function () {
                     var $filelist = $('#fileslist');
                     if ($filelist.length) {
                         $.each(files, function (index, file) {
-                            console.log(response.routes[file.name]);
                             if (typeof response.routes[file.name] !== 'undefined') {
                                 // Upload succeeded.
+
+                                // Clone the file card in the lower content
                                 var $card = $(file.previewElement);
-                                var $clone = $card.clone().css({
+                                var $destination = $card.clone().css({
                                     'opacity': 0,
                                     'max-height': '0px'
                                 }, st.animationSpeed);
-                                $filelist.prepend($clone);
+                                $filelist.prepend($destination);
 
-                                st.loadContent(response.routes[file.name], $clone, false, function () {
-                                    $clone.animate({
-                                        'opacity': 1,
-                                        'max-height': '600px'
-                                    }, st.animationSpeed, function () {
-                                        $(this).css({'max-height': 'auto'});
-                                    });
-                                    st.fileLoaded($clone);
-                                });
+                                // Ajax load into the clone while animating.
+                                st.loadFile(response.routes[file.name], $destination);
+
+                                // Animate the preview card down to the
+                                // destination.
                                 $card
                                     .css({'position': 'relative'})
                                     .animate({
                                         'top': '220px',
-                                        'margin-left': '-1em',
-                                        'margin-right': '-1em',
+                                        'margin-left': '-1.5em',
+                                        'margin-right': '-1.5em',
                                         'opacity': 0
                                     }, st.animationSpeed, function () {
                                         $(this).animate({
                                             'height': '0px'
-                                        }, 600, function () {
+                                        }, st.animationSpeed, function () {
                                             $(this).remove();
                                         });
                                     });
+
+                                // Fade in new card during hte ajax req.
+                                $destination.animate({
+                                    'opacity': 1,
+                                    'max-height': '600px'
+                                }, st.animationSpeed, function () {
+                                    $(this).css({'max-height': 'auto'});
+                                });
+
+                                // Show the "files" header
                                 $('#file-list-header:first.d-none')
                                     .css({'opacity': 0})
                                     .removeClass('d-none')
@@ -65,22 +72,6 @@ $(function () {
                                     }, st.animationSpeed);
                             }
                         });
-                        // if (typeof response.routes !== 'undefined') {
-                        //     $.each(response.routes, function (fileName,
-                        // route) { st.loadContent(route, $filelist, true,
-                        // function () { st.fileLoaded($filelist); }); var
-                        // $card = $('span.file-preview-name:contains("' +
-                        // fileName + '"):first').parent().parent(); // if
-                        // (!$card.length) { //     $card =
-                        // $(file.previewElement); // } $card .css({'position':
-                        // 'relative'}) .animate({ 'top': '220px',
-                        // 'margin-left': '-1em', 'margin-right': '-1em',
-                        // 'opacity': 0 }, 600, function () { $(this).animate({
-                        // 'height': '0px' }, 600, function () {
-                        // $(this).remove(); }); });
-                        // $('#file-list-header:first.d-none') .css({'opacity':
-                        // 0}) .removeClass('d-none') .animate({ 'opacity': 1
-                        // }, 600); }); }
                     }
                 });
             },

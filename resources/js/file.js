@@ -1,7 +1,8 @@
 jQuery.countdown = require('jquery.countdown');
 
 st.classModePrefix = '.file-mode-';
-st.fileLoaded = function ($context) {
+st.refreshDelay = 1000;
+st.filesLoaded = function ($context) {
     // Hide fields irrelevant to the current file mode.
     $('select[name=mode]', $context).bind('change', function () {
         var $form = $(this).closest('form');
@@ -45,8 +46,36 @@ st.fileLoaded = function ($context) {
     if ($min.length && $min.text() === '0m') {
         $min.hide();
     }
+
+    st.filesRefresh($context);
+};
+
+st.loadFile = function ($route, $destination) {
+    st.loadContent($route, $destination, false, function ($result) {
+        st.fileRefresh($result, st.refreshDelay);
+    });
+};
+
+st.fileRefresh = function ($file, delay) {
+    setTimeout(function () {
+        if ($file.hasClass('file-refresh') && !$file.hasClass('file-refreshing')) {
+            $file.addClass('file-refreshing');
+            st.loadContent($file.attr('data-file-origin'), $file, false, function ($destination) {
+                st.fileRefresh($destination, delay);
+            });
+        }
+    }, delay);
+};
+
+st.filesRefresh = function ($context) {
+    var $files = $('.file-refresh:not(.file-refreshing)', $context);
+    if ($files.length) {
+        $files.each(function () {
+            st.fileRefresh($(this), st.refreshDelay);
+        });
+    }
 };
 
 $(function () {
-    st.fileLoaded($('body'));
+    st.filesLoaded($('body'));
 });

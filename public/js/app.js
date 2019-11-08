@@ -41010,19 +41010,21 @@ __webpack_require__(/*! ./tooltips */ "./resources/js/tooltips.js");
 
 __webpack_require__(/*! ./file */ "./resources/js/file.js");
 
-st.animationSpeed = 'slow';
+st.animationSpeed = '900';
 
 st.loadContent = function (url, $destination, prepend, callback) {
   $.getJSON(url, function (data) {
     if (typeof data.success !== 'undefined' && data.html.length) {
+      $result = $(data.html);
+
       if (prepend) {
-        $destination.prepend($(data.html));
+        $destination.prepend($result);
       } else {
-        $destination.replaceWith(data.html);
+        $destination.replaceWith($result);
       }
 
       if (typeof callback == 'function') {
-        callback();
+        callback($result);
       }
     }
   });
@@ -41084,8 +41086,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 jQuery.countdown = __webpack_require__(/*! jquery.countdown */ "./node_modules/jquery.countdown/jquery.countdown.js");
 st.classModePrefix = '.file-mode-';
+st.refreshDelay = 1000;
 
-st.fileLoaded = function ($context) {
+st.filesLoaded = function ($context) {
   // Hide fields irrelevant to the current file mode.
   $('select[name=mode]', $context).bind('change', function () {
     var $form = $(this).closest('form');
@@ -41130,10 +41133,39 @@ st.fileLoaded = function ($context) {
   if ($min.length && $min.text() === '0m') {
     $min.hide();
   }
+
+  st.filesRefresh($context);
+};
+
+st.loadFile = function ($route, $destination) {
+  st.loadContent($route, $destination, false, function ($result) {
+    st.fileRefresh($result, st.refreshDelay);
+  });
+};
+
+st.fileRefresh = function ($file, delay) {
+  setTimeout(function () {
+    if ($file.hasClass('file-refresh') && !$file.hasClass('file-refreshing')) {
+      $file.addClass('file-refreshing');
+      st.loadContent($file.attr('data-file-origin'), $file, false, function ($destination) {
+        st.fileRefresh($destination, delay);
+      });
+    }
+  }, delay);
+};
+
+st.filesRefresh = function ($context) {
+  var $files = $('.file-refresh:not(.file-refreshing)', $context);
+
+  if ($files.length) {
+    $files.each(function () {
+      st.fileRefresh($(this), st.refreshDelay);
+    });
+  }
 };
 
 $(function () {
-  st.fileLoaded($('body'));
+  st.filesLoaded($('body'));
 });
 
 /***/ }),
@@ -41171,63 +41203,50 @@ $(function () {
 
           if ($filelist.length) {
             $.each(files, function (index, file) {
-              console.log(response.routes[file.name]);
-
               if (typeof response.routes[file.name] !== 'undefined') {
                 // Upload succeeded.
+                // Clone the file card in the lower content
                 var $card = $(file.previewElement);
-                var $clone = $card.clone().css({
+                var $destination = $card.clone().css({
                   'opacity': 0,
                   'max-height': '0px'
                 }, st.animationSpeed);
-                $filelist.prepend($clone);
-                st.loadContent(response.routes[file.name], $clone, false, function () {
-                  $clone.animate({
-                    'opacity': 1,
-                    'max-height': '600px'
-                  }, st.animationSpeed, function () {
-                    $(this).css({
-                      'max-height': 'auto'
-                    });
-                  });
-                  st.fileLoaded($clone);
-                });
+                $filelist.prepend($destination); // Ajax load into the clone while animating.
+
+                st.loadFile(response.routes[file.name], $destination); // Animate the preview card down to the
+                // destination.
+
                 $card.css({
                   'position': 'relative'
                 }).animate({
                   'top': '220px',
-                  'margin-left': '-1em',
-                  'margin-right': '-1em',
+                  'margin-left': '-1.5em',
+                  'margin-right': '-1.5em',
                   'opacity': 0
                 }, st.animationSpeed, function () {
                   $(this).animate({
                     'height': '0px'
-                  }, 600, function () {
+                  }, st.animationSpeed, function () {
                     $(this).remove();
                   });
-                });
+                }); // Fade in new card during hte ajax req.
+
+                $destination.animate({
+                  'opacity': 1,
+                  'max-height': '600px'
+                }, st.animationSpeed, function () {
+                  $(this).css({
+                    'max-height': 'auto'
+                  });
+                }); // Show the "files" header
+
                 $('#file-list-header:first.d-none').css({
                   'opacity': 0
                 }).removeClass('d-none').animate({
                   'opacity': 1
                 }, st.animationSpeed);
               }
-            }); // if (typeof response.routes !== 'undefined') {
-            //     $.each(response.routes, function (fileName,
-            // route) { st.loadContent(route, $filelist, true,
-            // function () { st.fileLoaded($filelist); }); var
-            // $card = $('span.file-preview-name:contains("' +
-            // fileName + '"):first').parent().parent(); // if
-            // (!$card.length) { //     $card =
-            // $(file.previewElement); // } $card .css({'position':
-            // 'relative'}) .animate({ 'top': '220px',
-            // 'margin-left': '-1em', 'margin-right': '-1em',
-            // 'opacity': 0 }, 600, function () { $(this).animate({
-            // 'height': '0px' }, 600, function () {
-            // $(this).remove(); }); });
-            // $('#file-list-header:first.d-none') .css({'opacity':
-            // 0}) .removeClass('d-none') .animate({ 'opacity': 1
-            // }, 600); }); }
+            });
           }
         });
       }
