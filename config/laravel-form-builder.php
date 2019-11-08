@@ -13,19 +13,15 @@ return [
             'field_class' => 'form-control-plaintext',
         ],
         'checkbox'            => [
-            'wrapper_class'  => 'form-check custom-control custom-checkbox',
-            'field_class'    => 'form-check-input custom-control-input',
-            'label_class'    => 'form-check-label custom-control-label',
-            // 'choice_options' => [
-            //     'wrapper_class' => 'custom-control custom-checkbox',
-            //     'label_class'   => 'custom-control-label',
-            //     'field_class'   => 'custom-control-input',
-            // ],
+            'wrapper_class'  => 'custom-control custom-switch',
+            'field_class'    => 'custom-control-input',
+            'label_class'    => 'custom-control-label',
         ],
+        // Custom classes used for single selects. Multiples require custom classes when used.
         'choice'            => [
-            // 'wrapper_class'  => 'custom-control',
             'choice_options' => [
-                'field_class'   => 'custom-select',
+                'wrapper_class'  => 'custom-control',
+                'field_class'    => 'custom-control custom-select',
                 'label_class'    => 'custom-control-label',
             ],
         ],

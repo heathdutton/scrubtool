@@ -30,6 +30,10 @@ class FileForm extends Form
         }
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
+            $classModePrefix    = 'd-none file-mode-';
+            $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
+            $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
+
             $user = $file->user()->getRelated()->first();
 
             $this->formOptions = [
@@ -37,31 +41,40 @@ class FileForm extends Form
                 'url'    => route('file.store', ['id' => $file->id]),
             ];
 
-            $this->add('static_action', Field::STATIC, [
-                'tag'        => 'h5',
-                'label_show' => false,
-                'value'      => __('File Action'),
-            ]);
+            // $this->add('static_action', Field::STATIC, [
+            //     'tag'        => 'h5',
+            //     'label_show' => false,
+            //     'value'      => __('Settings'),
+            // ]);
 
             // @todo - Add select for suppression lists to replace/append.
             /** @var User $user */
-            $listChoices                     = [];
-            $actionChoices                   = [];
-            $actionChoices[File::MODE_HASH]  = __('Hash');
-            $actionChoices[File::MODE_SCRUB] = __('Scrub');
+            $listChoices                   = [];
+            $modeChoices                   = [];
+            $modeChoices[File::MODE_HASH]  = __('Hash');
+            $modeChoices[File::MODE_SCRUB] = __('Scrub');
             if ($user) {
-                $actionChoices[File::MODE_LIST_CREATE] = __('New suppression list');
-                // @todo - Add these when functionality is done.
-                // $actionChoices[File::MODE_LIST_APPEND]  = __('Add to an existing list');
-                // $actionChoices[File::MODE_LIST_REPLACE] = __('Replace a suppression list');
+                $modeChoices[File::MODE_LIST_CREATE]  = __('New list');
+                $modeChoices[File::MODE_LIST_APPEND]  = __('Append list');
+                $modeChoices[File::MODE_LIST_REPLACE] = __('Replace list');
             }
             $this->add('mode', Field::CHOICE, [
                 'rules'         => 'required',
-                'label'         => __('Action'),
-                'label_show'    => false,
-                'choices'       => $actionChoices,
+                'label'         => __('Mode'),
+                'label_show'    => true,
+                'choices'       => $modeChoices,
                 'selected'      => $file->mode ?? File::MODE_HASH,
                 'default_value' => File::MODE_HASH,
+                // 'attr'          => [
+                //     'class' => 'btn btn-primary',
+                // ],
+                // 'wrapper'       => [
+                //     'class'       => 'btn-group btn-group-toggle',
+                //     'data-toggle' => 'buttons',
+                // ],
+                'wrapper'       => [
+                    'class' => $classChoiceWrapper,
+                ],
             ]);
 
             // Get user's own suppression lists as options to scrub against.
@@ -80,38 +93,96 @@ class FileForm extends Form
                 'label'      => __('List to Append'),
                 'label_show' => true,
                 'choices'    => $listChoices,
+                'wrapper'    => [
+                    'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_APPEND,
+                ],
+            ]);
+
+            $this->add('suppression_list_replace', Field::CHOICE, [
+                'label'      => __('List to Replace'),
+                'label_show' => true,
+                'choices'    => $listChoices,
+                'wrapper'    => [
+                    'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_REPLACE,
+                ],
             ]);
 
             // Add global suppression list options for scrubbing.
+            $requiredLists = [];
             foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
-                $listChoices[$list->id] = $list->name ?? $list->id;
+                $label = $list->name ?? $list->id;
+                if ($list->required) {
+                    $label                    .= ' ('.__('Required').')';
+                    $requiredLists[$list->id] = true;
+                }
+                $listChoices[$list->id] = $label;
             }
             asort($listChoices);
 
             if ($listChoices) {
-                $this->add('suppression_list_use', Field::CHOICE, [
-                    'label'      => __('List/s to use for scrubbing'),
-                    'label_show' => true,
-                    'choices'    => $listChoices,
-                    'multiple'   => true,
-                    'expanded'   => true,
+                $this->add('static_suppression_list_use', Field::STATIC, [
+                    'tag'        => 'label',
+                    'label_show' => false,
+                    'value'      => __('Scrub this file using:'),
+                    'wrapper'    => [
+                        'class' => 'ml-4 '.$classModePrefix.File::MODE_SCRUB,
+                    ],
                 ]);
+                foreach ($listChoices as $listId => $label) {
+                    $options            = [];
+                    $options['label']   = $label;
+                    $options['value']   = $listId;
+                    $options['attr']    = [];
+                    $options['wrapper'] = [
+                        'class' => $classCheckWrapper.' ml-4 '.$classModePrefix.File::MODE_SCRUB,
+                    ];
+                    if (count($listChoices) <= 5) {
+                        $options['checked'] = 'checked';
+                    }
+                    if (isset($requiredLists[$listId]) || count($listChoices) === 1) {
+                        $options['required']         = true;
+                        $options['attr']['disabled'] = 'disabled';
+                        $options['checked']          = 'checked';
+                    }
+                    $this->add('suppression_list_use', Field::CHECKBOX, $options);
+                };
+                // @todo - Auto select all link/button. Possibly handle a selection list better if there are MANY.
+                // if (count($listChoices) > 5) {
+                //     $this->add('static_suppression_list_all', Field::CHECKBOX, [
+                //         'label'  => __('All of the Above'),
+                //         'value'  => 1,
+                //     ]);
+                // }
+                // @todo - Link/button for creating a new suppression list?
+                // if (count($listChoices) > 5) {
+                //     $this->add('static_suppression_list_all', Field::CHECKBOX, [
+                //         'label'  => __('All of the Above'),
+                //         'value'  => 1,
+                //     ]);
+                // }
             }
 
             if ($file->columns) {
                 $this->add('static_columns', Field::STATIC, [
                     'tag'        => 'h5',
                     'label_show' => false,
-                    'value'      => __('Column Types'),
+                    'value'      => __('Columns'),
+                    'wrapper'    => [
+                        'class' => 'mt-3',
+                    ],
                 ]);
                 $hashHelper    = new HashHelper();
                 $hashOptions   = [null => __('Plain Text')] + $hashHelper->listChoices();
                 $hiddenColumns = 0;
                 foreach ($file->columns as $columnIndex => $column) {
-                    $column['filled']  = $column['filled'] ?? false;
-                    $class             = !empty($column['filled']) ? 'column-filled' : 'column-empty';
                     $label             = $this->columnName($column['name'], $columnIndex);
-                    $column['samples'] = $column['samples'] ?? [__('None')];
+                    $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
+                    $column['filled']  = $column['filled'] ?? false;
+                    if (empty($column['filled'])) {
+                        $classChoiceWrapper .= ' column-empty';
+                    } else {
+                        $classChoiceWrapper .= ' column-filled';
+                    }
                     array_walk($column['samples'], 'strip_tags');
                     if (!$column['filled']) {
                         $hiddenColumns++;
@@ -126,56 +197,50 @@ class FileForm extends Form
                         ],
                         'selected'      => $column['type'] ?? null,
                         'default_value' => null,
-                        // 'attr'          => [
-                        //     'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
-                        // ],
                         'label_attr'    => [
                             'data-toggle'         => 'tooltip',
                             'data-placement'      => 'right',
-                            'data-original-title' => '<strong>'.__('Samples').':</strong><br/><br/>'.
+                            'data-original-title' => '<strong>'.__('Samples').':</strong><br/>'.
                                 implode('<br/>', $column['samples']),
                         ],
                         'wrapper'       => [
-                            'class' => 'form-group '.$class,
+                            'class' => $classChoiceWrapper,
                         ],
                     ]);
 
                     // Do not give hash input options if no hash was detected.
                     if (!empty($column['hash'])) {
-                        // @todo - Only show this if the above is a known type.
+
+                        // @todo - Hide these if the field type is unknown/other.
                         $this->add('column_hash_input_'.$columnIndex, Field::CHOICE, [
-                            'label'         => $label.' '.__('Hash Used'),
+                            'label'         => __('Hash Provided'),
                             'label_show'    => true,
                             'choices'       => $hashOptions,
                             'selected'      => $column['hash'] ?? null,
                             'default_value' => null,
-                            // 'attr'          => [
-                            //     'class' => 'form-control col-md-3 pull-right '.(empty($column['filled']) ? 'filled' : 'empty'),
-                            // ],
                             'wrapper'       => [
-                                'class' => 'form-group '.($column['type'] ? '' : ' d-none').' '.$class,
+                                'class' => $classChoiceWrapper,
                             ],
                         ]);
                     }
 
-                    // @todo - Only show this if Plain Text is selected above or there is no hash, and the field type is defined as phone or email.
                     $this->add('column_hash_output_'.$columnIndex, Field::CHOICE, [
-                        'label'         => $label.' '.__('Output Hash'),
+                        'label'         => __('Hash to Generate'),
                         'label_show'    => true,
                         'choices'       => $hashOptions,
                         'selected'      => $column['hash'] ?? null,
                         'default_value' => null,
-                        // 'attr'          => [
-                        //     'class' => 'form-control col-md-3 pull-right ml-4 '.(empty($column['filled']) ? 'filled' : 'empty'),
-                        // ],
                         'wrapper'       => [
-                            'class' => 'form-group '.$class,
+                            'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_HASH,
                         ],
                     ]);
                 }
                 if (count($file->columns) && $hiddenColumns) {
                     $this->add('show_all', Field::CHECKBOX, [
-                        'label' => __('Show other columns').' ('.$hiddenColumns.')',
+                        'label'   => __('Show other columns').' ('.$hiddenColumns.')',
+                        'wrapper' => [
+                            'class' => $classCheckWrapper.' pull-left mt-5',
+                        ],
                     ]);
                 }
             }
@@ -183,7 +248,7 @@ class FileForm extends Form
             $this->add('submit', Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-check"></i> '.__('Begin'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3',
+                    'class' => 'btn btn-info pull-right mb-3 mt-4',
                 ],
             ]);
 
