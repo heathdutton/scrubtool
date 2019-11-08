@@ -4,9 +4,9 @@ namespace App\Imports;
 
 use App\Exports\FileExport;
 use App\File;
+use App\FileSuppressionList;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
-use App\Helpers\FileSuppressionListHelper;
 use App\SuppressionList;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -39,8 +39,8 @@ class FileImport implements ToModel, WithChunkReading
         'rows_phone_dnc'       => 0,
     ];
 
-    /** @var FileSuppressionListHelper */
-    protected $fileSuppressionListHelper;
+    /** @var FileSuppressionList */
+    protected $FileSuppressionList;
 
     /** @var int */
     private $rowIndex = 0;
@@ -120,13 +120,13 @@ class FileImport implements ToModel, WithChunkReading
                     if ($this->file->mode & File::MODE_SCRUB) {
                         // @todo - Evaluate if the suppression list in question supports the column/hash types in use here before beginning the scrubbing process.
 
-                        if ($this->getFileSuppressionListHelper()->scrubRow($row)) {
+                        if ($this->getFileSuppressionList()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
                         }
                     }
 
                     if ($row && $this->file->mode & File::MODE_LIST_CREATE) {
-                        if ($this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex)) {
+                        if ($this->getFileSuppressionList()->appendRowToList($row, $this->rowIndex)) {
                             $this->stats['rows_imported']++;
                         } else {
                             $this->stats['rows_invalid']++;
@@ -200,16 +200,16 @@ class FileImport implements ToModel, WithChunkReading
     }
 
     /**
-     * @return FileSuppressionListHelper
+     * @return FileSuppressionList
      * @throws \Exception
      */
-    private function getFileSuppressionListHelper()
+    private function getFileSuppressionList()
     {
-        if (!$this->fileSuppressionListHelper) {
-            $this->fileSuppressionListHelper = new FileSuppressionListHelper($this->file);
+        if (!$this->FileSuppressionList) {
+            $this->FileSuppressionList = new FileSuppressionList([], $this->file);
         }
 
-        return $this->fileSuppressionListHelper;
+        return $this->FileSuppressionList;
     }
 
     /**
@@ -244,8 +244,8 @@ class FileImport implements ToModel, WithChunkReading
      */
     public function finish()
     {
-        if ($this->fileSuppressionListHelper) {
-            $this->fileSuppressionListHelper->finish();
+        if ($this->FileSuppressionList) {
+            $this->FileSuppressionList->finish();
         }
         $this->persistStats();
 

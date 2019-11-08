@@ -37,6 +37,7 @@ class SuppressionList extends Model
             $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
             $attributes['description'] = $attributes['description'] ?? '';
             $attributes['global']      = $attributes['global'] ?? 0;
+            $attributes['required']    = $attributes['required'] ?? 0;
         }
 
         parent::__construct($attributes);
