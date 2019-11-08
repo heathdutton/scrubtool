@@ -54,9 +54,7 @@ class FileController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'html'    => view('partials.file')->with([
-                    'file' => $file,
-                ]),
+                'html'    => view('partials.file')->with(['file' => $file,])->toHtml(),
                 'success' => true,
             ]);
         } else {
@@ -160,7 +158,7 @@ class FileController extends Controller
     }
 
     /**
-     * upload a file and associate it to the db while copying it to a persistent location.
+     * Upload one or more files and associate to the db while copying to a persistent location.
      *
      * @param  Request  $request
      *
@@ -169,22 +167,29 @@ class FileController extends Controller
      */
     public function upload(Request $request)
     {
-        $errors = $filesUploaded = $stats = [];
+        $errors = $uploaded = $routes = [];
 
         /** @var UploadedFile $uploadedFile */
-        foreach ($request->allFiles() as $uploadedFile) {
-            $file = new File();
-            try {
-                $file->createAndMove($uploadedFile, File::MODE_HASH, $request);
-                $filesUploaded[] = $uploadedFile->getClientOriginalName();
-            } catch (Exception $e) {
-                $errors[$uploadedFile->getClientOriginalName()] = $e->getMessage();
+        foreach ($request->allFiles() as $uploadedFiles) {
+            if (!is_array($uploadedFiles)) {
+                $uploadedFiles = [$uploadedFiles];
+            }
+            foreach ($uploadedFiles as $uploadedFile) {
+                $name = $uploadedFile->getClientOriginalName();
+                try {
+                    $file            = File::createAndMove($uploadedFile, File::MODE_HASH, $request);
+                    $uploaded[$name] = $uploadedFile->getClientOriginalName();
+                    $routes[$name]   = route('file', ['id' => $file->id]);
+                } catch (Exception $e) {
+                    $errors[$name] = $e->getMessage();
+                }
             }
         }
 
         return response()->json([
-            'success' => $filesUploaded,
+            'success' => $uploaded,
             'errors'  => $errors,
+            'routes'  => $routes,
         ]);
     }
 }

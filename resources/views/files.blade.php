@@ -9,7 +9,7 @@
                 <div class="justify-content-center mb-3">
                     @include('partials.upload')
                 </div>
-                <h1 class="@if(!count($files)) d-none @endif">
+                <h1 id="file-list-header" class="@if(!count($files)) d-none @endif">
                     {{ __('Files') }}
                 </h1>
             @endif

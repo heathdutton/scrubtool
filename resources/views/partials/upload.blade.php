@@ -17,7 +17,7 @@
                     <img data-dz-thumbnail/>
                 </div>
             </div>
-            <span data-dz-name></span>
+            <span data-dz-name class="file-preview-name"></span>
             {{--<i class="fa fa-file-text float-right"></i>--}}
             <span class="float-right">
                 <div class="dz-size" data-dz-size></div>

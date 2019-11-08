@@ -23,7 +23,7 @@ Route::post('/files/new/upload', 'FileController@upload')->name('file.upload');
 
 Route::get('/file', 'FileController@file');
 
-Route::get('/files/{id}', 'FileController@file');
+Route::get('/files/{id}', 'FileController@file')->name('file');
 Route::post('/files/{id}', 'FileController@store')->name('file.store');
 Route::get('/files/{id}/download', 'FileController@download')->name('file.download');
 

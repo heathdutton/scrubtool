@@ -143,102 +143,6 @@ class File extends Model
     }
 
     /**
-     * Deletes input and output files, then soft deletes the model.
-     *
-     * @return bool|mixed|null
-     */
-    public function delete()
-    {
-        $input = $this->getRelativeLocation($this->input_location);
-        if ($this->getStorage()->exists($input)) {
-            $this->getStorage()->delete($input);
-        }
-        $output = $this->getRelativeLocation($this->output_location);
-        if ($this->getStorage()->exists($output)) {
-            $this->getStorage()->delete($output);
-        }
-
-        return $this->performDeleteOnModel();
-    }
-
-    /**
-     * @param  string  $location
-     *
-     * @return false|string
-     */
-    public function getRelativeLocation($location = '')
-    {
-        $remove = storage_path('app');
-        if (substr($location, 0, strlen($remove)) === $remove) {
-            $location = substr($location, strlen($remove) + 1);
-        }
-
-        return $location;
-    }
-
-    /**
-     * @return \Illuminate\Contracts\Filesystem\Filesystem|Storage
-     */
-    private function getStorage()
-    {
-        if (!$this->storage) {
-            $this->storage = Storage::disk(self::STORAGE);
-        }
-
-        return $this->storage;
-    }
-
-    /**
-     * Format bytes to kb, mb, gb, tb
-     *
-     * @param  integer  $precision
-     *
-     * @return integer
-     */
-    public function humanSize($precision = 1)
-    {
-        $size = $this->size ?? 0;
-        if ($size > 0) {
-            $size     = (int) $size;
-            $base     = log($size) / log(1024);
-            $suffixes = [' bytes', ' KB', ' MB', ' GB', ' TB'];
-
-            return round(pow(1024, $base - floor($base)), $precision).$suffixes[(int) floor($base)];
-        } else {
-            return $size;
-        }
-    }
-
-    /**
-     * @param  FormBuilder  $formBuilder
-     *
-     * @return \Kris\LaravelFormBuilder\Form
-     */
-    public function buildForm(FormBuilder $formBuilder)
-    {
-        return $formBuilder->create(FileForm::class, [], [
-            'file' => $this,
-        ]);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function lists()
-    {
-        return $this->belongsToMany(SuppressionList::class)
-            ->using(FileSuppressionList::class);
-    }
-
-    /**
      * @param $uploadedFile
      * @param $mode
      * @param  Request  $request
@@ -246,7 +150,7 @@ class File extends Model
      * @return File
      * @throws Exception
      */
-    public function createAndMove($uploadedFile, $mode, Request $request)
+    public static function createAndMove($uploadedFile, $mode, Request $request)
     {
         if (!($uploadedFile instanceof UploadedFile)) {
             throw new Exception('Unable to parse file upload.');
@@ -264,7 +168,7 @@ class File extends Model
         }
 
         /** @var File $file */
-        $file = $this::create([
+        $file = self::create([
             'name'                 => $uploadedFile->getClientOriginalName() ?? 'na',
             'available_till'       => null,
             'input_location'       => $uploadedFile->getRealPath(),
@@ -348,6 +252,102 @@ class File extends Model
         $this->save();
 
         return $this;
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Filesystem\Filesystem|Storage
+     */
+    private function getStorage()
+    {
+        if (!$this->storage) {
+            $this->storage = Storage::disk(self::STORAGE);
+        }
+
+        return $this->storage;
+    }
+
+    /**
+     * Deletes input and output files, then soft deletes the model.
+     *
+     * @return bool|mixed|null
+     */
+    public function delete()
+    {
+        $input = $this->getRelativeLocation($this->input_location);
+        if ($this->getStorage()->exists($input)) {
+            $this->getStorage()->delete($input);
+        }
+        $output = $this->getRelativeLocation($this->output_location);
+        if ($this->getStorage()->exists($output)) {
+            $this->getStorage()->delete($output);
+        }
+
+        return $this->performDeleteOnModel();
+    }
+
+    /**
+     * @param  string  $location
+     *
+     * @return false|string
+     */
+    public function getRelativeLocation($location = '')
+    {
+        $remove = storage_path('app');
+        if (substr($location, 0, strlen($remove)) === $remove) {
+            $location = substr($location, strlen($remove) + 1);
+        }
+
+        return $location;
+    }
+
+    /**
+     * Format bytes to kb, mb, gb, tb
+     *
+     * @param  integer  $precision
+     *
+     * @return integer
+     */
+    public function humanSize($precision = 1)
+    {
+        $size = $this->size ?? 0;
+        if ($size > 0) {
+            $size     = (int) $size;
+            $base     = log($size) / log(1024);
+            $suffixes = [' bytes', ' KB', ' MB', ' GB', ' TB'];
+
+            return round(pow(1024, $base - floor($base)), $precision).$suffixes[(int) floor($base)];
+        } else {
+            return $size;
+        }
+    }
+
+    /**
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return \Kris\LaravelFormBuilder\Form
+     */
+    public function buildForm(FormBuilder $formBuilder)
+    {
+        return $formBuilder->create(FileForm::class, [], [
+            'file' => $this,
+        ]);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function lists()
+    {
+        return $this->belongsToMany(SuppressionList::class)
+            ->using(FileSuppressionList::class);
     }
 
     /**
