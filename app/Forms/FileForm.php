@@ -30,11 +30,37 @@ class FileForm extends Form
         }
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
+            $ownedListOptions   = [];
+            $globalListOptions  = [];
             $classModePrefix    = 'd-none file-mode-';
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
 
-            $user = $file->user()->getRelated()->first();
+            $user = $file->user_id ? $file->user()->getRelated()->first() : null;
+
+            // Get user's own suppression lists as options to scrub against.
+            if ($user) {
+                $lists = $user->lists()->getRelated()->all();
+                if ($lists) {
+                    foreach ($lists as $list) {
+                        $ownedListOptions[$list->id] = $list->name ?? $list->id;
+                    }
+                }
+            } else {
+                // @todo - Add tooltip/links for users not logged in.
+            }
+            asort($ownedListOptions);
+
+            // Add global suppression list options for scrubbing.
+            foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
+                $label = $list->name ?? $list->id;
+                if ($list->required) {
+                    $label                    .= ' ('.__('Required').')';
+                    $requiredLists[$list->id] = true;
+                }
+                $globalListOptions[$list->id] = $label;
+            }
+            asort($globalListOptions);
 
             $this->formOptions = [
                 'method' => 'POST',
@@ -47,16 +73,18 @@ class FileForm extends Form
             //     'value'      => __('Settings'),
             // ]);
 
-            // @todo - Add select for suppression lists to replace/append.
             /** @var User $user */
-            $listChoices                   = [];
-            $modeChoices                   = [];
-            $modeChoices[File::MODE_HASH]  = __('Hash');
-            $modeChoices[File::MODE_SCRUB] = __('Scrub');
+            $modeChoices                  = [];
+            $modeChoices[File::MODE_HASH] = __('Hash');
+            if ($ownedListOptions || $globalListOptions) {
+                $modeChoices[File::MODE_SCRUB] = __('Scrub');
+            }
             if ($user) {
-                $modeChoices[File::MODE_LIST_CREATE]  = __('New list');
-                $modeChoices[File::MODE_LIST_APPEND]  = __('Append list');
-                $modeChoices[File::MODE_LIST_REPLACE] = __('Replace list');
+                $modeChoices[File::MODE_LIST_CREATE] = __('New list');
+                if ($ownedListOptions) {
+                    $modeChoices[File::MODE_LIST_APPEND]  = __('Append list');
+                    $modeChoices[File::MODE_LIST_REPLACE] = __('Replace list');
+                }
             }
             $this->add('mode', Field::CHOICE, [
                 'rules'         => 'required',
@@ -77,49 +105,26 @@ class FileForm extends Form
                 ],
             ]);
 
-            // Get user's own suppression lists as options to scrub against.
-            if ($user) {
-                $lists = $user->lists()->getRelated()->all();
-                if ($lists) {
-                    // @todo - Provide a selection option for the user's current self-owned suppression lists.
-                    foreach ($lists as $list) {
-                        $listChoices[$list->id] = $list->name ?? $list->id;
-                    }
-                }
+            if ($ownedListOptions) {
+                $this->add('suppression_list_append', Field::CHOICE, [
+                    'label'      => __('List to Append'),
+                    'label_show' => true,
+                    'choices'    => $ownedListOptions,
+                    'wrapper'    => [
+                        'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_APPEND,
+                    ],
+                ]);
+                $this->add('suppression_list_replace', Field::CHOICE, [
+                    'label'      => __('List to Replace'),
+                    'label_show' => true,
+                    'choices'    => $ownedListOptions,
+                    'wrapper'    => [
+                        'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_REPLACE,
+                    ],
+                ]);
             }
-            asort($listChoices);
 
-            $this->add('suppression_list_append', Field::CHOICE, [
-                'label'      => __('List to Append'),
-                'label_show' => true,
-                'choices'    => $listChoices,
-                'wrapper'    => [
-                    'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_APPEND,
-                ],
-            ]);
-
-            $this->add('suppression_list_replace', Field::CHOICE, [
-                'label'      => __('List to Replace'),
-                'label_show' => true,
-                'choices'    => $listChoices,
-                'wrapper'    => [
-                    'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_REPLACE,
-                ],
-            ]);
-
-            // Add global suppression list options for scrubbing.
-            $requiredLists = [];
-            foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
-                $label = $list->name ?? $list->id;
-                if ($list->required) {
-                    $label                    .= ' ('.__('Required').')';
-                    $requiredLists[$list->id] = true;
-                }
-                $listChoices[$list->id] = $label;
-            }
-            asort($listChoices);
-
-            if ($listChoices) {
+            if ($ownedListOptions || $globalListOptions) {
                 $this->add('static_suppression_list_use', Field::STATIC, [
                     'tag'        => 'label',
                     'label_show' => false,
@@ -128,7 +133,8 @@ class FileForm extends Form
                         'class' => 'ml-4 '.$classModePrefix.File::MODE_SCRUB,
                     ],
                 ]);
-                foreach ($listChoices as $listId => $label) {
+                $allListOptions = array_merge($ownedListOptions, $globalListOptions);
+                foreach ($allListOptions as $listId => $label) {
                     $options            = [];
                     $options['label']   = $label;
                     $options['value']   = $listId;
@@ -136,10 +142,10 @@ class FileForm extends Form
                     $options['wrapper'] = [
                         'class' => $classCheckWrapper.' ml-4 '.$classModePrefix.File::MODE_SCRUB,
                     ];
-                    if (count($listChoices) <= 5) {
+                    if (count($allListOptions) <= 5) {
                         $options['checked'] = 'checked';
                     }
-                    if (isset($requiredLists[$listId]) || count($listChoices) === 1) {
+                    if (isset($requiredLists[$listId]) || count($allListOptions) === 1) {
                         $options['required']         = true;
                         $options['attr']['disabled'] = 'disabled';
                         $options['checked']          = 'checked';
