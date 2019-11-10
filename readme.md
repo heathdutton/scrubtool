@@ -1,18 +1,30 @@
-# Scrubtool
-A tool for helping manage a variety of suppression lists using a list file.
+![Scrubtool](./public/img/logo-social.png)
 
-## Feature Priority
+Professionally utilize lead suppression lists.
 
-* Hash: Generate a hashed file to be used for offline scrubbing.
-* Scrub: Remove records your file that match one or more suppression list/s.
-* List: Manage a suppression list (DNC/DNE) for anyone use for scrubbing leads. 
-* Enhance: Normalize/filter/append your file.
+## Main Features
 
-## Getting Started
+* *Scrub*: Remove records from your file that match one or more suppression list/s.
+* *List*: Create and manage your suppression list (DNE/DNC) for you (or others) to use. Supports plain-text and all popular hash algorithms.
+* *Hash*: Generate a hashed file to be used for scrubbing in other systems.
+
+## Requirements
+
+* PHP 7.3
+* MySQL 5.7
+* Laravel Nova license token (for the administrative interface)
+
+### Local Development
 
     composer install
     npm install
-    npm run development
+    npm run watch &
     php artisan migrate
     php artisan queue:work --queue=process,build,delete &
     php artisan serve
+
+### Queues Explained
+
+* *process*: Imports files, analyzes them, scrubs them, hashes them, generates exports.
+* *build*: Takes plain text suppression lists and builds support for various hashed equivalents.
+* *delete*: Purges uploaded files after the allowed download window has passed.
