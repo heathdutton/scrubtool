@@ -67,56 +67,198 @@ class FileSuppressionList extends Pivot
     private function setList(SuppressionList $list = null)
     {
         $this->list = $list;
-        if (!$this->list && $this->file) {
-            if ($this->file->mode & File::MODE_LIST_CREATE) {
-                if (!$this->file->user_id) {
-                    throw new Exception(__('The file must be associated with a logged in user in order to be associated with a suppression list. Please log in and try again.'));
-                }
 
-                $this->list = new SuppressionList([], $this->file);
+        if (empty($this->file->id)) {
+            throw new Exception(__('File needed.'));
+        }
 
-                // Suppression lists can contain email/phone/both at the moment.
-                $supports             = [];
-                $this->columnSupports = [];
-                foreach (self::COLUMN_TYPES as $type) {
-                    $columns = $this->file->getColumnsWithInputHashes($type);
-                    if ($columns) {
-                        if (count(array_unique($columns)) > 1) {
-                            throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
-                        }
-                        // Should only have one hash type for this column type.
-                        $support = new SuppressionListSupport([
-                            'column_type' => $type,
-                            'hash_type'   => array_values($columns)[0],
-                            'status'      => SuppressionListSupport::STATUS_BUILDING,
-                        ]);
-                        foreach (array_keys($columns) as $columnIndex) {
-                            $this->columnSupports[$columnIndex] = $support;
-                        }
-                        $supports[] = $support;
-                    }
-                }
-                if (!$supports) {
-                    throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
-                }
-                $this->list->save();
-                $this->list->supports()->saveMany($supports);
-                $this->list->files()->attach($this->file->id, [
-                    'created_at'          => Carbon::now('UTC'),
-                    'updated_at'          => Carbon::now('UTC'),
-                    'suppression_list_id' => $this->list->id,
-                    'relationship'        => FileSuppressionList::RELATIONSHIP_FILE_TO_LIST,
-                ]);
+        if (
+            empty($this->list->id)
+            && empty($this->file->user_id)
+            && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
+        ) {
+            throw new Exception(__('File not associated to a user.'));
+        }
+
+        // Create a new Suppression List.
+        if (empty($this->list->id) && $this->file->mode & File::MODE_LIST_CREATE) {
+            $this->createList()
+                ->createSupportsNeeded()
+                ->attachFile(FileSuppressionList::RELATIONSHIP_FILE_TO_LIST);
+        }
+
+        if (empty($this->list->id) && $this->file->mode ^ File::MODE_LIST_CREATE) {
+            throw new Exception(__('List needed.'));
+        }
+
+        if ($this->file->mode & File::MODE_LIST_APPEND) {
+            // @todo - Load and confirm existing list.
+            throw new Exception(__('List append function does not yet exist.'));
+        }
+
+        if ($this->file->mode & File::MODE_LIST_REPLACE) {
+            // @todo - Drop all tables associated with the list to start fresh.
+            throw new Exception(__('List replace function does not yet exist.'));
+        }
+
+        // Scrub against an existing Suppression List.
+        if ($this->file->mode & File::MODE_SCRUB) {
+            $this->findSupportsNeeded()
+                ->attachFile(FileSuppressionList::RELATIONSHIP_LIST_SCRUBBED_BY);
+
+            throw new Exception(__('Scrub function does not yet exist.'));
+        }
+    }
+
+    /**
+     * @param $relationship
+     *
+     * @return $this
+     */
+    private function attachFile($relationship)
+    {
+        $this->list->files()->attach($this->file->id, [
+            'created_at'          => Carbon::now('UTC'),
+            'updated_at'          => Carbon::now('UTC'),
+            'suppression_list_id' => $this->list->id,
+            'relationship'        => $relationship,
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     * @throws Exception
+     */
+    private function createSupportsNeeded()
+    {
+        $supports = [];
+        foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+            $support = new SuppressionListSupport([
+                'column_type' => $columnType,
+                'hash_type'   => array_values($columns)[0],
+                'status'      => SuppressionListSupport::STATUS_BUILDING,
+            ]);
+            foreach (array_keys($columns) as $columnIndex) {
+                $this->columnSupports[$columnIndex] = $support;
             }
-            if ($this->file->mode & (File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
-                // @todo - Load and confirm existing list.
-                throw new Exception(__('List append function does not yet exist.'));
-            }
-            if ($this->file->mode & File::MODE_LIST_REPLACE) {
-                // @todo - Drop all tables associated with the list to start fresh.
-                throw new Exception(__('List replace function does not yet exist.'));
+            $supports[] = $support;
+        }
+        if (!$supports) {
+            throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
+        }
+        $this->list->save();
+        $this->list->supports()->saveMany($supports);
+
+        return $this;
+    }
+
+    // /**
+    //  * @return $this
+    //  * @throws Exception
+    //  */
+    // private function createSupports()
+    // {
+    //     $supports             = [];
+    //     $this->columnSupports = [];
+    //     foreach (self::COLUMN_TYPES as $type) {
+    //         $columns = $this->file->getColumnsWithInputHashes($type);
+    //         if ($columns) {
+    //             if (count(array_unique($columns)) > 1) {
+    //                 throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
+    //             }
+    //             // Should only have one hash type for this column type.
+    //             $support = new SuppressionListSupport([
+    //                 'column_type' => $type,
+    //                 'hash_type'   => array_values($columns)[0],
+    //                 'status'      => SuppressionListSupport::STATUS_BUILDING,
+    //             ]);
+    //             foreach (array_keys($columns) as $columnIndex) {
+    //                 $this->columnSupports[$columnIndex] = $support;
+    //             }
+    //             $supports[] = $support;
+    //         }
+    //     }
+    //     if (!$supports) {
+    //         throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
+    //     }
+    //     $this->list->save();
+    //     $this->list->supports()->saveMany($supports);
+    //
+    //     return $this;
+    // }
+
+    /**
+     * Suppression lists can contain email/phone/both at the moment.
+     *
+     * @return array
+     * @throws Exception
+     */
+    private function discernSupportsNeeded()
+    {
+        // Suppression lists can contain email/phone/both at the moment.
+        $supportsNeeded = [];
+        foreach (self::COLUMN_TYPES as $columnType) {
+            $columns = $this->file->getColumnsWithInputHashes($columnType);
+            if ($columns) {
+                if (count(array_unique($columns)) > 1) {
+                    throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
+                }
+                $supportsNeeded[$columnType] = $columns;
             }
         }
+        if (!$supportsNeeded) {
+            throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
+        }
+
+        return $supportsNeeded;
+    }
+
+    /**
+     * @return $this
+     */
+    private function createList()
+    {
+        $this->list = new SuppressionList([], $this->file);
+
+        return $this;
+    }
+
+    /**
+     * Evaluate if the suppression list in question supports the column/hash types in use here before beginning the
+     * scrubbing process, while also building the column map.
+     *
+     * @return $this
+     * @throws Exception
+     */
+    private function findSupportsNeeded()
+    {
+        $messages     = [];
+        $supportFound = false;
+        foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+            $hashType = array_values($columns)[0];
+            $support  = SuppressionListSupport::withoutTrashed()
+                ->where('column_type', $columnType)
+                ->where('hash_type', $hashType)
+                ->where('status', SuppressionListSupport::STATUS_READY)
+                ->first();
+
+            if ($support) {
+                $supportFound = true;
+                foreach (array_keys($columns) as $columnIndex) {
+                    $this->columnSupports[$columnIndex] = $support;
+                }
+            } else {
+                $messages[$columnType.'_'.$hashType] = __('This suppression list does not currently support scrubbing $1 with $2.',
+                    [$columnType, $hashType ?? __('plaintext')]);
+            }
+        }
+        if (!$supportFound) {
+            throw new Exception($messages);
+        }
+
+        return $this;
     }
 
     /**

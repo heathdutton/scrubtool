@@ -408,9 +408,9 @@ class File extends Model
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
 
             // @todo - Validate and associate lists via pivot.
-            if ($this->mode ^ File::MODE_HASH) {
+            // if ($this->mode ^ File::MODE_HASH) {
                 // $this->lists()->firstOrCreate([]);
-            }
+            // }
 
             unset($this->form);
             $this->save();

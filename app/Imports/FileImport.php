@@ -118,7 +118,6 @@ class FileImport implements ToModel, WithChunkReading
                     $this->stats['rows_total']++;
 
                     if ($this->file->mode & File::MODE_SCRUB) {
-                        // @todo - Evaluate if the suppression list in question supports the column/hash types in use here before beginning the scrubbing process.
 
                         if ($this->getFileSuppressionList()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
