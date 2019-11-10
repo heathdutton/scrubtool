@@ -11,7 +11,7 @@ $(function () {
             clickable: 'form#dropzone',
             previewTemplate: $('#dropzone-preview-template:first').html(),
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]:first').attr('content')
             },
             autoDiscover: false,
             maxFilesize: 100,

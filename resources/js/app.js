@@ -9,6 +9,7 @@ st.animationSpeed = '900';
 st.loadContent = function (url, $destination, prepend, callback) {
     $.getJSON(url, function (data) {
         if (typeof data.success !== 'undefined' && data.html.length) {
+            // @todo - check timestamp or contents before replacement.
             $result = $(data.html);
             if (prepend) {
                 $destination.prepend($result);
