@@ -33,11 +33,9 @@ class SuppressionList extends Model
         $this->file = $file;
 
         if (!empty($this->file->id)) {
-            $attributes['user_id']     = $this->file->user_id ?? null;
-            $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
-            $attributes['description'] = $attributes['description'] ?? '';
-            $attributes['global']      = $attributes['global'] ?? 0;
-            $attributes['required']    = $attributes['required'] ?? 0;
+            $attributes['user_id'] = $this->file->user_id ?? null;
+            $attributes['name']    = $attributes['name'] ?? $this->choseListNameFromFileName();
+            $attributes['token']   = $attributes['token'] ?? $this->generateToken();
         }
 
         parent::__construct($attributes);
@@ -58,6 +56,55 @@ class SuppressionList extends Model
         }
 
         return $fileName;
+    }
+
+    /**
+     * @return string
+     */
+    private function generateToken()
+    {
+        $bin    = hash('crc32', implode(',', $this->getAttributes()), true);
+        $dec    = bindec($bin);
+        $base35 = base_convert($dec, 10, 35);
+
+        return $base35;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getIdToken()
+    {
+        if (empty($this->id) || empty($this->token)) {
+            return null;
+        }
+        $idString = base_convert($this->id, 10, 35);
+
+        return $idString.'z'.$this->token;
+    }
+
+    /**
+     * @param $string
+     *
+     * @return \Illuminate\Database\Eloquent\Builder|Model|\Illuminate\Database\Query\Builder|object|static|null
+     */
+    public function findByIdToken($string)
+    {
+        $string = strtolower(trim($string));
+        list($idString, $tokenString) = explode('z', $string);
+        if (!$idString || !$tokenString) {
+            return null;
+        }
+
+        $id = (int) base_convert($idString, 35, 10);
+        if (!$id) {
+            return null;
+        }
+
+        return self::withoutTrashed()
+            ->where('id', $id)
+            ->where('token', $tokenString)
+            ->first();
     }
 
     /**

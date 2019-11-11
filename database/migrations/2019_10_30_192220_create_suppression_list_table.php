@@ -19,9 +19,11 @@ class CreateSuppressionListTable extends Migration
             $table->softDeletes();
             $table->text('name');
             $table->text('description');
-            $table->bigInteger('user_id')->unsigned();
-            $table->unsignedTinyInteger('global');
-            $table->unsignedTinyInteger('required');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedTinyInteger('global')->default(0);
+            $table->unsignedTinyInteger('required')->default(0);
+            $table->unsignedTinyInteger('private')->default(0);
+            $table->string('token')->default('');
         });
     }
 
