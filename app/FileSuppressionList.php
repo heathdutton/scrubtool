@@ -69,7 +69,7 @@ class FileSuppressionList extends Pivot
         $this->list = $list;
 
         if (empty($this->file->id)) {
-            // Standard construction, the list should already exist.
+            // Standard construction, the list association should already exist.
             return;
         }
 
@@ -86,10 +86,6 @@ class FileSuppressionList extends Pivot
             $this->createList()
                 ->createSupportsNeeded()
                 ->attachFile(FileSuppressionList::RELATIONSHIP_FILE_TO_LIST);
-        }
-
-        if (empty($this->list->id) && $this->file->mode ^ File::MODE_LIST_CREATE) {
-            throw new Exception(__('List needed.'));
         }
 
         if ($this->file->mode & File::MODE_LIST_APPEND) {

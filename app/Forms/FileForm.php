@@ -154,7 +154,7 @@ class FileForm extends Form
                         $options['attr']['disabled'] = 'disabled';
                         $options['checked']          = 'checked';
                     }
-                    $this->add('suppression_list_use', Field::CHECKBOX, $options);
+                    $this->add('suppression_list_use_'.$listId, Field::CHECKBOX, $options);
                 };
                 // @todo - Auto select all link/button. Possibly handle a selection list better if there are MANY.
                 // if (count($listChoices) > 5) {
