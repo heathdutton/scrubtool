@@ -107,8 +107,6 @@ class FileSuppressionList extends Pivot
         if ($this->file->mode & File::MODE_SCRUB) {
             $this->loadLists()
                 ->findSupportsNeeded();
-
-            throw new Exception(__('Scrub function does not yet exist.'));
         }
     }
 
@@ -143,7 +141,7 @@ class FileSuppressionList extends Pivot
                 'suppression_list_id' => $this->list->id,
             ]);
             foreach (array_keys($columns) as $columnIndex) {
-                $this->columnSupports[$columnIndex] = $support;
+                $this->columnSupports[$columnIndex] = [$support];
             }
             $supports[] = $support;
         }
@@ -207,17 +205,17 @@ class FileSuppressionList extends Pivot
         if ($listIds) {
             foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
                 $hashType = array_values($columns)[0];
-                $support  = SuppressionListSupport::withoutTrashed()
+                $supports = SuppressionListSupport::withoutTrashed()
                     ->whereIn('suppression_list_id', $listIds)
                     ->where('column_type', $columnType)
                     ->where('hash_type', $hashType)
                     ->where('status', SuppressionListSupport::STATUS_READY)
                     ->first();
 
-                if ($support) {
+                if ($supports) {
                     $supportFound = true;
                     foreach (array_keys($columns) as $columnIndex) {
-                        $this->columnSupports[$columnIndex] = $support;
+                        $this->columnSupports[$columnIndex] = $supports;
                     }
                 } else {
                     $messages[$columnType.'_'.$hashType] = __('This suppression list does not currently support scrubbing $1 with $2.',
@@ -257,12 +255,12 @@ class FileSuppressionList extends Pivot
     public function scrubRow(&$row)
     {
         $scrub = false;
-        if ($this->list && $this->columnSupports) {
+        if ($this->lists && $this->columnSupports) {
             /**
              * @var int $columnIndex
              * @var SuppressionListSupport $support
              */
-            foreach ($this->columnSupports as $columnIndex => $support) {
+            foreach ($this->columnSupports as $columnIndex => $supports) {
                 // Validate/sanitize/hash before attempting a scrub.
                 $value = $row[$columnIndex];
                 if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
@@ -301,16 +299,15 @@ class FileSuppressionList extends Pivot
     {
         $valid = false;
         if ($this->list && $this->columnSupports) {
-            /**
-             * @var int $columnIndex
-             * @var SuppressionListSupport $support
-             */
-            foreach ($this->columnSupports as $columnIndex => $support) {
-                // Validate/sanitize/hash before insertion.
-                $value = $row[$columnIndex];
-                if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
-                    $support->addContentToQueue($value, $rowIndex);
-                    $valid = true;
+            foreach ($this->columnSupports as $columnIndex => $supports) {
+                /** @var SuppressionListSupport $support */
+                foreach ($support as $support) {
+                    // Validate/sanitize/hash before insertion.
+                    $value = $row[$columnIndex];
+                    if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
+                        $support->addContentToQueue($value, $rowIndex);
+                        $valid = true;
+                    }
                 }
             }
         }
@@ -323,9 +320,11 @@ class FileSuppressionList extends Pivot
      */
     public function finish()
     {
-        foreach ($this->columnSupports as $columnIndex => $support) {
+        foreach ($this->columnSupports as $columnIndex => $supports) {
             /** @var SuppressionListSupport $support */
-            $support->finish();
+            foreach ($support as $support) {
+                $support->finish();
+            }
         }
 
         return $this;
