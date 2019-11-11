@@ -42,7 +42,7 @@ class SuppressionList extends Model
             $attributes['user_id']     = $this->file->user_id ?? null;
             $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
             $attributes['description'] = $attributes['description'] ?? '';
-            $attributes['token']       = $attributes['token'] ?? $this->generateToken();
+            $attributes['token']       = $attributes['token'] ?? $this->generateToken($attributes);
         }
 
         parent::__construct($attributes);
@@ -66,13 +66,14 @@ class SuppressionList extends Model
     }
 
     /**
+     * @param $attributes
+     *
      * @return string
      */
-    private function generateToken()
+    private function generateToken($attributes)
     {
-        $bin    = hash('crc32', implode(',', $this->getAttributes()), true);
-        $dec    = bindec($bin);
-        $base35 = base_convert($dec, 10, 35);
+        $hash   = hash('crc32', uniqid(implode(chr(31), $attributes)), false);
+        $base35 = base_convert($hash, 16, 35);
 
         return $base35;
     }
