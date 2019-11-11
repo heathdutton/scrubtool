@@ -67,11 +67,12 @@ class SuppressionListSupport extends Model
             $this->status = self::STATUS_READY;
             $this->save();
 
-            // Build support for additional hash types.
+            // Build support for additional hash types, and queue the processes to build them out.
             if (null === $this->hash_type) {
-                $list = $this->list()->getRelated()->withoutTrashed()->first();
+                $list = $this->loadList();
+
                 if (!$list) {
-                    throw new Exception(__('Suppression list no longer exists.'));
+                    throw new Exception(__('Suppression list parent no longer exists.'));
                 }
                 foreach ((new HashHelper())->listChoices() as $algo => $name) {
                     // Create new support if it doesn't already exist.
@@ -100,6 +101,22 @@ class SuppressionListSupport extends Model
     }
 
     /**
+     * @return SuppressionList|null
+     */
+    public function loadList()
+    {
+        return $this->list()->withoutTrashed()->getRelated()->first();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function list()
+    {
+        return $this->belongsTo(SuppressionList::class);
+    }
+
+    /**
      * @return int
      */
     public function persistQueue()
@@ -109,13 +126,5 @@ class SuppressionListSupport extends Model
         }
 
         return 0;
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function list()
-    {
-        return $this->belongsTo(SuppressionList::class);
     }
 }

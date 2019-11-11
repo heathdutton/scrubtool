@@ -64,16 +64,13 @@ class SuppressionListContent extends Model
         $this->support = $support;
 
         if ($this->support) {
-            $list = $this->support->list()->withoutTrashed()->getParent();
+            $list = $this->support->loadList();
             if (!$list) {
-                throw new Exception(__('List no longer exists.'));
+                throw new Exception(__('Suppression list origin no longer exists.'));
             }
-            // Dynamic table name based on the column type, and hash type.
-            $pieces = [self::TABLE_PREFIX, $list->id, $support->column_type];
-            if ($support->hash_type) {
-                $pieces[] = $support->hash_type;
-            }
-            $this->setTable(implode('_', $pieces));
+
+            // Dynamic table name based on listID and SupportID.
+            $this->setTable(implode('_', [self::TABLE_PREFIX, $list->id, $support->id]));
         }
 
         parent::__construct($attributes);

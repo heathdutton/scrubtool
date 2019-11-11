@@ -135,9 +135,10 @@ class FileSuppressionList extends Pivot
         $supports = [];
         foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
             $support = new SuppressionListSupport([
-                'column_type' => $columnType,
-                'hash_type'   => array_values($columns)[0],
-                'status'      => SuppressionListSupport::STATUS_BUILDING,
+                'column_type'         => $columnType,
+                'hash_type'           => array_values($columns)[0],
+                'status'              => SuppressionListSupport::STATUS_BUILDING,
+                'suppression_list_id' => $this->list->id,
             ]);
             foreach (array_keys($columns) as $columnIndex) {
                 $this->columnSupports[$columnIndex] = $support;
@@ -147,46 +148,10 @@ class FileSuppressionList extends Pivot
         if (!$supports) {
             throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
         }
-        $this->list->save();
         $this->list->supports()->saveMany($supports);
 
         return $this;
     }
-
-    // /**
-    //  * @return $this
-    //  * @throws Exception
-    //  */
-    // private function createSupports()
-    // {
-    //     $supports             = [];
-    //     $this->columnSupports = [];
-    //     foreach (self::COLUMN_TYPES as $type) {
-    //         $columns = $this->file->getColumnsWithInputHashes($type);
-    //         if ($columns) {
-    //             if (count(array_unique($columns)) > 1) {
-    //                 throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
-    //             }
-    //             // Should only have one hash type for this column type.
-    //             $support = new SuppressionListSupport([
-    //                 'column_type' => $type,
-    //                 'hash_type'   => array_values($columns)[0],
-    //                 'status'      => SuppressionListSupport::STATUS_BUILDING,
-    //             ]);
-    //             foreach (array_keys($columns) as $columnIndex) {
-    //                 $this->columnSupports[$columnIndex] = $support;
-    //             }
-    //             $supports[] = $support;
-    //         }
-    //     }
-    //     if (!$supports) {
-    //         throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
-    //     }
-    //     $this->list->save();
-    //     $this->list->supports()->saveMany($supports);
-    //
-    //     return $this;
-    // }
 
     /**
      * Suppression lists can contain email/phone/both at the moment.
@@ -220,7 +185,7 @@ class FileSuppressionList extends Pivot
     private function createList()
     {
         $this->list = new SuppressionList([], $this->file);
-
+        $this->list->save();
         return $this;
     }
 
