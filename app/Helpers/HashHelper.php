@@ -404,10 +404,10 @@ class HashHelper
     ];
 
     /** @var array */
-    protected $simpleAgos = [];
+    private $simpleAgos = [];
 
     /** @var array */
-    protected $choicesAlgos = [];
+    private $choicesAlgos = [];
 
     /**
      * Get the minimum binary size required to store a hash by the algorithm.

@@ -60,21 +60,21 @@ class FileAnalysisHelper
 
     const TYPE_STRING     = 32768;
 
-    protected $columnCount = 0;
+    private $columnCount = 0;
 
-    protected $columnNames = [];
+    private $columnNames = [];
 
-    protected $columnTypes = [];
+    private $columnTypes = [];
 
-    protected $columnHashes = [];
+    private $columnHashes = [];
 
-    protected $hashHelper;
+    private $hashHelper;
 
-    protected $rowIsHeader = false;
+    private $rowIsHeader = false;
 
-    protected $rowData = [];
+    private $rowData = [];
 
-    protected $rowIndex = 0;
+    private $rowIndex = 0;
 
     /** @var array Simplified strings that identify the column type with fair certainty. */
     private $typeIdentifiers = [

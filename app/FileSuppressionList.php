@@ -29,13 +29,13 @@ class FileSuppressionList extends Pivot
     ];
 
     /** @var File */
-    protected $file;
+    private $file;
 
     /** @var SuppressionList */
-    protected $list;
+    private $list;
 
     /** @var FileHashHelper */
-    protected $fileHashHelper;
+    private $fileHashHelper;
 
     /** @var array */
     private $columnSupports = [];
@@ -69,7 +69,8 @@ class FileSuppressionList extends Pivot
         $this->list = $list;
 
         if (empty($this->file->id)) {
-            throw new Exception(__('File needed.'));
+            // Standard construction, the list should already exist.
+            return;
         }
 
         if (

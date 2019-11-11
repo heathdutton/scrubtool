@@ -22,7 +22,7 @@ class FileProcess implements ShouldQueue
 
     public $deleteWhenMissingModels = true;
 
-    protected $fileId;
+    private $fileId;
 
     public function __construct($fileId)
     {

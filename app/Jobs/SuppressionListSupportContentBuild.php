@@ -17,13 +17,13 @@ class SuppressionListSupportContentBuild implements ShouldQueue
     public $deleteWhenMissingModels = true;
 
     /** @var int */
-    protected $supportId;
+    private $supportId;
 
     /** @var int */
-    protected $startId;
+    private $startId;
 
     /** @var int */
-    protected $endId;
+    private $endId;
 
     /**
      * SuppressionListSupportContentBuild constructor.

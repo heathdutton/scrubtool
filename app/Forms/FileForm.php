@@ -32,6 +32,7 @@ class FileForm extends Form
         if ($file->status & File::STATUS_INPUT_NEEDED) {
             $ownedListOptions   = [];
             $globalListOptions  = [];
+            $requiredLists      = [];
             $classModePrefix    = 'd-none file-mode-';
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
@@ -44,6 +45,9 @@ class FileForm extends Form
                 if ($lists) {
                     foreach ($lists as $list) {
                         $ownedListOptions[$list->id] = $list->name ?? $list->id;
+                        if ($list->required) {
+                            $requiredLists[$list->id] = true;
+                        }
                     }
                 }
             } else {
@@ -133,7 +137,7 @@ class FileForm extends Form
                         'class' => 'ml-4 '.$classModePrefix.File::MODE_SCRUB,
                     ],
                 ]);
-                $allListOptions = array_merge($ownedListOptions, $globalListOptions);
+                $allListOptions = $ownedListOptions + $globalListOptions;
                 foreach ($allListOptions as $listId => $label) {
                     $options            = [];
                     $options['label']   = $label;

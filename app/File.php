@@ -84,7 +84,7 @@ class File extends Model
     ];
 
     /** @var Storage */
-    protected $storage;
+    private $storage;
 
     /**
      * Combine both session (no auth) files uploaded and user files (logged in).

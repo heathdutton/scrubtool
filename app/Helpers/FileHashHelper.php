@@ -7,10 +7,10 @@ use App\File;
 class FileHashHelper
 {
     /** @var File */
-    protected $file;
+    private $file;
 
     /** @var HashHelper */
-    protected $hashHelper;
+    private $hashHelper;
 
     /**
      * FileHashHelper constructor.

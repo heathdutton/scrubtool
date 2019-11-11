@@ -23,7 +23,7 @@ class FileImport implements ToModel, WithChunkReading
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
 
-    protected $stats = [
+    private $stats = [
         'rows_total'           => 0,
         'rows_imported'        => 0,
         'rows_scrubbed'        => 0,

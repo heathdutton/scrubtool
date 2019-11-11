@@ -33,9 +33,10 @@ class SuppressionList extends Model
         $this->file = $file;
 
         if (!empty($this->file->id)) {
-            $attributes['user_id'] = $this->file->user_id ?? null;
-            $attributes['name']    = $attributes['name'] ?? $this->choseListNameFromFileName();
-            $attributes['token']   = $attributes['token'] ?? $this->generateToken();
+            $attributes['user_id']     = $this->file->user_id ?? null;
+            $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
+            $attributes['description'] = $attributes['description'] ?? '';
+            $attributes['token']       = $attributes['token'] ?? $this->generateToken();
         }
 
         parent::__construct($attributes);
