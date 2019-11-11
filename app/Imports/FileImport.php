@@ -23,24 +23,10 @@ class FileImport implements ToModel, WithChunkReading
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
 
-    private $stats = [
-        'rows_total'           => 0,
-        'rows_imported'        => 0,
-        'rows_scrubbed'        => 0,
-        'rows_hashed'          => 0,
-        'rows_invalid'         => 0,
-        'rows_email_valid'     => 0,
-        'rows_email_invalid'   => 0,
-        'rows_email_duplicate' => 0,
-        'rows_email_dnc'       => 0,
-        'rows_phone_valid'     => 0,
-        'rows_phone_invalid'   => 0,
-        'rows_phone_duplicate' => 0,
-        'rows_phone_dnc'       => 0,
-    ];
-
     /** @var FileSuppressionList */
     protected $FileSuppressionList;
+
+    private $stats = File::STATS_DEFAULT;
 
     /** @var int */
     private $rowIndex = 0;

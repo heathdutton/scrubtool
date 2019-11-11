@@ -14,14 +14,16 @@ class FileSuppressionList extends Pivot
     use SoftDeletes;
 
     /** @var array */
-    const COLUMN_TYPES                  = [
+    const COLUMN_TYPES = [
         FileAnalysisHelper::TYPE_EMAIL,
         FileAnalysisHelper::TYPE_PHONE,
     ];
 
-    const RELATIONSHIP_FILE_TO_LIST     = 1;
+    /** @var int Indicates a file that was SCRUBBED by the list. */
+    const RELATIONSHIP_CHILD = 1;
 
-    const RELATIONSHIP_LIST_SCRUBBED_BY = 2;
+    /** @var int Indicates a file that was used to CREATE the list. */
+    const RELATIONSHIP_PARENT = 2;
 
     /** @var array */
     protected $guarded = [
@@ -85,7 +87,7 @@ class FileSuppressionList extends Pivot
         if (empty($this->list->id) && $this->file->mode & File::MODE_LIST_CREATE) {
             $this->createList()
                 ->createSupportsNeeded()
-                ->attachFile(FileSuppressionList::RELATIONSHIP_FILE_TO_LIST);
+                ->attachFile(FileSuppressionList::RELATIONSHIP_PARENT);
         }
 
         if ($this->file->mode & File::MODE_LIST_APPEND) {
@@ -101,7 +103,7 @@ class FileSuppressionList extends Pivot
         // Scrub against an existing Suppression List.
         if ($this->file->mode & File::MODE_SCRUB) {
             $this->findSupportsNeeded()
-                ->attachFile(FileSuppressionList::RELATIONSHIP_LIST_SCRUBBED_BY);
+                ->attachFile(FileSuppressionList::RELATIONSHIP_CHILD);
 
             throw new Exception(__('Scrub function does not yet exist.'));
         }
@@ -336,7 +338,6 @@ class FileSuppressionList extends Pivot
     {
         foreach ($this->columnSupports as $columnIndex => $support) {
             /** @var SuppressionListSupport $support */
-            $support->persistQueue();
             $support->finish();
         }
 

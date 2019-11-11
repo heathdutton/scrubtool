@@ -33,6 +33,7 @@ class SuppressionListSupport extends Model
      * @param  int  $id
      *
      * @return $this
+     * @throws \Exception
      */
     public function addContentToQueue($content, $id = 0)
     {
@@ -60,7 +61,6 @@ class SuppressionListSupport extends Model
      */
     public function finish()
     {
-        $this->persistQueue();
         if ($this->content) {
             $this->content->finish();
 
@@ -100,15 +100,15 @@ class SuppressionListSupport extends Model
     }
 
     /**
-     * @return $this
+     * @return int
      */
     public function persistQueue()
     {
         if ($this->content) {
-            $this->content->persistQueue();
+            return $this->content->persistQueue();
         }
 
-        return $this;
+        return 0;
     }
 
     /**

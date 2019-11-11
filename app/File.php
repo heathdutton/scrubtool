@@ -55,6 +55,23 @@ class File extends Model
 
     const PRIVATE_STORAGE     = 'private';
 
+    /** @var array */
+    const STATS_DEFAULT = [
+        'rows_total'           => 0,
+        'rows_imported'        => 0,
+        'rows_scrubbed'        => 0,
+        'rows_hashed'          => 0,
+        'rows_invalid'         => 0,
+        'rows_email_valid'     => 0,
+        'rows_email_invalid'   => 0,
+        'rows_email_duplicate' => 0,
+        'rows_email_dnc'       => 0,
+        'rows_phone_valid'     => 0,
+        'rows_phone_invalid'   => 0,
+        'rows_phone_duplicate' => 0,
+        'rows_phone_dnc'       => 0,
+    ];
+
     const STATUS_ADDED        = 1;
 
     const STATUS_ANALYSIS     = 2;
@@ -409,7 +426,7 @@ class File extends Model
 
             // @todo - Validate and associate lists via pivot.
             // if ($this->mode ^ File::MODE_HASH) {
-                // $this->lists()->firstOrCreate([]);
+            // $this->lists()->firstOrCreate([]);
             // }
 
             unset($this->form);

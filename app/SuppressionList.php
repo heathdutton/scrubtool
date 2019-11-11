@@ -22,6 +22,12 @@ class SuppressionList extends Model
     /** @var File */
     private $file;
 
+    /** @var array */
+    private $statsChildren = [];
+
+    /** @var array */
+    private $statsParent = [];
+
     /**
      * SuppressionList constructor.
      *
@@ -72,6 +78,79 @@ class SuppressionList extends Model
     }
 
     /**
+     * @param  string  $stat
+     *
+     * @return int
+     */
+    public function statChild($stat)
+    {
+        $this->getStatsChildren();
+
+        return $this->statsChildren[$stat] ?? 0;
+    }
+
+    /**
+     * @return array
+     */
+    private function getStatsChildren()
+    {
+        if (!$this->statsChildren) {
+            $this->statsChildren = File::STATS_DEFAULT;
+            /** @var File $file */
+            foreach (self::files()->where('relationship', FileSuppressionList::RELATIONSHIP_CHILD)->get() as $file) {
+                foreach ($this->statsChildren as $key => &$value) {
+                    if (!empty($file->{$key})) {
+                        $value += $file->{$key};
+                    }
+                }
+            }
+        }
+
+        return $this->statsChildren;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function files()
+    {
+        return $this->belongsToMany(File::class)
+            ->using(FileSuppressionList::class);
+    }
+
+    /**
+     * @param  string  $stat
+     *
+     * @return int
+     */
+    public function statParent($stat)
+    {
+        $this->getStatsParent();
+
+        return $this->statsParent[$stat] ?? 0;
+    }
+
+    /**
+     * @return array
+     */
+    private function getStatsParent()
+    {
+        if (!$this->statsParent) {
+            $this->statsParent = File::STATS_DEFAULT;
+            /** @var File $file */
+            foreach (self::files()->where('relationship', FileSuppressionList::RELATIONSHIP_PARENT)->get() as $file) {
+                foreach ($this->statsParent as $key => &$value) {
+                    if (!empty($file->{$key})) {
+                        $value += $file->{$key};
+                    }
+                }
+            }
+        }
+
+        return $this->statsParent;
+    }
+
+    /**
      * @return string|null
      */
     public function getIdToken()
@@ -114,15 +193,6 @@ class SuppressionList extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function files()
-    {
-        return $this->belongsToMany(File::class)
-            ->using(FileSuppressionList::class);
     }
 
     /**

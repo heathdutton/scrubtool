@@ -20,7 +20,7 @@ $action = '';
         </a>
         <div class="card-body">
             <div class="row">
-                @include('partials.stat', ['icon' => 'database', 'class' => '', 'value' => $list->rows_total ?? 0, 'label' => __('Total Records')])
+                @include('partials.stat', ['icon' => 'database', 'class' => '', 'value' => $list->statParent('rows_imported') ?? 0, 'label' => __('Total Records')])
             </div>
         </div>
     </div>

@@ -48,6 +48,9 @@ class SuppressionListContent extends Model
     /** @var int */
     private $queueCount = 0;
 
+    /** @var int */
+    private $persistedCount = 0;
+
     /**
      * SuppressionListSupportContent constructor.
      *
@@ -61,7 +64,10 @@ class SuppressionListContent extends Model
         $this->support = $support;
 
         if ($this->support) {
-            $list = $this->support->list()->getRelated()->withoutTrashed()->first();
+            $list = $this->support->list()->withoutTrashed()->getParent();
+            if (!$list) {
+                throw new Exception(__('List no longer exists.'));
+            }
             // Dynamic table name based on the column type, and hash type.
             $pieces = [self::TABLE_PREFIX, $list->id, $support->column_type];
             if ($support->hash_type) {
@@ -153,25 +159,23 @@ class SuppressionListContent extends Model
     }
 
     /**
-     * @return $this
+     * @return int
      */
     public function persistQueue()
     {
-        DB::table($this->getTable())->insertOrIgnore($this->queue);
+        $this->persistedCount += DB::table($this->getTable())->insertOrIgnore($this->queue);
 
         $this->queueCount = 0;
         $this->queue      = [];
 
-        return $this;
+        return $this->persistedCount;
     }
 
     /**
-     * @return $this
+     * @return int
      */
     public function finish()
     {
-        $this->persistQueue();
-
-        return $this;
+        return $this->persistQueue();
     }
 }
