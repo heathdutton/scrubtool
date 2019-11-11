@@ -54,8 +54,9 @@ class FileController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'html'    => view('partials.file')->with(['file' => $file,])->toHtml(),
-                'success' => true,
+                'html'       => view('partials.file')->with(['file' => $file,])->toHtml(),
+                'updated_at' => $file->updated_at->getTimestamp(),
+                'success'    => true,
             ]);
         } else {
             return view('files')->with([

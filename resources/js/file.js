@@ -1,21 +1,14 @@
 jQuery.countdown = require('jquery.countdown');
 
-st.classModePrefix = '.file-mode-';
+st.classModePrefix = '.file-mode';
 st.refreshDelay = 1000;
 st.filesLoaded = function ($context) {
     // Hide fields irrelevant to the current file mode.
     $('select[name=mode]', $context).bind('change', function () {
         var $form = $(this).closest('form');
         var val = $(this).val();
-        $(this).find('option').each(function () {
-            var thisVal = $(this).val();
-            if (val === thisVal) {
-                $form.find(st.classModePrefix + thisVal).removeClass('d-none');
-            }
-            else {
-                $form.find(st.classModePrefix + thisVal).addClass('d-none');
-            }
-        });
+        $form.find(st.classModePrefix + ':not(' + st.classModePrefix + '-' + val + ')').hide();
+        $form.find(st.classModePrefix + '-' + val).show();
     }).trigger('change');
 
     // Show all columns switch.
@@ -50,25 +43,26 @@ st.filesLoaded = function ($context) {
     st.filesRefresh($context);
 };
 
-st.loadFile = function ($route, $destination) {
-    st.loadContent($route, $destination, false, function ($result) {
-        st.fileRefresh($result, st.refreshDelay);
+st.fileLoad = function ($route, $destination) {
+    st.loadContent($route, $destination, false, function ($context) {
+        st.filesLoaded($context);
     });
 };
 
 st.fileRefresh = function ($file, delay) {
     setTimeout(function () {
-        if ($file.hasClass('file-refresh') && !$file.hasClass('file-refreshing')) {
-            $file.addClass('file-refreshing');
-            st.loadContent($file.attr('data-file-origin'), $file, false, function ($destination) {
-                st.fileRefresh($destination, delay);
-            });
+        if ($file.hasClass('file-refresh')) {
+            st.fileLoad($file.attr('data-file-origin'), $file);
         }
     }, delay);
 };
 
 st.filesRefresh = function ($context) {
-    var $files = $('.file-refresh:not(.file-refreshing)', $context);
+    var selector = '.file-refresh';
+    var $files = $(selector, $context);
+    if (!$files.length && $context.is(selector)) {
+        $files = $context;
+    }
     if ($files.length) {
         $files.each(function () {
             st.fileRefresh($(this), st.refreshDelay);

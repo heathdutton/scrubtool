@@ -33,7 +33,7 @@ class FileForm extends Form
             $ownedListOptions   = [];
             $globalListOptions  = [];
             $requiredLists      = [];
-            $classModePrefix    = 'd-none file-mode-';
+            $classModePrefix    = 'file-mode file-mode-';
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
 

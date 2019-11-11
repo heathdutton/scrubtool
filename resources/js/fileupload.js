@@ -36,7 +36,7 @@ $(function () {
                                 $filelist.prepend($destination);
 
                                 // Ajax load into the clone while animating.
-                                st.loadFile(response.routes[file.name], $destination);
+                                st.fileLoad(response.routes[file.name], $destination);
 
                                 // Animate the preview card down to the
                                 // destination.

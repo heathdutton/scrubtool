@@ -11692,6 +11692,10 @@ form#dropzone .dz-message {
   display: none;
 }
 
+.card-file form .file-mode {
+  display: none;
+}
+
 @-webkit-keyframes pb {
   0% {
     width: 0%;

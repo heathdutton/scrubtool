@@ -41012,20 +41012,29 @@ __webpack_require__(/*! ./file */ "./resources/js/file.js");
 
 st.animationSpeed = '900';
 
-st.loadContent = function (url, $destination, prepend, callback) {
+st.loadContent = function (url, $destination, prepend, done) {
   $.getJSON(url, function (data) {
     if (typeof data.success !== 'undefined' && data.html.length) {
-      // @todo - check timestamp or contents before replacement.
-      $result = $(data.html);
-
       if (prepend) {
+        var $result = $(data.html);
         $destination.prepend($result);
+
+        if (typeof done == 'function') {
+          return done($result);
+        }
       } else {
-        $destination.replaceWith($result);
+        if ($destination.data('updated-at') !== data.updated_at && $destination.get(0).outerHTML !== data.html) {
+          var $result = $(data.html);
+          $destination.replaceWith($result);
+
+          if (typeof done == 'function') {
+            return done($result);
+          }
+        }
       }
 
-      if (typeof callback == 'function') {
-        callback($result);
+      if (typeof done == 'function') {
+        return done($destination);
       }
     }
   });
@@ -41086,7 +41095,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 /***/ (function(module, exports, __webpack_require__) {
 
 jQuery.countdown = __webpack_require__(/*! jquery.countdown */ "./node_modules/jquery.countdown/jquery.countdown.js");
-st.classModePrefix = '.file-mode-';
+st.classModePrefix = '.file-mode';
 st.refreshDelay = 1000;
 
 st.filesLoaded = function ($context) {
@@ -41094,15 +41103,8 @@ st.filesLoaded = function ($context) {
   $('select[name=mode]', $context).bind('change', function () {
     var $form = $(this).closest('form');
     var val = $(this).val();
-    $(this).find('option').each(function () {
-      var thisVal = $(this).val();
-
-      if (val === thisVal) {
-        $form.find(st.classModePrefix + thisVal).removeClass('d-none');
-      } else {
-        $form.find(st.classModePrefix + thisVal).addClass('d-none');
-      }
-    });
+    $form.find(st.classModePrefix + ':not(' + st.classModePrefix + '-' + val + ')').hide();
+    $form.find(st.classModePrefix + '-' + val).show();
   }).trigger('change'); // Show all columns switch.
 
   $(':checkbox[name=show_all]', $context).bind('change', function () {
@@ -41138,25 +41140,27 @@ st.filesLoaded = function ($context) {
   st.filesRefresh($context);
 };
 
-st.loadFile = function ($route, $destination) {
-  st.loadContent($route, $destination, false, function ($result) {
-    st.fileRefresh($result, st.refreshDelay);
+st.fileLoad = function ($route, $destination) {
+  st.loadContent($route, $destination, false, function ($context) {
+    st.filesLoaded($context);
   });
 };
 
 st.fileRefresh = function ($file, delay) {
   setTimeout(function () {
-    if ($file.hasClass('file-refresh') && !$file.hasClass('file-refreshing')) {
-      $file.addClass('file-refreshing');
-      st.loadContent($file.attr('data-file-origin'), $file, false, function ($destination) {
-        st.fileRefresh($destination, delay);
-      });
+    if ($file.hasClass('file-refresh')) {
+      st.fileLoad($file.attr('data-file-origin'), $file);
     }
   }, delay);
 };
 
 st.filesRefresh = function ($context) {
-  var $files = $('.file-refresh:not(.file-refreshing)', $context);
+  var selector = '.file-refresh';
+  var $files = $(selector, $context);
+
+  if (!$files.length && $context.is(selector)) {
+    $files = $context;
+  }
 
   if ($files.length) {
     $files.each(function () {
@@ -41214,7 +41218,7 @@ $(function () {
                 }, st.animationSpeed);
                 $filelist.prepend($destination); // Ajax load into the clone while animating.
 
-                st.loadFile(response.routes[file.name], $destination); // Animate the preview card down to the
+                st.fileLoad(response.routes[file.name], $destination); // Animate the preview card down to the
                 // destination.
 
                 $card.css({

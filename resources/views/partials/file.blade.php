@@ -31,7 +31,12 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
     $action = __('Done');
 }
 ?>
-<div class="card border-{{ $class }} mb-4 {{ $card }} card-file" data-file-id="{{ $file->id }}" data-file-status="{{ $file->status }}" data-file-origin="{{ route('file', ['id' => $file->id]) }}">
+<div class="card border-{{ $class }} mb-4 {{ $card }} card-file"
+     data-file-id="{{ $file->id }}"
+     data-file-status="{{ $file->status }}"
+     data-file-origin="{{ route('file', ['id' => $file->id]) }}"
+     data-updated-at="{{ $file->updated_at->getTimestamp() }}"
+>
     <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}"
        role="tab" id="heading{{ $file->id }}"
        data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="file{{ $file->id }}">

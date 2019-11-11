@@ -6,19 +6,30 @@ require('./file');
 
 st.animationSpeed = '900';
 
-st.loadContent = function (url, $destination, prepend, callback) {
+st.loadContent = function (url, $destination, prepend, done) {
     $.getJSON(url, function (data) {
         if (typeof data.success !== 'undefined' && data.html.length) {
-            // @todo - check timestamp or contents before replacement.
-            $result = $(data.html);
             if (prepend) {
+                var $result = $(data.html);
                 $destination.prepend($result);
+                if (typeof done == 'function') {
+                    return done($result);
+                }
             }
             else {
-                $destination.replaceWith($result);
+                if (
+                    $destination.data('updated-at') !== data.updated_at
+                    && $destination.get(0).outerHTML !== data.html
+                ) {
+                    var $result = $(data.html);
+                    $destination.replaceWith($result);
+                    if (typeof done == 'function') {
+                        return done($result);
+                    }
+                }
             }
-            if (typeof callback == 'function') {
-                callback($result);
+            if (typeof done == 'function') {
+                return done($destination);
             }
         }
     });
