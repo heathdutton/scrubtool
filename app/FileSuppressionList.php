@@ -33,8 +33,11 @@ class FileSuppressionList extends Pivot
     /** @var File */
     private $file;
 
-    /** @var SuppressionList */
+    /** @var SuppressionList to feed into */
     private $list;
+
+    /** @var Collection|null SuppressionLists to scrub with */
+    private $lists;
 
     /** @var FileHashHelper */
     private $fileHashHelper;
@@ -102,8 +105,8 @@ class FileSuppressionList extends Pivot
 
         // Scrub against an existing Suppression List.
         if ($this->file->mode & File::MODE_SCRUB) {
-            $this->findSupportsNeeded()
-                ->attachFile(FileSuppressionList::RELATIONSHIP_CHILD);
+            $this->loadLists()
+                ->findSupportsNeeded();
 
             throw new Exception(__('Scrub function does not yet exist.'));
         }
@@ -117,10 +120,9 @@ class FileSuppressionList extends Pivot
     private function attachFile($relationship)
     {
         $this->list->files()->attach($this->file->id, [
-            'created_at'          => Carbon::now('UTC'),
-            'updated_at'          => Carbon::now('UTC'),
-            'suppression_list_id' => $this->list->id,
-            'relationship'        => $relationship,
+            'created_at'   => Carbon::now('UTC'),
+            'updated_at'   => Carbon::now('UTC'),
+            'relationship' => $relationship,
         ]);
 
         return $this;
@@ -186,6 +188,7 @@ class FileSuppressionList extends Pivot
     {
         $this->list = new SuppressionList([], $this->file);
         $this->list->save();
+
         return $this;
     }
 
@@ -200,26 +203,45 @@ class FileSuppressionList extends Pivot
     {
         $messages     = [];
         $supportFound = false;
-        foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
-            $hashType = array_values($columns)[0];
-            $support  = SuppressionListSupport::withoutTrashed()
-                ->where('column_type', $columnType)
-                ->where('hash_type', $hashType)
-                ->where('status', SuppressionListSupport::STATUS_READY)
-                ->first();
+        $listIds      = $this->lists->modelKeys();
+        if ($listIds) {
+            foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+                $hashType = array_values($columns)[0];
+                $support  = SuppressionListSupport::withoutTrashed()
+                    ->whereIn('suppression_list_id', $listIds)
+                    ->where('column_type', $columnType)
+                    ->where('hash_type', $hashType)
+                    ->where('status', SuppressionListSupport::STATUS_READY)
+                    ->first();
 
-            if ($support) {
-                $supportFound = true;
-                foreach (array_keys($columns) as $columnIndex) {
-                    $this->columnSupports[$columnIndex] = $support;
+                if ($support) {
+                    $supportFound = true;
+                    foreach (array_keys($columns) as $columnIndex) {
+                        $this->columnSupports[$columnIndex] = $support;
+                    }
+                } else {
+                    $messages[$columnType.'_'.$hashType] = __('This suppression list does not currently support scrubbing $1 with $2.',
+                        [$columnType, $hashType ?? __('plaintext')]);
                 }
-            } else {
-                $messages[$columnType.'_'.$hashType] = __('This suppression list does not currently support scrubbing $1 with $2.',
-                    [$columnType, $hashType ?? __('plaintext')]);
             }
         }
+        // Partial support is allowed, but if no support is found we'll throw an error.
         if (!$supportFound) {
             throw new Exception($messages);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     * @throws Exception
+     */
+    private function loadLists()
+    {
+        $this->lists = $this->file->lists()->withoutTrashed()->get();
+        if (!$this->lists) {
+            throw new Exception(__('Lists chosen for scrubbing are not available.'));
         }
 
         return $this;

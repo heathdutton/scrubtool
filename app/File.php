@@ -56,7 +56,7 @@ class File extends Model
     const PRIVATE_STORAGE     = 'private';
 
     /** @var array */
-    const STATS_DEFAULT = [
+    const STATS_DEFAULT       = [
         'rows_total'           => 0,
         'rows_imported'        => 0,
         'rows_scrubbed'        => 0,
@@ -351,23 +351,6 @@ class File extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function lists()
-    {
-        return $this->belongsToMany(SuppressionList::class)
-            ->using(FileSuppressionList::class);
-    }
-
-    /**
      * @return bool|\Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function download()
@@ -415,6 +398,8 @@ class File extends Model
 
     /**
      * @param $values
+     *
+     * @throws Exception
      */
     public function saveInputSettings($values)
     {
@@ -425,15 +410,60 @@ class File extends Model
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
 
             // @todo - Validate and associate lists via pivot.
-            // if ($this->mode ^ File::MODE_HASH) {
-            // $this->lists()->firstOrCreate([]);
-            // }
+            if ($this->mode & File::MODE_SCRUB) {
+                $listIds = [];
+                foreach ($this->input_settings as $key => $value) {
+                    if ($value) {
+                        $listIds[] = (int) $value;
+                    }
+                }
+                $listIds = array_unique($listIds);
+                $user    = $this->user()->withoutTrashed()->getRelated()->first();
+                $q       = SuppressionList::withoutTrashed()
+                    ->whereIn('id', $listIds)
+                    ->where(function ($q) use ($user) {
+                        // Dissalow private list usage, unless the file of origin also belongs to the same user.
+                        $q->where('private', '!=', 1);
+                        if ($user) {
+                            $q->orWhere('user_id', $user->id);
+                        }
+                    });
+                $lists   = $q->get();
+                if (!$lists) {
+                    throw new Exception(__('No appropriate lists were found for scrubbing with.'));
+                }
+                /** @var FileSuppressionList $list */
+                foreach ($lists as $list) {
+                    $this->lists()->attach($list->id, [
+                        'created_at'   => Carbon::now('UTC'),
+                        'updated_at'   => Carbon::now('UTC'),
+                        'relationship' => FileSuppressionList::RELATIONSHIP_CHILD,
+                    ]);
+                }
+            }
 
             unset($this->form);
             $this->save();
 
             FileProcess::dispatch($this->id)->onQueue('process');
         }
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function lists()
+    {
+        return $this->belongsToMany(SuppressionList::class)
+            ->using(FileSuppressionList::class);
     }
 
     /**
