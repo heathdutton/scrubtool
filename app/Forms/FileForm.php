@@ -50,8 +50,6 @@ class FileForm extends Form
                         }
                     }
                 }
-            } else {
-                // @todo - Add tooltip/links for users not logged in.
             }
             asort($ownedListOptions);
 
@@ -108,6 +106,21 @@ class FileForm extends Form
                     'class' => $classChoiceWrapper,
                 ],
             ]);
+
+            if (!$user) {
+                $this->add('static_login', Field::STATIC, [
+                    'tag'        => 'a',
+                    'label_show' => false,
+                    'value'      => __('Login for more options'),
+                    'attr'       => [
+                        'href'  => route('login'),
+                        'class' => 'btn btn-secondary btn-sm ml-4',
+                    ],
+                    'wrapper'    => [
+                        'class' => '',
+                    ],
+                ]);
+            }
 
             if ($ownedListOptions) {
                 $this->add('suppression_list_append', Field::CHOICE, [

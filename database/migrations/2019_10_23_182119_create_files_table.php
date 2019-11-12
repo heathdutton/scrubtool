@@ -33,8 +33,8 @@ class CreateFilesTable extends Migration
             $table->unsignedInteger('column_count');
             $table->unsignedBigInteger('size');
             $table->text('message')->nullable();
-            $table->string('crc32b');
-            $table->string('md5');
+            $table->string('crc32b')->nullable();
+            $table->string('md5')->nullable();
             $table->string('country');
             $table->unsignedBigInteger('rows_total');
 

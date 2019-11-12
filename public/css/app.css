@@ -11630,6 +11630,10 @@ form#dropzone {
   box-shadow: inset 0 0 10px #ced4da;
 }
 
+form#dropzone.dropzone {
+  min-height: 140px;
+}
+
 form#dropzone .dz-message {
   text-align: center;
   margin: 2.8em 0 2em 0;
@@ -14643,5 +14647,9 @@ div.tooltip-inner {
   left: calc(-2.25rem + 2px);
   width: calc(1rem - 4px);
   height: calc(1rem - 4px);
+}
+
+.custom-select {
+  padding-left: 0.9rem;
 }
 

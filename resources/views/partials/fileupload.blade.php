@@ -19,7 +19,8 @@
         <span class="card-header text-secondary" role="tab">
             <div class="file-icon" class="bg-info">
                 <div>
-                    <img data-dz-thumbnail/>
+                    <i class="fa fa-question-circle fa-2x" style="margin: -2px 0 0 -.5px; opacity: .2; filter: grayscale(1) saturate(1.2);"></i>
+                    {{-- <img data-dz-thumbnail style="position: absolute; top:0; left:0;"/> --}}
                 </div>
             </div>
             <span data-dz-name class="file-preview-name"></span>

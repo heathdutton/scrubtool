@@ -72,6 +72,7 @@ class File extends Model
         'rows_phone_invalid'   => 0,
         'rows_phone_duplicate' => 0,
         'rows_phone_dnc'       => 0,
+        'download_count'       => 0,
     ];
 
     const STATUS_ADDED        = 1;
@@ -187,40 +188,26 @@ class File extends Model
         }
 
         /** @var File $file */
-        $file = self::create([
-            'name'                 => $uploadedFile->getClientOriginalName() ?? 'na',
-            'available_till'       => null,
-            'input_location'       => $uploadedFile->getRealPath(),
-            'output_location'      => null,
-            'user_id'              => $request->user() ? $request->user()->id : null,
-            'input_settings'       => null,
-            'ip_address'           => $request->getClientIp(),
-            'session_id'           => $request->getSession()->getId(),
-            'status'               => self::STATUS_ADDED,
-            'mode'                 => File::MODE_HASH,
-            'type'                 => $fileType,
-            'columns'              => null,
-            'column_count'         => 0,
-            'size'                 => $fileSize,
-            'message'              => null,
-            'crc32b'               => '',
-            'md5'                  => '',
-            'country'              => $request->header('CF-IPCountry', 'US'),
-            'rows_total'           => 0,
-            'rows_imported'        => 0,
-            'rows_scrubbed'        => 0,
-            'rows_hashed'          => 0,
-            'rows_invalid'         => 0,
-            'rows_email_valid'     => 0,
-            'rows_email_invalid'   => 0,
-            'rows_email_duplicate' => 0,
-            'rows_email_dnc'       => 0,
-            'rows_phone_valid'     => 0,
-            'rows_phone_invalid'   => 0,
-            'rows_phone_duplicate' => 0,
-            'rows_phone_dnc'       => 0,
-            'download_count'       => 0,
-        ]);
+        $file = self::create(self::STATS_DEFAULT + [
+                'name'            => $uploadedFile->getClientOriginalName() ?? 'na',
+                'available_till'  => null,
+                'input_location'  => $uploadedFile->getRealPath(),
+                'output_location' => null,
+                'user_id'         => $request->user() ? $request->user()->id : null,
+                'input_settings'  => null,
+                'ip_address'      => $request->getClientIp(),
+                'session_id'      => $request->getSession()->getId(),
+                'status'          => self::STATUS_ADDED,
+                'mode'            => File::MODE_HASH,
+                'type'            => $fileType,
+                'columns'         => null,
+                'column_count'    => 0,
+                'size'            => $fileSize,
+                'message'         => null,
+                'crc32b'          => null,
+                'md5'             => null,
+                'country'         => $request->header('CF-IPCountry', 'US'),
+            ]);
         $file->move($uploadedFile);
 
         // If the file size is over 10mb, prioritize analysis over hash check to save time.

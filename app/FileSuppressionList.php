@@ -6,6 +6,7 @@ use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -141,7 +142,7 @@ class FileSuppressionList extends Pivot
                 'suppression_list_id' => $this->list->id,
             ]);
             foreach (array_keys($columns) as $columnIndex) {
-                $this->columnSupports[$columnIndex] = [$support];
+                $this->columnSupports[$columnIndex] = (new Collection())->add($support);
             }
             $supports[] = $support;
         }
@@ -210,7 +211,7 @@ class FileSuppressionList extends Pivot
                     ->where('column_type', $columnType)
                     ->where('hash_type', $hashType)
                     ->where('status', SuppressionListSupport::STATUS_READY)
-                    ->first();
+                    ->get();
 
                 if ($supports) {
                     $supportFound = true;
@@ -251,6 +252,7 @@ class FileSuppressionList extends Pivot
      * @param $row
      *
      * @return bool
+     * @throws Exception
      */
     public function scrubRow(&$row)
     {
@@ -264,9 +266,12 @@ class FileSuppressionList extends Pivot
                 // Validate/sanitize/hash before attempting a scrub.
                 $value = $row[$columnIndex];
                 if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
-                    if ($support->where('content', $value)->exists()) {
-                        $row = [];
-                        break;
+                    foreach ($supports as $support) {
+                        if ($support->getContent()->where('content', $value)->exists()) {
+                            $row = [];
+                            $scrub = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -321,7 +326,7 @@ class FileSuppressionList extends Pivot
     {
         foreach ($this->columnSupports as $columnIndex => $supports) {
             /** @var SuppressionListSupport $support */
-            foreach ($support as $support) {
+            foreach ($supports as $support) {
                 $support->finish();
             }
         }

@@ -8,6 +8,10 @@ form#dropzone {
     box-shadow: inset 0 0 10px $gray-400;
 }
 
+form#dropzone.dropzone {
+    min-height: 140px;
+}
+
 form#dropzone .dz-message {
     text-align: center;
     margin: 2.8em 0 2em 0;

@@ -37,20 +37,24 @@ class SuppressionListSupport extends Model
      */
     public function addContentToQueue($content, $id = 0)
     {
-        $this->getContent()->addContentToQueue($content, $id);
+        $this->getContent(true)->addContentToQueue($content, $id);
 
         return $this;
     }
 
     /**
+     * @param  bool  $create
+     *
      * @return SuppressionListContent
      * @throws \Exception
      */
-    private function getContent()
+    public function getContent($create = false)
     {
         if (!$this->content) {
             $this->content = new SuppressionListContent([], $this);
-            $this->content->createTableIfNotExists();
+            if ($create) {
+                $this->content->createTableIfNotExists();
+            }
         }
 
         return $this->content;
