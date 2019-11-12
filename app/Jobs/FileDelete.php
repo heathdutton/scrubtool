@@ -19,12 +19,13 @@ class FileDelete implements ShouldQueue
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
+        $this->queue = 'delete';
     }
 
     public function handle()
     {
         /** @var File $file */
-        $file = File::find($this->fileId);
+        $file = File::query()->findOrFail($this->fileId);
         if ($file) {
             $file->delete();
         }

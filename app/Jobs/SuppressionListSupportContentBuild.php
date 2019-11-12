@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Helpers\HashHelper;
-use App\SuppressionListSupport;
 use App\SuppressionListContent;
+use App\SuppressionListSupport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -37,6 +37,7 @@ class SuppressionListSupportContentBuild implements ShouldQueue
         $this->supportId = $supportId;
         $this->startId   = $startId;
         $this->endId     = $endId;
+        $this->queue     = 'build';
     }
 
     /**

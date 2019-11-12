@@ -3,7 +3,9 @@
 namespace App;
 
 use App\Forms\FileForm;
-use App\Jobs\FileProcess;
+use App\Jobs\FileAnalyze;
+use App\Jobs\FileGetHashes;
+use App\Jobs\FileRun;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -201,8 +203,8 @@ class File extends Model
             'column_count'         => 0,
             'size'                 => $fileSize,
             'message'              => null,
-            'crc32b'               => hash_file('crc32b', $uploadedFile->getRealPath()),
-            'md5'                  => hash_file('md5', $uploadedFile->getRealPath()),
+            'crc32b'               => '',
+            'md5'                  => '',
             'country'              => $request->header('CF-IPCountry', 'US'),
             'rows_total'           => 0,
             'rows_imported'        => 0,
@@ -221,7 +223,8 @@ class File extends Model
         ]);
         $file->move($uploadedFile);
 
-        FileProcess::dispatch($file->id)->onQueue('process');
+        FileAnalyze::dispatch($file->id);
+        FileGetHashes::dispatch($file->id);
 
         return $file;
     }
@@ -322,6 +325,34 @@ class File extends Model
     }
 
     /**
+     * @return mixed|null
+     */
+    public function getValidatedInputLocation()
+    {
+        $input = $this->getRelativeLocation($this->input_location);
+        if ($this->getStorage()->exists($input)) {
+            return $this->input_location;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  string  $location
+     *
+     * @return false|string
+     */
+    public function getRelativeLocation($location = '')
+    {
+        $remove = storage_path('app');
+        if (substr($location, 0, strlen($remove)) === $remove) {
+            $location = substr($location, strlen($remove) + 1);
+        }
+
+        return $location;
+    }
+
+    /**
      * Deletes input and output files, then soft deletes the model.
      *
      * @return bool|mixed|null
@@ -338,21 +369,6 @@ class File extends Model
         }
 
         return $this->performDeleteOnModel();
-    }
-
-    /**
-     * @param  string  $location
-     *
-     * @return false|string
-     */
-    public function getRelativeLocation($location = '')
-    {
-        $remove = storage_path('app');
-        if (substr($location, 0, strlen($remove)) === $remove) {
-            $location = substr($location, strlen($remove) + 1);
-        }
-
-        return $location;
     }
 
     /**
@@ -483,7 +499,7 @@ class File extends Model
             unset($this->form);
             $this->save();
 
-            FileProcess::dispatch($this->id)->onQueue('process');
+            FileRun::dispatch($this->id);
         }
     }
 

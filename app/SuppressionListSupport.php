@@ -92,7 +92,7 @@ class SuppressionListSupport extends Model
                         $newSupport->status = self::STATUS_BUILDING;
                     }
                     $newSupport->save();
-                    SuppressionListSupportContentBuild::dispatch($newSupport->id)->onQueue('build');
+                    SuppressionListSupportContentBuild::dispatch($newSupport->id);
                 }
             }
         }
