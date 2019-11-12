@@ -119,6 +119,7 @@ class File extends Resource
     {
         return [
             (new DownloadExcel)
+                ->withName(__('Export'))
                 ->withWriterType(Excel::CSV)
                 ->withHeadings()
                 ->withFilename('files-'.time().'.csv'),

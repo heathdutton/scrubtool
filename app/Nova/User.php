@@ -116,6 +116,7 @@ class User extends Resource
     {
         return [
             (new DownloadExcel)
+                ->withName(__('Export'))
                 ->withWriterType(Excel::CSV)
                 ->withHeadings()
                 ->withFilename('users-'.time().'.csv'),
