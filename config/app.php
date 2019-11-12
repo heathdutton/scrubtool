@@ -240,9 +240,4 @@ return [
         'FormBuilder' => Kris\LaravelFormBuilder\Facades\FormBuilder::class,
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
     ],
-
-    /**
-     * Scrubtool specific
-     */
-    'max_upload_mb' => env('MAX_UPLOAD_MB', 6000),
 ];

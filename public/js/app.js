@@ -41200,7 +41200,7 @@ $(function () {
       maxFilesize: $dropzoneForm.data('max-upload-mb'),
       acceptedFiles: $dropzoneForm.data('accepted-files'),
       addRemoveLinks: false,
-      timeout: 899,
+      timeout: 0,
       uploadMultiple: true,
       init: function init() {
         this.on('successmultiple', function (files, response) {

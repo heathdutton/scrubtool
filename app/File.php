@@ -284,6 +284,44 @@ class File extends Model
     }
 
     /**
+     * Get the maximum file size the system currently supports for upload.
+     *
+     * @return float
+     */
+    public static function getMaxUploadMb()
+    {
+        static $maxUploadMb = -1;
+        if ($maxUploadMb < 0) {
+            $postMaxSize = self::parseSizeToBytes(ini_get('post_max_size'));
+            if ($postMaxSize > 0) {
+                $maxUploadMb = $postMaxSize;
+            }
+            $uploadMax = self::parseSizeToBytes(ini_get('upload_max_filesize'));
+            if ($uploadMax > 0 && $uploadMax < $maxUploadMb) {
+                $maxUploadMb = $uploadMax;
+            }
+        }
+
+        return round($maxUploadMb / 1048576, 2, PHP_ROUND_HALF_DOWN);
+    }
+
+    /**
+     * @param $size
+     *
+     * @return float
+     */
+    private static function parseSizeToBytes($size)
+    {
+        $unit = preg_replace('/[^bkmgtpezy]/i', '', $size);
+        $size = preg_replace('/[^0-9\.]/', '', $size);
+        if ($unit) {
+            return floor($size * pow(1024, stripos('bkmgtpezy', $unit[0])));
+        } else {
+            return floor($size);
+        }
+    }
+
+    /**
      * Deletes input and output files, then soft deletes the model.
      *
      * @return bool|mixed|null
