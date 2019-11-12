@@ -4,7 +4,7 @@ namespace App;
 
 use App\Forms\FileForm;
 use App\Jobs\FileAnalyze;
-use App\Jobs\FileGetHashes;
+use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
 use Carbon\Carbon;
 use Exception;
@@ -226,9 +226,9 @@ class File extends Model
         // If the file size is over 10mb, prioritize analysis over hash check to save time.
         if ($fileSize > 10000000) {
             FileAnalyze::dispatch($file->id);
-            FileGetHashes::dispatch($file->id);
+            FileGetChecksums::dispatch($file->id);
         } else {
-            FileGetHashes::dispatch($file->id);
+            FileGetChecksums::dispatch($file->id);
             FileAnalyze::dispatch($file->id);
         }
 

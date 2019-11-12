@@ -44,6 +44,8 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             <div>
                 @if($file->md5)
                     <img src="https://www.gravatar.com/avatar/{{ $file->md5 }}?r=pg&d=identicon&s=24"/>
+                @else
+                    <i class="fa fa-question-circle fa-2x" style="margin: -2px 0 0 -.5px; opacity: .2; filter: grayscale(1) saturate(1.2);"></i>
                 @endif
             </div>
         </div>

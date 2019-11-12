@@ -8,11 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 
-class FileGetHashes implements ShouldQueue
+class FileGetChecksums implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
-    const HASHES = ['md5', 'crc32b'];
+    const CHECKSUMS = ['md5', 'crc32b'];
 
     public $deleteWhenMissingModels = true;
 
@@ -29,7 +29,7 @@ class FileGetHashes implements ShouldQueue
         /** @var File $file */
         $file = File::query()->findOrFail($this->fileId);
         if ($file) {
-            foreach (self::HASHES as $algo) {
+            foreach (self::CHECKSUMS as $algo) {
                 if (empty($file->{$algo})) {
                     $input = $file->getValidatedInputLocation();
                     if ($input) {

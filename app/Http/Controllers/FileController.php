@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\File;
-use App\Jobs\FileGetHashes;
+use App\Jobs\FileGetChecksums;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
