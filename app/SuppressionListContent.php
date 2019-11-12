@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Schema;
 class SuppressionListContent extends Model
 {
     /** @var int */
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 1009;
 
     /** @var string */
     const CONTENT_COLUMN = 'content';

@@ -104,7 +104,6 @@ class FileImport implements ToModel, WithChunkReading
                     $this->stats['rows_total']++;
 
                     if ($this->file->mode & File::MODE_SCRUB) {
-
                         if ($this->getFileSuppressionList()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
                         }
@@ -120,13 +119,15 @@ class FileImport implements ToModel, WithChunkReading
 
                     if ($row && $this->file->mode & File::MODE_HASH) {
                         if ($this->getFileHashHelper()->modifyRowForOutput($row)) {
-                            $this->appendRowToExport($row);
                             $this->stats['rows_hashed']++;
                         } else {
                             $this->stats['rows_invalid']++;
                         }
                     }
 
+                    if ($row && $this->file->mode & (File::MODE_HASH | File::MODE_SCRUB)) {
+                        $this->appendRowToExport($row);
+                    }
                 }
             } else {
                 $this->stats['rows_invalid']++;
