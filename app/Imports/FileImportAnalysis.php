@@ -2,9 +2,10 @@
 
 namespace App\Imports;
 
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithLimit;
 
-class FileImportAnalysis extends FileImport implements WithLimit
+class FileImportAnalysis extends FileImport implements WithLimit, WithChunkReading
 {
 
     /** @var int */
@@ -15,6 +16,6 @@ class FileImportAnalysis extends FileImport implements WithLimit
      */
     public function limit(): int
     {
-        return 101;
+        return self::CHUNK_SIZE;
     }
 }

@@ -178,6 +178,7 @@ return [
          */
         // Collective\Html\HtmlServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
+        Maatwebsite\LaravelNovaExcel\LaravelNovaExcelServiceProvider::class,
         Kris\LaravelFormBuilder\FormBuilderServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
     ],

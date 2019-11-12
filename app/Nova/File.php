@@ -8,6 +8,8 @@ use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
 use Laravel\Nova\Fields\Text;
+use Maatwebsite\Excel\Excel;
+use Maatwebsite\LaravelNovaExcel\Actions\DownloadExcel;
 
 class File extends Resource
 {
@@ -115,6 +117,12 @@ class File extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            (new DownloadExcel)
+                ->withWriterType(Excel::CSV)
+                ->withHeadings()
+                ->withFilename('files-'.time().'.csv'),
+        ];
     }
+
 }

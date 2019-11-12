@@ -7,6 +7,8 @@ use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Text;
+use Maatwebsite\Excel\Excel;
+use Maatwebsite\LaravelNovaExcel\Actions\DownloadExcel;
 use Themsaid\CashierTool\CashierResourceTool;
 
 class User extends Resource
@@ -112,6 +114,11 @@ class User extends Resource
      */
     public function actions(Request $request)
     {
-        return [];
+        return [
+            (new DownloadExcel)
+                ->withWriterType(Excel::CSV)
+                ->withHeadings()
+                ->withFilename('users-'.time().'.csv'),
+        ];
     }
 }
