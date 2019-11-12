@@ -140,7 +140,7 @@ class FileImport implements ToModel, WithChunkReading
             }
         }
 
-        if ($row && $this->rowIndex <= 20 && !$analysis->getRowIsHeader()) {
+        if ($row && $this->rowIndex <= 10 && !$analysis->getRowIsHeader()) {
             $this->samples[] = $row;
         }
     }

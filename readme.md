@@ -20,11 +20,12 @@ Professionally utilize lead suppression lists.
     npm install
     npm run watch &
     php artisan migrate
-    php artisan queue:work --queue=process,build,delete &
+    php artisan queue:work --queue=analyze,run,build,delete &
     php artisan serve
 
 ### Queues Explained
 
-* *process*: Imports files, analyzes them, scrubs them, hashes them, generates exports.
-* *build*: Takes plain text suppression lists and builds support for various hashed equivalents.
+* *analyze*: Analyzes files right after upload.
+* *run*: Imports files, scrubs them, hashes them, generates exports.
+* *build*: Takes plain text suppression lists and builds support for hashed equivalents.
 * *delete*: Purges uploaded files after the allowed download window has passed.

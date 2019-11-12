@@ -23,55 +23,58 @@ $(function () {
                 this.on('successmultiple', function (files, response) {
                     var $filelist = $('#fileslist');
                     if ($filelist.length) {
-                        $.each(files, function (index, file) {
-                            if (typeof response.routes[file.name] !== 'undefined') {
-                                // Upload succeeded.
+                        // Delay to allow time for file to be secured.
+                        setTimeout(function () {
+                            $.each(files, function (index, file) {
+                                if (typeof response.routes[file.name] !== 'undefined') {
+                                    // Upload succeeded.
 
-                                // Clone the file card in the lower content
-                                var $card = $(file.previewElement);
-                                var $destination = $card.clone().css({
-                                    'opacity': 0,
-                                    'max-height': '0px'
-                                }, st.animationSpeed);
-                                $filelist.prepend($destination);
+                                    // Clone the file card in the lower content
+                                    var $card = $(file.previewElement);
+                                    var $destination = $card.clone().css({
+                                        'opacity': 0,
+                                        'max-height': '0px'
+                                    }, st.animationSpeed);
+                                    $filelist.prepend($destination);
 
-                                // Ajax load into the clone while animating.
-                                st.fileLoad(response.routes[file.name], $destination);
+                                    // Ajax load into the clone while animating.
+                                    st.fileLoad(response.routes[file.name], $destination);
 
-                                // Animate the preview card down to the
-                                // destination.
-                                $card
-                                    .css({'position': 'relative'})
-                                    .animate({
-                                        'top': '220px',
-                                        'margin-left': '-1.5em',
-                                        'margin-right': '-1.5em',
-                                        'opacity': 0
-                                    }, st.animationSpeed, function () {
-                                        $(this).animate({
-                                            'height': '0px'
+                                    // Animate the preview card down to the
+                                    // destination.
+                                    $card
+                                        .css({'position': 'relative'})
+                                        .animate({
+                                            'top': '220px',
+                                            'margin-left': '-1.5em',
+                                            'margin-right': '-1.5em',
+                                            'opacity': 0
                                         }, st.animationSpeed, function () {
-                                            $(this).remove();
+                                            $(this).animate({
+                                                'height': '0px'
+                                            }, st.animationSpeed, function () {
+                                                $(this).remove();
+                                            });
                                         });
+
+                                    // Fade in new card during hte ajax req.
+                                    $destination.animate({
+                                        'opacity': 1,
+                                        'max-height': '600px'
+                                    }, st.animationSpeed, function () {
+                                        $(this).css({'max-height': 'auto'});
                                     });
 
-                                // Fade in new card during hte ajax req.
-                                $destination.animate({
-                                    'opacity': 1,
-                                    'max-height': '600px'
-                                }, st.animationSpeed, function () {
-                                    $(this).css({'max-height': 'auto'});
-                                });
-
-                                // Show the "files" header
-                                $('#file-list-header:first.d-none')
-                                    .css({'opacity': 0})
-                                    .removeClass('d-none')
-                                    .animate({
-                                        'opacity': 1
-                                    }, st.animationSpeed);
-                            }
-                        });
+                                    // Show the "files" header
+                                    $('#file-list-header:first.d-none')
+                                        .css({'opacity': 0})
+                                        .removeClass('d-none')
+                                        .animate({
+                                            'opacity': 1
+                                        }, st.animationSpeed);
+                                }
+                            });
+                        }, 1000);
                     }
                 });
             },

@@ -223,8 +223,14 @@ class File extends Model
         ]);
         $file->move($uploadedFile);
 
-        FileAnalyze::dispatch($file->id);
-        FileGetHashes::dispatch($file->id);
+        // If the file size is over 10mb, prioritize analysis over hash check to save time.
+        if ($fileSize > 10000000) {
+            FileAnalyze::dispatch($file->id);
+            FileGetHashes::dispatch($file->id);
+        } else {
+            FileGetHashes::dispatch($file->id);
+            FileAnalyze::dispatch($file->id);
+        }
 
         return $file;
     }

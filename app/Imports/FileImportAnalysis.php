@@ -8,13 +8,13 @@ class FileImportAnalysis extends FileImport implements WithLimit
 {
 
     /** @var int */
-    const CHUNK_SIZE = 20;
+    const CHUNK_SIZE = 101;
 
     /**
      * @return int
      */
     public function limit(): int
     {
-        return 20;
+        return 101;
     }
 }

@@ -42,7 +42,9 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
        data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="file{{ $file->id }}">
         <div class="file-icon altered" class="bg-{{ $class }}">
             <div>
-                <img src="https://www.gravatar.com/avatar/{{ $file->md5 }}?r=pg&d=identicon&s=24"/>
+                @if($file->md5)
+                    <img src="https://www.gravatar.com/avatar/{{ $file->md5 }}?r=pg&d=identicon&s=24"/>
+                @endif
             </div>
         </div>
         <span data-toggle='tooltip' data-placement="top"

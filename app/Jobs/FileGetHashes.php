@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\File;
-use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,7 +21,7 @@ class FileGetHashes implements ShouldQueue
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
-        $this->queue = 'analyze';
+        $this->queue  = 'analyze';
     }
 
     public function handle()
@@ -30,22 +29,18 @@ class FileGetHashes implements ShouldQueue
         /** @var File $file */
         $file = File::query()->findOrFail($this->fileId);
         if ($file) {
-            try {
-                foreach (self::HASHES as $algo) {
-                    if (empty($file->{$algo})) {
-                        $input = $file->getValidatedInputLocation();
-                        if ($input) {
-                            $hash = hash_file($algo, $input);
-                            if ($hash) {
-                                $file          = File::query()->findOrFail($this->fileId);
-                                $file->{$algo} = $hash;
-                                $file->save();
-                            }
+            foreach (self::HASHES as $algo) {
+                if (empty($file->{$algo})) {
+                    $input = $file->getValidatedInputLocation();
+                    if ($input) {
+                        $hash = hash_file($algo, $input);
+                        if ($hash) {
+                            $file          = File::query()->findOrFail($this->fileId);
+                            $file->{$algo} = $hash;
+                            $file->save();
                         }
                     }
                 }
-            } catch (Exception $exception) {
-                report($exception);
             }
         }
     }
