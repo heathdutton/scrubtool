@@ -14,8 +14,8 @@ $(function () {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]:first').attr('content')
             },
             autoDiscover: false,
-            maxFilesize: 100,
-            acceptedFiles: '.xlsx, .csv, .tsv, .ods, .xls, .slk, .xml, .gnumeric, .html',
+            maxFilesize: $dropzoneForm.data('max-upload-mb'),
+            acceptedFiles: $dropzoneForm.data('accepted-files'),
             addRemoveLinks: false,
             timeout: 899,
             uploadMultiple: true,

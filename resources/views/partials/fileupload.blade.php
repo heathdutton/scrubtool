@@ -1,4 +1,9 @@
-<form method="post" action="{{ route('file.upload') }}" enctype="multipart/form-data" class="dropzone card bg-light mb-3 col-md-12" id="dropzone">
+<form method="post" action="{{ route('file.upload') }}"
+      id="dropzone"
+      enctype="multipart/form-data"
+      class="dropzone card bg-light mb-3 col-md-12"
+      data-accepted-files=".{{ implode(', .', array_keys(config('excel.extension_detector'))) }}"
+      data-max-upload-mb="{{ config('app.max_upload_mb') }}">
     <div class="dz-message">
         <i class="fa fa-arrow-right"></i>
         <span class="p-3">

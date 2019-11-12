@@ -241,4 +241,8 @@ return [
         'DataTables' => Yajra\DataTables\Facades\DataTables::class,
     ],
 
+    /**
+     * Scrubtool specific
+     */
+    'max_upload_mb' => env('MAX_UPLOAD_MB', 6000),
 ];

@@ -264,8 +264,7 @@ class FileSuppressionList extends Pivot
                 // Validate/sanitize/hash before attempting a scrub.
                 $value = $row[$columnIndex];
                 if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
-                    $scrub = (bool) $support->where('content', $value)->first();
-                    if ($scrub) {
+                    if ($support->where('content', $value)->exists()) {
                         $row = [];
                         break;
                     }
@@ -301,7 +300,7 @@ class FileSuppressionList extends Pivot
         if ($this->list && $this->columnSupports) {
             foreach ($this->columnSupports as $columnIndex => $supports) {
                 /** @var SuppressionListSupport $support */
-                foreach ($support as $support) {
+                foreach ($supports as $support) {
                     // Validate/sanitize/hash before insertion.
                     $value = $row[$columnIndex];
                     if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input')) {
