@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportAnalysis;
+use App\Imports\FileImportSheetAnalysis;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -37,12 +38,12 @@ class FileAnalyze implements ShouldQueue
             $file->message = '';
             $file->save();
 
-            $fileImportAnalysis = new FileImportAnalysis($file);
             /**
              * @var Excel $excel
              * @var CustomReader $reader
              */
             list($excel, $reader) = resolve('excelCustom');
+            $fileImportAnalysis = new FileImportSheetAnalysis($file);
             $excel->import(
                 $fileImportAnalysis,
                 $file->input_location,

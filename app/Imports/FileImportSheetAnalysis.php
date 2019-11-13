@@ -2,10 +2,9 @@
 
 namespace App\Imports;
 
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithLimit;
 
-class FileImportAnalysis extends FileImport implements WithLimit, WithChunkReading
+class FileImportSheetAnalysis extends FileImportSheet implements WithLimit
 {
 
     /** @var int */

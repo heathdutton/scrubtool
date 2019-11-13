@@ -61,7 +61,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                                         <dd>{{ $file->crc32b }}</dd>
                                         <dt>{{ __('Columns')  }}</dt>
                                         <dd>{{ $file->column_count }}</dd>
-                                        <dt>{{ __('Rows')  }}</dt>
+                                        <dt>{{ __('Total Rows')  }}</dt>
                                         <dd>{{ $file->rows_total }}</dd>
                                     </dl>'>
             {{ $file->name }}
@@ -88,16 +88,20 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             @endif
             @if($file->status & \App\File::STATUS_WHOLE)
                 <div class="row">
-                    @include('partials.stat', ['icon' => 'database', 'class' => '', 'value' => $file->rows_total, 'label' => __('Total Records')])
-                    @include('partials.stat', ['icon' => 'bug', 'class' => '', 'value' => $file->rows_invalid, 'label' => __('Invalid')])
+                    @include('partials.file.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'label' => __('Rows')])
+                    @include('partials.file.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'label' => __('Records')])
+                    @include('partials.file.stat', ['icon' => 'close', 'class' => 'warning', 'value' => $file->stat('rows_invalid'), 'label' => __('Invalid')])
                     @if($file->mode & \App\File::MODE_HASH)
-                        @include('partials.stat', ['icon' => 'hashtag', 'class' => '', 'value' => $file->rows_hashed, 'label' => __('Hashed')])
+                        @include('partials.file.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
                     @endif
                     @if($file->mode & \App\File::MODE_SCRUB)
-                        @include('partials.stat', ['icon' => 'remove', 'class' => '', 'value' => $file->rows_scrubbed, 'label' => __('Scrubbed')])
+                        @include('partials.file.stat', ['icon' => 'remove', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
+                    @endif
+                    @if($file->mode & (\App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_REPLACE))
+                        @include('partials.file.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
                     @endif
                     @if($file->mode & (\App\File::MODE_HASH | \App\File::MODE_SCRUB))
-                        @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => $file->download_count, 'label' => __('Downloads')])
+                        @include('partials.file.stat', ['icon' => 'download', 'class' => '', 'value' => $file->stat('download_count'), 'label' => __('Downloads')])
                     @endif
                 </div>
                 <div class="row">

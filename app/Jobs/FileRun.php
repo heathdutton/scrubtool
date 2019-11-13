@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\File;
 use App\Imports\CustomReader;
-use App\Imports\FileImport;
+use App\Imports\FileImportSheet;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -41,7 +41,7 @@ class FileRun implements ShouldQueue
                 $file->message = '';
                 $file->save();
 
-                $fileImport = new FileImport($file);
+                $fileImport = new FileImportSheet($file);
 
                 /**
                  * @var Excel $excel
@@ -70,7 +70,6 @@ class FileRun implements ShouldQueue
 
                 $this->saveAndQueueForDelete($file, self::MINUTES_TILL_DELETION);
             }
-
         }
     }
 

@@ -60,6 +60,7 @@ class File extends Model
     /** @var array */
     const STATS_DEFAULT       = [
         'rows_total'           => 0,
+        'rows_filled'          => 0,
         'rows_imported'        => 0,
         'rows_scrubbed'        => 0,
         'rows_hashed'          => 0,
@@ -534,5 +535,24 @@ class File extends Model
         }
 
         return $columns;
+    }
+
+    /**
+     * @param $stat
+     * @param  bool  $formatted
+     *
+     * @return int|string
+     */
+    public function stat($stat, $formatted = true)
+    {
+        if (in_array($stat, array_keys(self::STATS_DEFAULT)) && isset($this->{$stat})) {
+            if ($formatted) {
+                return number_format($this->{$stat});
+            } else {
+                return (int) $this->{$stat};
+            }
+        }
+
+        return 0;
     }
 }

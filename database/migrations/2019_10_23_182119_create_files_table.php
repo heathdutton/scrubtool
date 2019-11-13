@@ -37,7 +37,8 @@ class CreateFilesTable extends Migration
             $table->string('md5')->nullable();
             $table->string('country');
             $table->json('sheets')->nullable();
-            $table->unsignedBigInteger('rows_total');
+            $table->unsignedBigInteger('rows_total'); // Total rows may include empty ones in XSL
+            $table->unsignedBigInteger('rows_filled'); // Rows that actually got the import process. Records.
 
             $table->unsignedBigInteger('rows_imported');
             $table->unsignedBigInteger('rows_scrubbed');
