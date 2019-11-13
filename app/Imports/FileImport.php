@@ -101,8 +101,6 @@ class FileImport implements ToModel, WithChunkReading
                         $this->appendRowToExport($row);
                     }
                 } else {
-                    $this->stats['rows_total']++;
-
                     if ($this->file->mode & File::MODE_SCRUB) {
                         if ($this->getFileSuppressionList()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
@@ -216,7 +214,9 @@ class FileImport implements ToModel, WithChunkReading
     private function persistStats()
     {
         foreach ($this->stats as $stat => $value) {
-            $this->file->setAttribute($stat, $value);
+            if ($value) {
+                $this->file->setAttribute($stat, $value);
+            }
         }
         $this->timeOfLastSave = microtime(true);
 
