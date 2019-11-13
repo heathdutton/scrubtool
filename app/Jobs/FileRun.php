@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\File;
+use App\Imports\CustomReader;
 use App\Imports\FileImport;
 use Carbon\Carbon;
 use Exception;
@@ -10,7 +11,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
 
 class FileRun implements ShouldQueue
 {
@@ -23,10 +24,11 @@ class FileRun implements ShouldQueue
 
     private $fileId;
 
+
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
-        $this->queue = 'run';
+        $this->queue  = 'run';
     }
 
     public function handle()
@@ -40,14 +42,20 @@ class FileRun implements ShouldQueue
                 $file->save();
 
                 $fileImport = new FileImport($file);
-                Excel::import(
+
+                /**
+                 * @var Excel $excel
+                 * @var CustomReader $reader
+                 */
+                list($excel, $reader) = resolve('excelCustom');
+                $reader->setTotalRows($file->sheets);
+                $excel->import(
                     $fileImport,
                     $file->input_location,
                     null,
                     $file->type
                 );
-
-                Excel::store(
+                $excel->store(
                     $fileImport->getExport(),
                     $file->getRelativeLocation($file->output_location),
                     null,
@@ -85,7 +93,8 @@ class FileRun implements ShouldQueue
     public function failed(Exception $exception)
     {
         report($exception);
-        $file = File::find($this->fileId);
+        /** @var File $file */
+        $file = File::query()->find($this->fileId);
         if ($file) {
             $file->status  = File::STATUS_STOPPED;
             $file->message = 'An error was encountered while processing your file. It was purged for your security. '.$exception->getMessage();

@@ -101,6 +101,7 @@ class File extends Model
     protected $casts = [
         'input_settings' => 'array',
         'columns'        => 'array',
+        'sheets'         => 'array',
     ];
 
     /** @var Storage */

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\File;
+use App\Imports\CustomReader;
 use App\Imports\FileImportAnalysis;
 use Carbon\Carbon;
 use Exception;
@@ -10,7 +11,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
 
 class FileAnalyze implements ShouldQueue
 {
@@ -23,7 +24,7 @@ class FileAnalyze implements ShouldQueue
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
-        $this->queue = 'analyze';
+        $this->queue  = 'analyze';
     }
 
     public function handle()
@@ -37,7 +38,12 @@ class FileAnalyze implements ShouldQueue
             $file->save();
 
             $fileImportAnalysis = new FileImportAnalysis($file);
-            Excel::import(
+            /**
+             * @var Excel $excel
+             * @var CustomReader $reader
+             */
+            list($excel, $reader) = resolve('excelCustom');
+            $excel->import(
                 $fileImportAnalysis,
                 $file->input_location,
                 null,
@@ -48,6 +54,8 @@ class FileAnalyze implements ShouldQueue
             $file->column_count = count($file->columns);
             $file->status       = File::STATUS_INPUT_NEEDED;
             $file->message      = '';
+            $file->rows_total   = array_sum($reader->getTotalRows());
+            $file->sheets       = $reader->getTotalRows();
             $file->save();
         }
     }

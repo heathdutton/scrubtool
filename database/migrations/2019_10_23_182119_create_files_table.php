@@ -36,6 +36,7 @@ class CreateFilesTable extends Migration
             $table->string('crc32b')->nullable();
             $table->string('md5')->nullable();
             $table->string('country');
+            $table->json('sheets')->nullable();
             $table->unsignedBigInteger('rows_total');
 
             $table->unsignedBigInteger('rows_imported');

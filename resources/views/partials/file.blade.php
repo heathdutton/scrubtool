@@ -61,6 +61,8 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
                                         <dd>{{ $file->crc32b }}</dd>
                                         <dt>{{ __('Columns')  }}</dt>
                                         <dd>{{ $file->column_count }}</dd>
+                                        <dt>{{ __('Rows')  }}</dt>
+                                        <dd>{{ $file->rows_total }}</dd>
                                     </dl>'>
             {{ $file->name }}
         </span>
