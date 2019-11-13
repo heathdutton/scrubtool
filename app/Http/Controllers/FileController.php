@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\File;
-use App\Jobs\FileGetChecksums;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -55,7 +54,7 @@ class FileController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'html'       => view('partials.file')->with(['file' => $file,])->toHtml(),
+                'html'       => view('partials.file.single')->with(['file' => $file, 'upload' => false])->toHtml(),
                 'updated_at' => $file->updated_at->getTimestamp(),
                 'success'    => true,
             ]);

@@ -26,7 +26,7 @@
             <span data-dz-name class="file-preview-name"></span>
             {{--<i class="fa fa-file-text float-right"></i>--}}
             <span class="float-right">
-                <div class="dz-size" data-dz-size></div>
+                {{ __('Uploading') }} <div class="dz-size" data-dz-size></div>
             </span>
         </span>
         <div id="file1" class="collapse show" role="tabpanel" aria-labelledby="heading1">

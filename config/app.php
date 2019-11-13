@@ -177,6 +177,7 @@ return [
          * Scrubtool specific
          */
         // Collective\Html\HtmlServiceProvider::class,
+        // Maatwebsite\Excel\ExcelServiceProvider::class,
         \App\Providers\ExcelCustomServiceProvider::class,
         Maatwebsite\LaravelNovaExcel\LaravelNovaExcelServiceProvider::class,
         Kris\LaravelFormBuilder\FormBuilderServiceProvider::class,
