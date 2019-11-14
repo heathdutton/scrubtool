@@ -538,24 +538,9 @@ class HashHelper
     public function detectHash($string, $hashName = '', $includeDisabled = false)
     {
         $selection = null;
-        $string    = strtolower($string);
-        $length    = strlen($string);
-        // Remove Octal identifiers.
-        if (in_array(substr($string, 0, 2), ['0x', '0h'])) {
-            $string = substr($string, 2);
-            $length -= 2;
-        } elseif (
-            !isset(self::ALGOS[$length])
-            && isset(self::ALGOS[$length - 1])
-            && '0' === substr($string, 0, 1)
-        ) {
-            $string = substr($string, 1);
-            $length--;
-        }
-        if (
-            isset(self::ALGOS[$length])
-            && 1 === preg_match('/^[0-9a-f]+$/', $string)
-        ) {
+        $this->filter($string);
+        if ($string) {
+            $length          = strlen($string);
             $alternatives    = [];
             $totalPopularity = 0;
             $certainty       = 0;
@@ -588,5 +573,44 @@ class HashHelper
         }
 
         return $selection;
+    }
+
+    /**
+     * @param  string  $value  Any form of hex string, will be sanitized to a minimal lowercase hash value, binary, or made null.
+     * @param  bool  $binary  Optionally return the result in binary.
+     * @param  null  $algo  Optionally enforce a specific algorithm, the length will be checked to match.
+     */
+    public function filter(&$value, $binary = false, $algo = null)
+    {
+        $string = strtolower($value);
+        $length = strlen($string);
+        $value  = null;
+        if (in_array(substr($string, 0, 2), ['0x', '0h'])) {
+            // Remove Octal identifiers.
+            $string = substr($string, 2);
+            $length -= 2;
+        } else {
+            if (
+                !isset(self::ALGOS[$length])
+                && isset(self::ALGOS[$length - 1])
+                && '0' === substr($string, 0, 1)
+            ) {
+                // 0 prefixed binary.
+                $string = substr($string, 1);
+                $length--;
+            }
+        }
+        if (
+            (!$algo && isset(self::ALGOS[$length]) || isset(self::ALGOS[$length][$algo]))
+            && 1 === preg_match('/^[0-9a-f]+$/', $string)
+        ) {
+            if ($binary) {
+                if ($result = @hex2bin($string)) {
+                    $value = $result;
+                }
+            } else {
+                $value = $string;
+            }
+        }
     }
 }

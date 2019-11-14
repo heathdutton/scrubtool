@@ -45,31 +45,40 @@ class FileHashHelper
      * @param $value
      * @param $columnIndex
      * @param  string  $mode
-     * @param  null  $algo
      * @param  bool  $binary
      *
      * @return string|string[]|null
      */
-    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $algo = null, $binary = false)
+    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $binary = false)
     {
         if (!empty($value)) {
-            $type = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
+            $type      = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
+            $algoInput = $this->file->input_settings['column_hash_input_'.$columnIndex] ?? null;
 
-            if ($type & FileAnalysisHelper::TYPE_PHONE) {
-                $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
-                $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
-                $value       = preg_replace("/[^0-9]/", '', $value);
+            if (!$algoInput) {
+                // We are starting with plain text.
+                if ($type & FileAnalysisHelper::TYPE_PHONE) {
+                    $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
+                    $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
+                    $value       = preg_replace("/[^0-9]/", '', $value);
+                } elseif ($type & FileAnalysisHelper::TYPE_EMAIL) {
+                    $value = strtolower(trim($value));
+                    $value = FileAnalysisHelper::getEmail($value);
+                }
             }
-
-            if ($type & FileAnalysisHelper::TYPE_EMAIL) {
-                $value = strtolower(trim($value));
-                $value = FileAnalysisHelper::getEmail($value);
-            }
-
             if ($value) {
-                $algo = $algo ?? $this->file->input_settings['column_hash_'.$mode.'_'.$columnIndex] ?? null;
-                if ($algo) {
-                    $this->getHashHelper()->hash($value, $algo, $binary);
+                if ('input' == $mode) {
+                    if ($algoInput) {
+                        $this->getHashHelper()->filter($value, $binary, $algoInput);
+                    }
+                } elseif ('output' == $mode) {
+                    if (!$algoInput) {
+                        if ($this->file->mode & File::MODE_HASH) {
+                            // Generate hash for output from the filtered plaintext.
+                            $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
+                            $this->getHashHelper()->hash($value, $algoOutput, $binary);
+                        }
+                    }
                 }
             }
         }
