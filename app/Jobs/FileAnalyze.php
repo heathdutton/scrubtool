@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\File;
 use App\Imports\CustomReader;
-use App\Imports\FileImportAnalysis;
 use App\Imports\FileImportSheetAnalysis;
 use Carbon\Carbon;
 use Exception;
@@ -33,7 +32,7 @@ class FileAnalyze implements ShouldQueue
         /** @var File $file */
         $file = File::query()->findOrFail($this->fileId);
         if ($file && $file->status & File::STATUS_ADDED) {
-
+            $tempFile      = null;
             $file->status  = File::STATUS_ANALYSIS;
             $file->message = '';
             $file->save();
@@ -43,21 +42,69 @@ class FileAnalyze implements ShouldQueue
              * @var CustomReader $reader
              */
             list($excel, $reader) = resolve('excelCustom');
-            $fileImportAnalysis = new FileImportSheetAnalysis($file);
+
+            // Take shortcuts with ultra-large plaintext files.
+            $fileLocationForAnalysis = $file->input_location;
+            if (
+                $file->size > File::LARGE_FILE_BYTES
+                && ($file->type == Excel::CSV || $file->type == Excel::TSV || $file->type == Excel::HTML)
+            ) {
+                $totalRows = 0;
+                if (
+                    0 !== stripos(PHP_OS, 'WIN')
+                    && !in_array('shell_exec', explode(',', strtolower(ini_get('disable_functions'))))
+                ) {
+                    // ~50x faster wc function.
+                    $result = explode(' ',
+                        trim(shell_exec('wc -l '.escapeshellarg($file->input_location).' 2>/dev/null')));
+                    if (count($result) > 1) {
+                        $totalRows = (int) $result[0];
+                    }
+                }
+                if (!$totalRows) {
+                    $handle = fopen($file->input_location, 'r');
+                    if ($handle) {
+                        while (($buffer = fgets($handle, 4096)) !== false) {
+                            $totalRows += substr_count($buffer, PHP_EOL);
+                        }
+                        fclose($handle);
+                    }
+                }
+                if ($totalRows) {
+                    $reader->setTotalRows(['Worksheet' => $totalRows]);
+                }
+
+                // Now get the first chunk of the file for analysis via  so that we don't have to load,
+                // the entire file into ram.
+                if ($handle = fopen($file->input_location, 'r')) {
+                    $data = fread($handle, File::LARGE_FILE_CHUNK);
+                    fclose($handle);
+                    $tempFile = tmpfile();
+                    if (fwrite($tempFile, $data)) {
+                        $fileLocationForAnalysis = stream_get_meta_data($tempFile)['uri'];
+                    }
+                }
+            }
+
+            $import = new FileImportSheetAnalysis($file);
             $excel->import(
-                $fileImportAnalysis,
-                $file->input_location,
+                $import,
+                $fileLocationForAnalysis,
                 null,
                 $file->type
             );
 
-            $file->columns      = $fileImportAnalysis->getAnalysis()['columns'];
+            $file->columns      = $import->getAnalysis()['columns'];
             $file->column_count = count($file->columns);
             $file->status       = File::STATUS_INPUT_NEEDED;
             $file->message      = '';
             $file->rows_total   = array_sum($reader->getTotalRows());
             $file->sheets       = $reader->getTotalRows();
             $file->save();
+
+            if ($tempFile) {
+                fclose($tempFile);
+            }
         }
     }
 
