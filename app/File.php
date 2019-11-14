@@ -27,11 +27,6 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 /**
  * Class File
  *
- * Files go into the system in 3 modes:
- *  - Hash: Just hash email/phone based on input provided.
- *  - List: Generate/append/replace a suppression list.
- *  - Scrub: Scrub records in the file against one or more suppression lists.
- *
  * Files go through the following workflow:
  *  - Added: Freshly uploaded, waiting to be picked up
  *  - Analysis: Checking for size, column types and such with a short-run import for a preview.
