@@ -43,19 +43,25 @@ class File extends Model
 
     const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
 
-    const MIN_BYTES           = 10;
+    /** @var int Files are treated differently when they are over this size to speed up analysis. */
+    const LARGE_FILE_BYTES  = 10000000;
 
-    const MODE_HASH           = 1;
+    /** @var int Chunk to load for file analysis */
+    const LARGE_FILE_CHUNK  = 1000000;
 
-    const MODE_LIST_APPEND    = 2;
+    const MIN_BYTES         = 10;
 
-    const MODE_LIST_CREATE    = 4;
+    const MODE_HASH         = 1;
 
-    const MODE_LIST_REPLACE   = 8;
+    const MODE_LIST_APPEND  = 2;
 
-    const MODE_SCRUB          = 16;
+    const MODE_LIST_CREATE  = 4;
 
-    const PRIVATE_STORAGE     = 'private';
+    const MODE_LIST_REPLACE = 8;
+
+    const MODE_SCRUB        = 16;
+
+    const PRIVATE_STORAGE   = 'private';
 
     /** @var array */
     const STATS_DEFAULT       = [
@@ -212,8 +218,8 @@ class File extends Model
             ]);
         $file->move($uploadedFile);
 
-        // If the file size is over 10mb, prioritize analysis over hash check to save time.
-        if ($fileSize > 10000000) {
+        // If the file is large, prioritize analysis over hash check to save time.
+        if ($fileSize > self::LARGE_FILE_BYTES) {
             FileAnalyze::dispatch($file->id);
             FileGetChecksums::dispatch($file->id);
         } else {
@@ -554,5 +560,29 @@ class File extends Model
         }
 
         return 0;
+    }
+
+    /**
+     * @return int
+     */
+    public function progress()
+    {
+        $done  = 0;
+        $total = $this->rows_total ?? 0;
+        if (!$total) {
+            return 100;
+        }
+        // if ($this->mode & self::MODE_HASH) {
+        //     $done = $this->rows_hashed;
+        // }
+        // if ($this->mode & self::MODE_SCRUB) {
+        //     $done = max($done, $this->rows_scrubbed);
+        // }
+        // if ($this->mode & (self::MODE_LIST_APPEND | self::MODE_LIST_CREATE | self::MODE_LIST_REPLACE)) {
+        //     $done = max($done, $this->rows_filled);
+        // }
+        $done = $this->rows_filled;
+
+        return min(100, max(0, floor(100 / $total * $done)));
     }
 }

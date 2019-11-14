@@ -2,7 +2,11 @@
 $class  = 'secondary';
 $action = '';
 $card   = '';
-if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS) {
+if ($file->status & \App\File::STATUS_ADDED) {
+    $card   = 'file-refresh';
+    $class  = 'secondary';
+    $action = __('Queued');
+} elseif ($file->status & \App\File::STATUS_ANALYSIS) {
     $card   = 'file-refresh';
     $class  = 'secondary';
     $action = __('Analyzing');
@@ -51,19 +55,21 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
         </div>
         <span data-toggle='tooltip' data-placement="top"
               data-original-title='<dl>
-                                        <dt>{{ __('Size')  }}</dt>
-                                        <dd>{{ $file->humanSize() }}</dd>
-                                        <dt>{{ __('Added')  }}</dt>
-                                        <dd>{{ $file->created_at }}</dd>
-                                        <dt>{{ __('MD5')  }}</dt>
-                                        <dd>{{ $file->md5 }}</dd>
-                                        <dt>{{ __('CRC32b')  }}</dt>
-                                        <dd>{{ $file->crc32b }}</dd>
-                                        <dt>{{ __('Columns')  }}</dt>
-                                        <dd>{{ $file->column_count }}</dd>
-                                        <dt>{{ __('Total Rows')  }}</dt>
-                                        <dd>{{ $file->rows_total }}</dd>
-                                    </dl>'>
+                <dt>{{ __('Size')  }}</dt><dd>{{ $file->humanSize() }}</dd>
+                <dt>{{ __('Added')  }}</dt><dd>{{ $file->created_at }}</dd>
+                @if($file->md5)
+                  <dt>{{ __('MD5')  }}</dt><dd>{{ $file->md5 }}</dd>
+                @endif
+                @if($file->crc32b)
+                  <dt>{{ __('CRC32b')  }}</dt><dd>{{ $file->crc32b }}</dd>
+                @endif
+                @if($file->column_count)
+                  <dt>{{ __('Columns')  }}</dt><dd>{{ $file->stat('column_count') }}</dd>
+                @endif
+                @if($file->rows_total)
+                  <dt>{{ __('Total Rows')  }}</dt><dd>{{ $file->stat('rows_total') }}</dd>
+                @endif
+            </dl>'>
             {{ $file->name }}
         </span>
         <i class="fa fa-chevron-down float-right"></i>
@@ -77,7 +83,7 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
 
             @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS || $file->status & \App\File::STATUS_READY || $file->status & \App\File::STATUS_RUNNING)
                 <div class="progress">
-                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
                         {{ $action }}
                     </div>
                 </div>
@@ -86,22 +92,22 @@ if ($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS
             @if($file->form)
                 {!! form($file->form) !!}
             @endif
-            @if($file->status & \App\File::STATUS_WHOLE)
-                <div class="row">
-                    @include('partials.file.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'label' => __('Rows')])
-                    @include('partials.file.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'label' => __('Records')])
-                    @include('partials.file.stat', ['icon' => 'close', 'class' => 'warning', 'value' => $file->stat('rows_invalid'), 'label' => __('Invalid')])
+            @if($file->status & (\App\File::STATUS_WHOLE | \App\File::STATUS_RUNNING))
+                <div class="row mt-3">
+                    @include('partials.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'label' => __('Rows')])
+                    @include('partials.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'label' => __('Records')])
+                    @include('partials.stat', ['icon' => 'close', 'class' => 'warning', 'value' => $file->stat('rows_invalid'), 'label' => __('Invalid')])
                     @if($file->mode & \App\File::MODE_HASH)
-                        @include('partials.file.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
+                        @include('partials.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
                     @endif
                     @if($file->mode & \App\File::MODE_SCRUB)
-                        @include('partials.file.stat', ['icon' => 'remove', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
+                        @include('partials.stat', ['icon' => 'remove', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
                     @endif
                     @if($file->mode & (\App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_REPLACE))
-                        @include('partials.file.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
+                        @include('partials.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
                     @endif
                     @if($file->mode & (\App\File::MODE_HASH | \App\File::MODE_SCRUB))
-                        @include('partials.file.stat', ['icon' => 'download', 'class' => '', 'value' => $file->stat('download_count'), 'label' => __('Downloads')])
+                        @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => $file->stat('download_count'), 'label' => __('Downloads')])
                     @endif
                 </div>
                 <div class="row">

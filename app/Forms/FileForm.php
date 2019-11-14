@@ -114,7 +114,7 @@ class FileForm extends Form
                     'value'      => __('Login for more options'),
                     'attr'       => [
                         'href'  => route('login'),
-                        'class' => 'btn btn-secondary btn-sm ml-4',
+                        'class' => 'btn btn-secondary btn-sm ml-4 mt-3',
                     ],
                     'wrapper'    => [
                         'class' => '',
