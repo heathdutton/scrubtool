@@ -2,7 +2,7 @@
     @if(count($files))
         <div id="accordion" role="tablist" aria-multiselectable="true">
             @foreach($files as $file)
-                @include('partials.file.single')
+                @include('partials.file.item')
             @endforeach
         </div>
     @endif

@@ -11,14 +11,10 @@ use App\SuppressionList;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class FileImportSheet implements ToModel, WithChunkReading
+class FileImportSheet implements ToModel
 {
     use SkipsFailures, SkipsErrors;
-
-    /** @var int */
-    const CHUNK_SIZE = 1009;
 
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
@@ -242,14 +238,6 @@ class FileImportSheet implements ToModel, WithChunkReading
         $this->persistStats();
 
         return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function chunkSize(): int
-    {
-        return self::CHUNK_SIZE;
     }
 
     /**

@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Kris\LaravelFormBuilder\FormBuilder;
+use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Maatwebsite\Excel\Helpers\FileTypeDetector;
 
@@ -44,7 +45,7 @@ class File extends Model
     const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
 
     /** @var int Files are treated differently when they are over this size to speed up analysis. */
-    const LARGE_FILE_BYTES  = 10000000;
+    const LARGE_FILE_BYTES = 10000000;
 
     /** @var int Chunk to load for file analysis */
     const LARGE_FILE_CHUNK  = 1000000;
@@ -563,11 +564,21 @@ class File extends Model
     }
 
     /**
+     * To be used to discern if an alternative treatment is necessary
+     *
+     * @return bool
+     */
+    public function isLargeCsv()
+    {
+        return $this->size > File::LARGE_FILE_BYTES
+            && in_array($this->type, [Excel::CSV, Excel::TSV, Excel::HTML]);
+    }
+
+    /**
      * @return int
      */
-    public function progress()
+    public function progress($animated = true)
     {
-        $done  = 0;
         $total = $this->rows_total ?? 0;
         if (!$total) {
             return 100;
@@ -583,6 +594,12 @@ class File extends Model
         // }
         $done = $this->rows_filled;
 
-        return min(100, max(0, floor(100 / $total * $done)));
+        $percentage = min(100, max(0, floor(100 / $total * $done)));
+
+        if (!$percentage && $animated) {
+            $percentage = 100;
+        }
+
+        return $percentage;
     }
 }

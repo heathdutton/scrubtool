@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheet;
+use App\Imports\LargeCsvReader;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -31,6 +32,11 @@ class FileRun implements ShouldQueue
         $this->queue  = 'run';
     }
 
+    /**
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     */
     public function handle()
     {
         /** @var File $file */
@@ -42,20 +48,39 @@ class FileRun implements ShouldQueue
                 $file->save();
 
                 // @todo - Complete multiple sheet support and use FileImport here. Columns array must support multiple sheets to do this.
+
+                /** @var FileImportSheet $fileImport */
                 $fileImport = new FileImportSheet($file);
 
-                /**
-                 * @var Excel $excel
-                 * @var CustomReader $reader
-                 */
                 list($excel, $reader) = resolve('excelCustom');
                 $reader->setTotalRows($file->sheets);
-                $excel->import(
-                    $fileImport,
-                    $file->input_location,
-                    null,
-                    $file->type
-                );
+
+                if ($file->isLargeCsv()) {
+                    /**
+                     * Perform a streamlined import to save time/memory.
+                     */
+                    $largeCsvReader = new LargeCsvReader();
+                    $largeCsvReader->setDelimiter(config('excel.imports.csv.delimiter'));
+                    $largeCsvReader->setEnclosure(config('excel.imports.csv.enclosure'));
+                    $largeCsvReader->setEscapeCharacter(config('excel.imports.csv.escape_character'));
+                    $largeCsvReader->setContiguous(config('excel.imports.csv.contiguous')); // Currently ignored.
+                    $largeCsvReader->setInputEncoding(config('excel.imports.csv.input_encoding'));
+                    $largeCsvReader->loadIntoCallback($file->input_location,
+                        function ($row, $rowIndex) use ($fileImport) {
+                            $fileImport->model($row);
+                        });
+                } else {
+                    /**
+                     * @var Excel $excel
+                     * @var CustomReader $reader
+                     */
+                    $excel->import(
+                        $fileImport,
+                        $file->input_location,
+                        null,
+                        $file->type
+                    );
+                }
                 $excel->store(
                     $fileImport->getExport(),
                     $file->getRelativeLocation($file->output_location),

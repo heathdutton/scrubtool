@@ -5,7 +5,6 @@ namespace App\Imports;
 use Exception;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Shared\StringHelper;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class LargeCsvReader extends Csv
 {
@@ -58,33 +57,13 @@ class LargeCsvReader extends Csv
      */
     private $escapeCharacter = '\\';
 
-    /** @var int  */
-    private $largeCsvLimit;
-
     /**
-     * LargeCsvReader constructor.
+     * @param $pFilename
+     * @param  callable  $callback
      *
-     * @param  null  $largeCsvLimit
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
      */
-    public function __construct($largeCsvLimit = null)
-    {
-        $this->largeCsvLimit = $largeCsvLimit;
-
-        parent::__construct();
-    }
-
-
-    /**
-     * Loads PhpSpreadsheet from file into PhpSpreadsheet instance.
-     *
-     * @param  string  $pFilename
-     * @param  Spreadsheet  $spreadsheet
-     *
-     * @return Spreadsheet
-     * @throws Exception
-     *
-     */
-    public function loadIntoExisting($pFilename, Spreadsheet $spreadsheet)
+    public function loadIntoCallback($pFilename, callable $callback)
     {
         $lineEnding = ini_get('auto_detect_line_endings');
         ini_set('auto_detect_line_endings', true);
@@ -101,49 +80,122 @@ class LargeCsvReader extends Csv
         $this->checkSeparator();
         $this->inferSeparator();
 
-        // Create new PhpSpreadsheet object
-        while ($spreadsheet->getSheetCount() <= $this->sheetIndex) {
-            $spreadsheet->createSheet();
-        }
-        $sheet = $spreadsheet->setActiveSheetIndex($this->sheetIndex);
-
-        // Set our starting row based on whether we're in contiguous mode or not
         $currentRow = 1;
-        if ($this->contiguous) {
-            $currentRow = ($this->contiguousRow == -1) ? $sheet->getHighestRow() : $this->contiguousRow;
-        }
 
         // Loop through each line of the file in turn
         while (($rowData = fgetcsv($fileHandle, 0, $this->delimiter, $this->enclosure,
                 $this->escapeCharacter)) !== false
-            && (!$this->largeCsvLimit || $currentRow <= $this->largeCsvLimit)
         ) {
-            $columnLetter = 'A';
-            foreach ($rowData as $rowDatum) {
-                if ($rowDatum != '' && $this->readFilter->readCell($columnLetter, $currentRow)) {
+            foreach ($rowData as &$rowDatum) {
+                if ($rowDatum != '') {
                     // Convert encoding if necessary
                     if ($this->inputEncoding !== 'UTF-8') {
                         $rowDatum = StringHelper::convertEncoding($rowDatum, 'UTF-8', $this->inputEncoding);
                     }
-
-                    // Set cell value
-                    $sheet->getCell($columnLetter.$currentRow)->setValue($rowDatum);
                 }
-                ++$columnLetter;
             }
+            $callback($rowData, $currentRow);
             ++$currentRow;
         }
 
         // Close file
         fclose($fileHandle);
 
-        if ($this->contiguous) {
-            $this->contiguousRow = $currentRow;
-        }
-
         ini_set('auto_detect_line_endings', $lineEnding);
 
-        // Return
-        return $spreadsheet;
+        return;
     }
+
+
+    /**
+     * Set input encoding.
+     *
+     * @param  string  $pValue  Input encoding, eg: 'UTF-8'
+     *
+     * @return Csv
+     */
+    public function setInputEncoding($pValue)
+    {
+        $this->inputEncoding = $pValue;
+
+        return $this;
+    }
+
+    /**
+     * Set delimiter.
+     *
+     * @param  string  $delimiter  Delimiter, eg: ','
+     *
+     * @return CSV
+     */
+    public function setDelimiter($delimiter)
+    {
+        $this->delimiter = $delimiter;
+
+        return $this;
+    }
+
+    /**
+     * Set enclosure.
+     *
+     * @param  string  $enclosure  Enclosure, defaults to "
+     *
+     * @return CSV
+     */
+    public function setEnclosure($enclosure)
+    {
+        if ($enclosure == '') {
+            $enclosure = '"';
+        }
+        $this->enclosure = $enclosure;
+
+        return $this;
+    }
+
+    /**
+     * Set sheet index.
+     *
+     * @param  int  $pValue  Sheet index
+     *
+     * @return CSV
+     */
+    public function setSheetIndex($pValue)
+    {
+        $this->sheetIndex = $pValue;
+
+        return $this;
+    }
+
+    /**
+     * Set Contiguous.
+     *
+     * @param  bool  $contiguous
+     *
+     * @return Csv
+     */
+    public function setContiguous($contiguous)
+    {
+        $this->contiguous = (bool) $contiguous;
+        if (!$contiguous) {
+            $this->contiguousRow = -1;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set escape backslashes.
+     *
+     * @param  string  $escapeCharacter
+     *
+     * @return $this
+     */
+    public function setEscapeCharacter($escapeCharacter)
+    {
+        $this->escapeCharacter = $escapeCharacter;
+
+        return $this;
+    }
+
+
 }

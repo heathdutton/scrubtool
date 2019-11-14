@@ -45,10 +45,7 @@ class FileAnalyze implements ShouldQueue
 
             // Take shortcuts with ultra-large plaintext files.
             $fileLocationForAnalysis = $file->input_location;
-            if (
-                $file->size > File::LARGE_FILE_BYTES
-                && ($file->type == Excel::CSV || $file->type == Excel::TSV || $file->type == Excel::HTML)
-            ) {
+            if ($file->isLargeCsv()) {
                 $totalRows = 0;
                 if (
                     0 !== stripos(PHP_OS, 'WIN')
