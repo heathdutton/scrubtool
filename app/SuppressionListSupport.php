@@ -4,7 +4,9 @@ namespace App;
 
 use App\Helpers\HashHelper;
 use App\Jobs\SuppressionListSupportContentBuild;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SuppressionListSupport extends Model
@@ -33,7 +35,7 @@ class SuppressionListSupport extends Model
      * @param  int  $id
      *
      * @return $this
-     * @throws \Exception
+     * @throws Exception
      */
     public function addContentToQueue($content, $id = 0)
     {
@@ -46,7 +48,7 @@ class SuppressionListSupport extends Model
      * @param  bool  $create
      *
      * @return SuppressionListContent
-     * @throws \Exception
+     * @throws Exception
      */
     public function getContent($create = false)
     {
@@ -113,7 +115,7 @@ class SuppressionListSupport extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function list()
     {

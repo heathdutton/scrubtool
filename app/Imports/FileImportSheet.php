@@ -8,6 +8,8 @@ use App\FileSuppressionList;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
 use App\SuppressionList;
+use Exception;
+use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -83,8 +85,8 @@ class FileImportSheet implements ToModel
     /**
      * @param  array  $row
      *
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Model[]|void|null
-     * @throws \Exception
+     * @return Model|Model[]|void|null
+     * @throws Exception
      */
     public function model(array $row)
     {
@@ -187,7 +189,7 @@ class FileImportSheet implements ToModel
 
     /**
      * @return FileSuppressionList
-     * @throws \Exception
+     * @throws Exception
      */
     private function getFileSuppressionList()
     {

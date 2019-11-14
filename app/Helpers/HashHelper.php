@@ -576,7 +576,8 @@ class HashHelper
     }
 
     /**
-     * @param  string  $value  Any form of hex string, will be sanitized to a minimal lowercase hash value, binary, or made null.
+     * @param  string  $value  Any form of hex string, will be sanitized to a minimal lowercase hash value, binary, or
+     *     made null.
      * @param  bool  $binary  Optionally return the result in binary.
      * @param  null  $algo  Optionally enforce a specific algorithm, the length will be checked to match.
      */

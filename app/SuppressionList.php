@@ -3,7 +3,11 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Query\Builder;
 
 /**
  * Class SuppressionList
@@ -111,7 +115,7 @@ class SuppressionList extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function files()
     {
@@ -167,7 +171,7 @@ class SuppressionList extends Model
     /**
      * @param $string
      *
-     * @return \Illuminate\Database\Eloquent\Builder|Model|\Illuminate\Database\Query\Builder|object|static|null
+     * @return \Illuminate\Database\Eloquent\Builder|Model|Builder|object|static|null
      */
     public function findByIdToken($string)
     {
@@ -189,7 +193,7 @@ class SuppressionList extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function user()
     {
@@ -197,7 +201,7 @@ class SuppressionList extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function supports()
     {

@@ -8,16 +8,21 @@ use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Maatwebsite\Excel\Helpers\FileTypeDetector;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Class File
@@ -277,7 +282,7 @@ class File extends Model
     }
 
     /**
-     * @return \Illuminate\Contracts\Filesystem\Filesystem|Storage
+     * @return Filesystem|Storage
      */
     private function getStorage()
     {
@@ -397,7 +402,7 @@ class File extends Model
     /**
      * @param  FormBuilder  $formBuilder
      *
-     * @return \Kris\LaravelFormBuilder\Form
+     * @return Form
      */
     public function buildForm(FormBuilder $formBuilder)
     {
@@ -407,7 +412,7 @@ class File extends Model
     }
 
     /**
-     * @return bool|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return bool|BinaryFileResponse
      */
     public function download()
     {
@@ -506,7 +511,7 @@ class File extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function user()
     {
@@ -514,7 +519,7 @@ class File extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return BelongsToMany
      */
     public function lists()
     {

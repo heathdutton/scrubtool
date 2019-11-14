@@ -3,6 +3,8 @@
 namespace App\Nova\Metrics;
 
 use App\File;
+use DateInterval;
+use DateTimeInterface;
 use Illuminate\Http\Request;
 use Laravel\Nova\Metrics\Trend;
 
@@ -11,7 +13,7 @@ class FilesPerDay extends Trend
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      *
      * @return mixed
      */
@@ -37,7 +39,7 @@ class FilesPerDay extends Trend
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return  DateTimeInterface|DateInterval|float|int
      */
     public function cacheFor()
     {

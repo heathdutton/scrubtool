@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\File;
 use Exception;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\View\View;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Kris\LaravelFormBuilder\FormBuilderTrait;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FileController extends Controller
 {
@@ -19,7 +24,7 @@ class FileController extends Controller
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @return Factory|View
      */
     public function index(Request $request, FormBuilder $formBuilder)
     {
@@ -37,7 +42,7 @@ class FileController extends Controller
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     * @return Factory|RedirectResponse|View
      */
     public function file(Request $request, FormBuilder $formBuilder)
     {
@@ -69,7 +74,7 @@ class FileController extends Controller
     /**
      * @param  Request  $request
      *
-     * @return bool|\Illuminate\Http\RedirectResponse
+     * @return bool|RedirectResponse
      */
     private function forceLogin(Request $request)
     {
@@ -100,7 +105,7 @@ class FileController extends Controller
     /**
      * @param  Request  $request
      *
-     * @return bool|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
+     * @return bool|RedirectResponse|BinaryFileResponse
      * @throws Exception
      */
     public function download(Request $request)
@@ -130,7 +135,7 @@ class FileController extends Controller
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request, FormBuilder $formBuilder)
     {
@@ -163,7 +168,7 @@ class FileController extends Controller
      *
      * @param  Request  $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      * @throws Exception
      */
     public function upload(Request $request)

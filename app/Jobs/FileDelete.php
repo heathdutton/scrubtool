@@ -19,7 +19,7 @@ class FileDelete implements ShouldQueue
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
-        $this->queue = 'delete';
+        $this->queue  = 'delete';
     }
 
     public function handle()

@@ -3,6 +3,8 @@
 namespace App\Nova\Metrics;
 
 use App\File;
+use DateInterval;
+use DateTimeInterface;
 use Illuminate\Http\Request;
 use Laravel\Nova\Metrics\Value;
 
@@ -11,7 +13,8 @@ class NewFiles extends Value
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
+     *
      * @return mixed
      */
     public function calculate(Request $request)
@@ -27,20 +30,20 @@ class NewFiles extends Value
     public function ranges()
     {
         return [
-            30 => '30 Days',
-            60 => '60 Days',
-            365 => '365 Days',
+            30      => '30 Days',
+            60      => '60 Days',
+            365     => '365 Days',
             'TODAY' => 'Today',
-            'MTD' => 'Month To Date',
-            'QTD' => 'Quarter To Date',
-            'YTD' => 'Year To Date',
+            'MTD'   => 'Month To Date',
+            'QTD'   => 'Quarter To Date',
+            'YTD'   => 'Year To Date',
         ];
     }
 
     /**
      * Determine for how many minutes the metric should be cached.
      *
-     * @return  \DateTimeInterface|\DateInterval|float|int
+     * @return  DateTimeInterface|DateInterval|float|int
      */
     public function cacheFor()
     {

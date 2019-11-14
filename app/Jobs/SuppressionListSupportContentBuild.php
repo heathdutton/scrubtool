@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Helpers\HashHelper;
 use App\SuppressionListContent;
 use App\SuppressionListSupport;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,7 +42,7 @@ class SuppressionListSupportContentBuild implements ShouldQueue
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle()
     {

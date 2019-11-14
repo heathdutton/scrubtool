@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\File;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Request;
 
 class UserEventSubscriber
@@ -48,7 +49,7 @@ class UserEventSubscriber
     /**
      * Register the listeners for the subscriber.
      *
-     * @param  \Illuminate\Events\Dispatcher  $events
+     * @param  Dispatcher  $events
      */
     public function subscribe($events)
     {
