@@ -26,7 +26,8 @@ class FileImportSheet implements ToModel, WithChunkReading
     /** @var FileSuppressionList */
     protected $FileSuppressionList;
 
-    private $stats = File::STATS_DEFAULT;
+    /** @var array */
+    private $stats;
 
     /** @var int */
     private $rowIndex = 0;
@@ -68,6 +69,11 @@ class FileImportSheet implements ToModel, WithChunkReading
         $this->file           = $file;
         $this->timeOfStart    = microtime(true);
         $this->timeOfLastSave = $this->timeOfStart;
+
+        // Resume previous statistics.
+        foreach (File::STATS_DEFAULT as $stat => $default) {
+            $this->stats[$stat] = $file->{$stat} ?? $default;
+        }
     }
 
     /**
@@ -96,13 +102,13 @@ class FileImportSheet implements ToModel, WithChunkReading
             }
         } elseif ($this->file->status & File::STATUS_RUNNING) {
             if ($analysis->rowIsValid()) {
-                $this->stats['rows_filled']++;
-
                 if ($analysis->getRowIsHeader()) {
                     if ($this->file->mode & (File::MODE_HASH | File::MODE_SCRUB)) {
                         $this->appendRowToExport($row);
                     }
                 } else {
+                    $this->stats['rows_filled']++;
+
                     if ($this->file->mode & File::MODE_SCRUB) {
                         if ($this->getFileSuppressionList()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
@@ -129,8 +135,6 @@ class FileImportSheet implements ToModel, WithChunkReading
                         $this->appendRowToExport($row);
                     }
                 }
-            } else {
-                $this->stats['rows_invalid']++;
             }
 
             if (0 == $this->rowIndex % 20) {
