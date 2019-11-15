@@ -20,12 +20,15 @@ Professionally utilize lead suppression lists.
     npm install
     npm run watch &
     php artisan migrate
+    php artisan db:seed
     php artisan queue:work --queue=analyze,run,build,delete &
     php artisan serve
 
+Default login `admin@scrubtool.com` password `secret`
+
 ### Queues Explained
 
-* *analyze*: Analyzes files right after upload.
+* *analyze*: Analyzes files right after upload, and generates checksums.
 * *run*: Imports files, scrubs them, hashes them, generates exports.
 * *build*: Takes plain text suppression lists and builds support for hashed equivalents.
 * *delete*: Purges uploaded files after the allowed download window has passed.
