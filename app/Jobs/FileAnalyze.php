@@ -45,6 +45,7 @@ class FileAnalyze implements ShouldQueue
 
             // Take shortcuts with ultra-large plaintext files.
             $fileLocationForAnalysis = $file->input_location;
+            $sheets                  = [];
             if ($file->isLargeCsv()) {
                 $totalRows = 0;
                 if (
@@ -68,7 +69,8 @@ class FileAnalyze implements ShouldQueue
                     }
                 }
                 if ($totalRows) {
-                    $reader->setTotalRows(['Worksheet' => $totalRows]);
+                    $sheets = ['Worksheet' => $totalRows];
+                    $reader->setTotalRows($sheets);
                 }
 
                 // Now get the first chunk of the file for analysis via  so that we don't have to load,
@@ -82,7 +84,6 @@ class FileAnalyze implements ShouldQueue
                     }
                 }
             }
-
             $import = new FileImportSheetAnalysis($file);
             $excel->import(
                 $import,
@@ -90,13 +91,15 @@ class FileAnalyze implements ShouldQueue
                 null,
                 $file->type
             );
-
+            if (!$sheets) {
+                $sheets = $reader->getTotalRows();
+            }
             $file->columns      = $import->getAnalysis()['columns'];
             $file->column_count = count($file->columns);
             $file->status       = File::STATUS_INPUT_NEEDED;
             $file->message      = '';
-            $file->rows_total   = array_sum($reader->getTotalRows());
-            $file->sheets       = $reader->getTotalRows();
+            $file->rows_total   = max($file->rows_total, array_sum($sheets));
+            $file->sheets       = $sheets;
             $file->save();
 
             if ($tempFile) {

@@ -17,7 +17,7 @@ class CustomReader extends Reader
      */
     public function getTotalRows(): array
     {
-        if (!$this->totalRows) {
+        if (!$this->totalRows && file_exists($this->currentFile->getLocalPath())) {
             $this->totalRows = parent::getTotalRows();
         }
 

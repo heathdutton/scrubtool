@@ -13,10 +13,13 @@ use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class FileImportSheet implements ToModel
+class FileImportSheet implements ToModel, WithChunkReading
 {
     use SkipsFailures, SkipsErrors;
+
+    const CHUNK_SIZE = 1009;
 
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
@@ -270,4 +273,11 @@ class FileImportSheet implements ToModel
         ];
     }
 
+    /**
+     * @return int
+     */
+    public function chunkSize(): int
+    {
+        return self::CHUNK_SIZE;
+    }
 }
