@@ -15,4 +15,18 @@ return [
     SuppressionListSupport::TYPE_EMAIL => 'email',
     SuppressionListSupport::TYPE_PHONE => 'phone',
     SuppressionListSupport::TYPE_HASH => 'hash',
+    'icons' => [
+        SuppressionListSupport::TYPE_AGE => 'birthday-cake',
+        SuppressionListSupport::TYPE_DOB => 'birthday-cake',
+        SuppressionListSupport::TYPE_NAME_FIRST => 'address-card',
+        SuppressionListSupport::TYPE_NAME_LAST => 'address-card',
+        SuppressionListSupport::TYPE_L_ADDRESS1 => 'home',
+        SuppressionListSupport::TYPE_L_ADDRESS2 => 'home',
+        SuppressionListSupport::TYPE_L_CITY => 'city',
+        SuppressionListSupport::TYPE_L_ZIP => 'mail-bulk',
+        SuppressionListSupport::TYPE_L_COUNTRY => 'globe-americas',
+        SuppressionListSupport::TYPE_EMAIL => 'envelope',
+        SuppressionListSupport::TYPE_PHONE => 'phone',
+        SuppressionListSupport::TYPE_HASH => 'hashtag',
+    ]
 ];
