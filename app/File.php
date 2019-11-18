@@ -207,7 +207,7 @@ class File extends Model
                 'ip_address'      => $request->getClientIp(),
                 'session_id'      => $request->getSession()->getId(),
                 'status'          => self::STATUS_ADDED,
-                'mode'            => File::MODE_HASH,
+                'mode'            => File::MODE_SCRUB,
                 'type'            => $fileType,
                 'columns'         => null,
                 'column_count'    => 0,

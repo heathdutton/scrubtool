@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\File;
+use App\SuppressionListSupport;
 use libphonenumber\Leniency;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
@@ -78,38 +79,38 @@ class FileAnalysisHelper
 
     /** @var array Simplified strings that identify the column type with fair certainty. */
     private $typeIdentifiers = [
-        'age'         => self::TYPE_AGE,
-        'dob'         => self::TYPE_DOB,
-        'dateofbirth' => self::TYPE_DOB,
-        'birth'       => self::TYPE_DOB,
-        'birthdate'   => self::TYPE_DOB,
-        'fnam'        => self::TYPE_NAME_FIRST,
-        'first'       => self::TYPE_NAME_FIRST,
-        'firstname'   => self::TYPE_NAME_FIRST,
-        'fname'       => self::TYPE_NAME_FIRST,
-        'lnam'        => self::TYPE_NAME_LAST,
-        'last'        => self::TYPE_NAME_LAST,
-        'lastname'    => self::TYPE_NAME_LAST,
-        'lname'       => self::TYPE_NAME_LAST,
-        'address'     => self::TYPE_L_ADDRESS1,
-        'address1'    => self::TYPE_L_ADDRESS1,
-        'address2'    => self::TYPE_L_ADDRESS2,
-        'city'        => self::TYPE_L_CITY,
-        'zip'         => self::TYPE_L_ZIP,
-        'postal'      => self::TYPE_L_ZIP,
-        'zipcode'     => self::TYPE_L_ZIP,
-        'country'     => self::TYPE_L_COUNTRY,
-        'email'       => self::TYPE_EMAIL,
-        'mail'        => self::TYPE_EMAIL,
-        'phone'       => self::TYPE_PHONE,
-        'home'        => self::TYPE_PHONE,
-        'homephone'   => self::TYPE_PHONE,
-        'ph'          => self::TYPE_PHONE,
-        'telephone'   => self::TYPE_PHONE,
-        'number'      => self::TYPE_PHONE,
-        'cell'        => self::TYPE_PHONE,
-        'mobile'      => self::TYPE_PHONE,
-        'hash'        => self::TYPE_HASH,
+        'age'         => SuppressionListSupport::TYPE_AGE,
+        'dob'         => SuppressionListSupport::TYPE_DOB,
+        'dateofbirth' => SuppressionListSupport::TYPE_DOB,
+        'birth'       => SuppressionListSupport::TYPE_DOB,
+        'birthdate'   => SuppressionListSupport::TYPE_DOB,
+        'fnam'        => SuppressionListSupport::TYPE_NAME_FIRST,
+        'first'       => SuppressionListSupport::TYPE_NAME_FIRST,
+        'firstname'   => SuppressionListSupport::TYPE_NAME_FIRST,
+        'fname'       => SuppressionListSupport::TYPE_NAME_FIRST,
+        'lnam'        => SuppressionListSupport::TYPE_NAME_LAST,
+        'last'        => SuppressionListSupport::TYPE_NAME_LAST,
+        'lastname'    => SuppressionListSupport::TYPE_NAME_LAST,
+        'lname'       => SuppressionListSupport::TYPE_NAME_LAST,
+        'address'     => SuppressionListSupport::TYPE_L_ADDRESS1,
+        'address1'    => SuppressionListSupport::TYPE_L_ADDRESS1,
+        'address2'    => SuppressionListSupport::TYPE_L_ADDRESS2,
+        'city'        => SuppressionListSupport::TYPE_L_CITY,
+        'zip'         => SuppressionListSupport::TYPE_L_ZIP,
+        'postal'      => SuppressionListSupport::TYPE_L_ZIP,
+        'zipcode'     => SuppressionListSupport::TYPE_L_ZIP,
+        'country'     => SuppressionListSupport::TYPE_L_COUNTRY,
+        'email'       => SuppressionListSupport::TYPE_EMAIL,
+        'mail'        => SuppressionListSupport::TYPE_EMAIL,
+        'phone'       => SuppressionListSupport::TYPE_PHONE,
+        'home'        => SuppressionListSupport::TYPE_PHONE,
+        'homephone'   => SuppressionListSupport::TYPE_PHONE,
+        'ph'          => SuppressionListSupport::TYPE_PHONE,
+        'telephone'   => SuppressionListSupport::TYPE_PHONE,
+        'number'      => SuppressionListSupport::TYPE_PHONE,
+        'cell'        => SuppressionListSupport::TYPE_PHONE,
+        'mobile'      => SuppressionListSupport::TYPE_PHONE,
+        'hash'        => SuppressionListSupport::TYPE_HASH,
     ];
 
     /** @var File */
@@ -334,7 +335,7 @@ class FileAnalysisHelper
                 }
                 foreach ($this->getHashHelper()->listSimple() as $hashSimple) {
                     if (strpos($simple, $hashSimple)) {
-                        $this->columnTypes[$i] += self::TYPE_HASH;
+                        $this->columnTypes[$i] += SuppressionListSupport::TYPE_HASH;
                     }
                 }
             }
@@ -382,13 +383,13 @@ class FileAnalysisHelper
     private function getType($value, $columnIndex)
     {
         if (self::isEmail($value)) {
-            return self::TYPE_EMAIL;
+            return SuppressionListSupport::TYPE_EMAIL;
         }
         if ($this->isHash($value)) {
-            return self::TYPE_HASH;
+            return SuppressionListSupport::TYPE_HASH;
         }
         if (self::isPhone($value, $this->file->country ?? 'US')) {
-            return self::TYPE_PHONE;
+            return SuppressionListSupport::TYPE_PHONE;
         }
 
         return null;
