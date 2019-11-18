@@ -21,6 +21,9 @@ class FileAnalyze implements ShouldQueue
 
     private $fileId;
 
+    /** @var int */
+    public $timeout = 900;
+
     public function __construct($fileId)
     {
         $this->fileId = $fileId;

@@ -18,6 +18,9 @@ class FileGetChecksums implements ShouldQueue
 
     private $fileId;
 
+    /** @var int */
+    public $timeout = 600;
+
     public function __construct($fileId)
     {
         $this->fileId = $fileId;
