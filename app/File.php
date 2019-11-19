@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
@@ -42,7 +43,12 @@ class File extends Model
 {
     use SoftDeletes;
 
+    const DATE_FORMAT         = 'Y-m-d H:i:s.u';
+
     const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
+
+    /** @var int Seconds allowed for the file move action to be complete. */
+    const FILE_MOVE_DELAY = 30;
 
     /** @var int Files are treated differently when they are over this size to speed up analysis. */
     const LARGE_FILE_BYTES = 10000000;
@@ -101,6 +107,8 @@ class File extends Model
     const STAT_PROPERTY_BLACKLIST = ['input_location', 'output_location', 'user_id', 'session_id'];
 
     const STORAGE                 = 'local';
+
+    protected $dateFormat = self::DATE_FORMAT;
 
     protected $guarded = [
         'id',
@@ -327,16 +335,60 @@ class File extends Model
     }
 
     /**
-     * @return mixed|null
+     * Permit microtime from MySQL
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newQuery()
+    {
+        $query = parent::newQuery();
+
+        if ($this->usesTimestamps()) {
+            $table   = $this->getTable();
+            $columns = ['*'];
+            foreach ($this->getDates() as $dateColumn) {
+                $columns[] = DB::raw("CONCAT($table.$dateColumn) AS $dateColumn");
+            }
+            $query->addSelect($columns);
+        }
+
+        return $query;
+    }
+
+    public function getDates()
+    {
+        $dates   = parent::getDates();
+        $dates[] = 'available_till';
+
+        return $dates;
+    }
+
+    /**
+     * @return string
+     * @throws Exception
      */
     public function getValidatedInputLocation()
     {
-        $input = $this->getRelativeLocation($this->input_location);
-        if ($this->getStorage()->exists($input)) {
-            return $this->input_location;
+        if (!$this->input_location) {
+            throw new Exception(__('Input file could not be found.'));
         }
 
-        return null;
+        $input = $this->getRelativeLocation($this->input_location);
+
+        $startTime = microtime(true);
+        while (!$this->getStorage()->exists($input)) {
+            // 100ms
+            usleep(100000);
+            if ((microtime(true) - $startTime) <= self::FILE_MOVE_DELAY) {
+                break;
+            }
+        }
+
+        if (!$this->getStorage()->exists($input)) {
+            throw new Exception(__('File move process taking longer than allowed time. File may be too large to handle.'));
+        }
+
+        return $this->input_location;
     }
 
     /**
@@ -601,5 +653,22 @@ class File extends Model
         }
 
         return $percentage;
+    }
+
+    /**
+     * Permit microtime from MySQL
+     *
+     * @param  mixed  $value
+     *
+     * @return \Illuminate\Support\Carbon
+     * @throws Exception
+     */
+    protected function asDateTime($value)
+    {
+        try {
+            return parent::asDateTime($value);
+        } catch (\InvalidArgumentException $e) {
+            return parent::asDateTime(new \DateTimeImmutable($value));
+        }
     }
 }

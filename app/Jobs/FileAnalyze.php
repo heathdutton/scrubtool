@@ -40,6 +40,8 @@ class FileAnalyze implements ShouldQueue
             $file->message = '';
             $file->save();
 
+            $input = $file->getValidatedInputLocation();
+
             /**
              * @var Excel $excel
              * @var CustomReader $reader
@@ -47,7 +49,6 @@ class FileAnalyze implements ShouldQueue
             list($excel, $reader) = resolve('excelCustom');
 
             // Take shortcuts with ultra-large plaintext files.
-            $fileLocationForAnalysis = $file->input_location;
             $sheets                  = [];
             if ($file->isLargeCsv()) {
                 $totalRows = 0;
@@ -57,13 +58,13 @@ class FileAnalyze implements ShouldQueue
                 ) {
                     // ~50x faster wc function.
                     $result = explode(' ',
-                        trim(shell_exec('wc -l '.escapeshellarg($file->input_location).' 2>/dev/null')));
+                        trim(shell_exec('wc -l '.escapeshellarg($input).' 2>/dev/null')));
                     if (count($result) > 1) {
                         $totalRows = (int) $result[0];
                     }
                 }
                 if (!$totalRows) {
-                    $handle = fopen($file->input_location, 'r');
+                    $handle = fopen($input, 'r');
                     if ($handle) {
                         while (($buffer = fgets($handle, 4096)) !== false) {
                             $totalRows += substr_count($buffer, PHP_EOL);
@@ -78,19 +79,19 @@ class FileAnalyze implements ShouldQueue
 
                 // Now get the first chunk of the file for analysis via  so that we don't have to load,
                 // the entire file into ram.
-                if ($handle = fopen($file->input_location, 'r')) {
+                if ($handle = fopen($input, 'r')) {
                     $data = fread($handle, File::LARGE_FILE_CHUNK);
                     fclose($handle);
                     $tempFile = tmpfile();
                     if (fwrite($tempFile, $data)) {
-                        $fileLocationForAnalysis = stream_get_meta_data($tempFile)['uri'];
+                        $input = stream_get_meta_data($tempFile)['uri'];
                     }
                 }
             }
             $import = new FileImportSheetAnalysis($file);
             $excel->import(
                 $import,
-                $fileLocationForAnalysis,
+                $input,
                 null,
                 $file->type
             );
