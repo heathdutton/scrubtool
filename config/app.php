@@ -43,6 +43,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Log Query Mode
+    |--------------------------------------------------------------------------
+    |
+    | While in Log Query Mode, all SQL queries will be sent to the
+    | `info` log stream in two parts. The first part; the SQL Syntax, and the
+    | second part is an array of the variable data to be merged into the SQL
+    | string. the entire log entry is encapsulated in a JSON object.
+    |
+    */
+
+    'log_sql' => env('LOG_SQL', env('APP_DEBUG', false)),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |
