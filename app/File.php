@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
@@ -41,6 +42,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class File extends Model
 {
     use SoftDeletes;
+
+    const DATE_FORMAT         = 'Y-m-d H:i:s.u';
 
     const FILENAME_DELIMITERS = [' ', '_', '.', '-'];
 
@@ -101,6 +104,8 @@ class File extends Model
     const STAT_PROPERTY_BLACKLIST = ['input_location', 'output_location', 'user_id', 'session_id'];
 
     const STORAGE                 = 'local';
+
+    protected $dateFormat = self::DATE_FORMAT;
 
     protected $guarded = [
         'id',
@@ -324,6 +329,35 @@ class File extends Model
         } else {
             return floor($size);
         }
+    }
+
+    /**
+     * Permit microtime from MySQL
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function newQuery()
+    {
+        $query = parent::newQuery();
+
+        if ($this->usesTimestamps()) {
+            $table   = $this->getTable();
+            $columns = ['*'];
+            foreach ($this->getDates() as $dateColumn) {
+                $columns[] = DB::raw("CONCAT($table.$dateColumn) AS $dateColumn");
+            }
+            $query->addSelect($columns);
+        }
+
+        return $query;
+    }
+
+    public function getDates()
+    {
+        $dates   = parent::getDates();
+        $dates[] = 'available_till';
+
+        return $dates;
     }
 
     /**
@@ -601,5 +635,22 @@ class File extends Model
         }
 
         return $percentage;
+    }
+
+    /**
+     * Permit microtime from MySQL
+     *
+     * @param  mixed  $value
+     *
+     * @return \Illuminate\Support\Carbon
+     * @throws Exception
+     */
+    protected function asDateTime($value)
+    {
+        try {
+            return parent::asDateTime($value);
+        } catch (\InvalidArgumentException $e) {
+            return parent::asDateTime(new \DateTimeImmutable($value));
+        }
     }
 }

@@ -16,9 +16,9 @@ class CreateFilesTable extends Migration
         Schema::create('files', function (Blueprint $table) {
             $table->collation = 'utf8mb4_unicode_ci';
             $table->bigIncrements('id');
-            $table->timestamps();
-            $table->softDeletes();
-            $table->timestamp('available_till', 0)->nullable();
+            $table->timestamps(6);
+            $table->softDeletes('deleted_at', 6);
+            $table->timestamp('available_till', 6)->nullable();
             $table->text('name');
             $table->text('input_location')->nullable();
             $table->text('output_location')->nullable();

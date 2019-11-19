@@ -60,7 +60,7 @@ class FileController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
-                'updated_at' => $file->updated_at->getTimestamp(),
+                'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
                 'success'    => true,
             ]);
         } else {
