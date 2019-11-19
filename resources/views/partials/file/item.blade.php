@@ -39,7 +39,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
      data-file-id="{{ $file->id }}"
      data-file-status="{{ $file->status }}"
      data-file-origin="{{ route('file', ['id' => $file->id]) }}"
-     data-updated-at="{{ $file->updated_at->getTimestamp() }}"
+     data-updated-at="{{ $file->updated_at->format(\App\File::DATE_FORMAT) }}"
 >
     <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}"
        role="tab" id="heading{{ $file->id }}"
