@@ -64,6 +64,7 @@ class SuppressionListSupport extends Model
 
     /**
      * @return $this
+     * @throws Exception
      */
     public function finish()
     {
@@ -74,7 +75,7 @@ class SuppressionListSupport extends Model
             $this->save();
 
             // Build support for additional hash types, and queue the processes to build them out.
-            if (null === $this->hash_type) {
+            if (null === $this->hash_type && $this->content->getPersistedCount()) {
                 $list = $this->loadList();
 
                 if (!$list) {
@@ -120,17 +121,5 @@ class SuppressionListSupport extends Model
     public function list()
     {
         return $this->belongsTo(SuppressionList::class);
-    }
-
-    /**
-     * @return int
-     */
-    public function persistQueue()
-    {
-        if ($this->content) {
-            return $this->content->persistQueue();
-        }
-
-        return 0;
     }
 }
