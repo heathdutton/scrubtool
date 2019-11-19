@@ -6,11 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use App\Helpers\ActionDefaults;
 
 class ActionDefaultsController extends Controller
 {
-    const TARGET_ACTION_PARAM = 'target_action';
-    const DEFAULTS_PARAM      = 'action_defaults';
 
     /**
      * @param Request $request
@@ -18,10 +17,10 @@ class ActionDefaultsController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $targetAction = $request->input(self::TARGET_ACTION_PARAM);
-        $defaults     = $request->input(self::DEFAULTS_PARAM);
+        $targetAction = $request->input(ActionDefaults::TARGET_ACTION_PARAM);
+        $defaults     = $request->input(ActionDefaults::DEFAULTS_PARAM);
 
-        Session::put(self::DEFAULTS_PARAM, $defaults);
+        Session::put(ActionDefaults::DEFAULTS_PARAM, $defaults);
 
         return $this->returnRedirect($targetAction);
     }
