@@ -106,8 +106,7 @@ class FileSuppressionList extends Pivot
 
         // Scrub against an existing Suppression List.
         if ($this->file->mode & File::MODE_SCRUB) {
-            $this->loadLists()
-                ->findSupportsNeeded();
+            $this->findSupportsNeeded();
         }
     }
 
@@ -202,7 +201,7 @@ class FileSuppressionList extends Pivot
     {
         $messages     = [];
         $supportFound = false;
-        $listIds      = $this->lists->modelKeys();
+        $listIds      = $this->lists()->modelKeys();
         if ($listIds) {
             foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
                 $hashType = array_values($columns)[0];
@@ -219,28 +218,14 @@ class FileSuppressionList extends Pivot
                         $this->columnSupports[$columnIndex] = $supports;
                     }
                 } else {
-                    $messages[$columnType.'_'.$hashType] = __('This suppression list does not currently support scrubbing $1 with $2.',
+                    $messages[$columnType.'_'.$hashType] = __('Unable to scrub $1 with $2.',
                         [$columnType, $hashType ?? __('plaintext')]);
                 }
             }
         }
         // Partial support is allowed, but if no support is found we'll throw an error.
         if (!$supportFound) {
-            throw new Exception($messages);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return $this
-     * @throws Exception
-     */
-    private function loadLists()
-    {
-        $this->lists = $this->file->lists()->withoutTrashed()->get();
-        if (!$this->lists) {
-            throw new Exception(__('Lists chosen for scrubbing are not available.'));
+            throw new Exception(__('This suppression list cannot support this file.').' '.implode(' ', $messages));
         }
 
         return $this;
@@ -332,5 +317,21 @@ class FileSuppressionList extends Pivot
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection|null
+     * @throws Exception
+     */
+    private function lists()
+    {
+        if (!$this->lists && $this->file) {
+            $this->lists = $this->file->lists()->withoutTrashed()->get();
+            if (!$this->lists) {
+                throw new Exception(__('Lists chosen for scrubbing are not available.'));
+            }
+        }
+
+        return $this->lists;
     }
 }

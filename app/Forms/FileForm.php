@@ -162,12 +162,16 @@ class FileForm extends Form
                     if (count($allListOptions) <= 5) {
                         $options['checked'] = 'checked';
                     }
+                    $fieldName = 'suppression_list_use_'.$listId;
                     if (isset($requiredLists[$listId]) || count($allListOptions) === 1) {
-                        $options['required']         = true;
+                        // This will create a hidden input with the static value, and a disabled visible field.
+                        $options['required'] = true;
+                        $options['checked']  = 'checked';
+                        $this->add($fieldName, Field::HIDDEN, $options);
                         $options['attr']['disabled'] = 'disabled';
-                        $options['checked']          = 'checked';
+                        $fieldName                   = 'suppression_list_use_disabled_'.$listId;
                     }
-                    $this->add('suppression_list_use_'.$listId, Field::CHECKBOX, $options);
+                    $this->add($fieldName, Field::CHECKBOX, $options);
                 };
                 // @todo - Auto select all link/button. Possibly handle a selection list better if there are MANY.
                 // if (count($listChoices) > 5) {
