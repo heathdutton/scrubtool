@@ -16,6 +16,9 @@ class FileDelete implements ShouldQueue
 
     private $fileId;
 
+    /** @var int */
+    public $timeout = 60;
+
     public function __construct($fileId)
     {
         $this->fileId = $fileId;

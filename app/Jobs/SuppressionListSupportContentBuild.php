@@ -18,6 +18,9 @@ class SuppressionListSupportContentBuild implements ShouldQueue
     public $deleteWhenMissingModels = true;
 
     /** @var int */
+    public $timeout = 21600;
+
+    /** @var int */
     private $supportId;
 
     /** @var int */

@@ -25,6 +25,8 @@ class FileRun implements ShouldQueue
 
     private $fileId;
 
+    /** @var int */
+    public $timeout = 21600;
 
     public function __construct($fileId)
     {
