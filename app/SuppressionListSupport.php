@@ -63,11 +63,12 @@ class SuppressionListSupport extends Model
     }
 
     /**
-     * @return $this
+     * @return int
      * @throws Exception
      */
     public function finish()
     {
+        $persisted = 0;
         if ($this->content) {
             $this->content->finish();
 
@@ -75,8 +76,8 @@ class SuppressionListSupport extends Model
             $this->save();
 
             // Build support for additional hash types, and queue the processes to build them out.
-            if (null === $this->hash_type && $this->content->getPersistedCount()) {
-                $list = $this->loadList();
+            $persisted = $this->content->getPersistedCount();
+            if (null === $this->hash_type && $persisted) {
 
                 if (!$this->suppressionList) {
                     throw new Exception(__('Suppression list parent no longer exists.'));

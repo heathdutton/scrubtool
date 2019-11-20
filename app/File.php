@@ -73,6 +73,8 @@ class File extends Model
     /** @var array */
     const STATS_DEFAULT       = [
         'rows_total'           => 0,
+        'rows_processed'       => 0,
+        'rows_persisted'       => 0,
         'rows_filled'          => 0,
         'rows_imported'        => 0,
         'rows_scrubbed'        => 0,
@@ -633,29 +635,19 @@ class File extends Model
     }
 
     /**
-     * @return int
+     * @param  bool  $animated
+     *
+     * @return int|mixed
      */
-    public function progress($animated = true)
+    public function progress($animated = false)
     {
         $total = $this->rows_total ?? 0;
         if (!$total) {
             return 100;
         }
-        // if ($this->mode & self::MODE_HASH) {
-        //     $done = $this->rows_hashed;
-        // }
-        // if ($this->mode & self::MODE_SCRUB) {
-        //     $done = max($done, $this->rows_scrubbed);
-        // }
-        // if ($this->mode & (self::MODE_LIST_APPEND | self::MODE_LIST_CREATE | self::MODE_LIST_REPLACE)) {
-        //     $done = max($done, $this->rows_filled);
-        // }
-        $done = $this->rows_filled;
-
-        $percentage = min(100, max(0, floor(100 / $total * $done)));
-
+        $percentage = min(100, max(0, floor(100 / $total * $this->rows_processed)));
         if (!$percentage && $animated) {
-            $percentage = 100;
+            return 100;
         }
 
         return $percentage;

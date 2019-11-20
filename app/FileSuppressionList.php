@@ -307,16 +307,19 @@ class FileSuppressionList extends Pivot
     }
 
     /**
-     * @return $this
+     * @return int|mixed
+     * @throws Exception
      */
     public function finish()
     {
+        $persisted = 0;
         foreach ($this->columnSupports as $columnIndex => $supports) {
             /** @var SuppressionListSupport $support */
             foreach ($supports as $support) {
+                $persisted = max($persisted, $support->finish());
             }
         }
 
-        return $this->lists;
+        return $persisted;
     }
 }
