@@ -13,13 +13,10 @@ use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class FileImportSheet implements ToModel, WithChunkReading
+class FileImportSheet implements ToModel
 {
     use SkipsFailures, SkipsErrors;
-
-    const CHUNK_SIZE = 1009;
 
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
@@ -137,6 +134,7 @@ class FileImportSheet implements ToModel, WithChunkReading
                     }
                 }
             }
+        }
 
         if (0 == $this->rowIndex % 20) {
             $now = microtime(true);
@@ -151,6 +149,7 @@ class FileImportSheet implements ToModel, WithChunkReading
 
         $this->stats['rows_processed']++;
 
+        return null;
     }
 
     /**
@@ -280,13 +279,5 @@ class FileImportSheet implements ToModel, WithChunkReading
         return [
             'columns' => $columns,
         ];
-    }
-
-    /**
-     * @return int
-     */
-    public function chunkSize(): int
-    {
-        return self::CHUNK_SIZE;
     }
 }
