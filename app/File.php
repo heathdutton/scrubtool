@@ -520,7 +520,7 @@ class File extends Model
             // @todo - Validate and associate lists via pivot.
             if ($this->mode & File::MODE_SCRUB) {
                 $listIds = [];
-                $prefix = 'suppression_list_use_';
+                $prefix  = 'suppression_list_use_';
                 foreach ($this->input_settings as $key => $value) {
                     if ($value && 0 === strpos($key, $prefix)) {
                         $listIds[] = (int) $value;
@@ -528,8 +528,8 @@ class File extends Model
                 }
                 $listIds = array_unique($listIds);
                 if ($listIds) {
-                    $user    = $this->user()->withoutTrashed()->getRelated()->first();
-                    $q       = SuppressionList::withoutTrashed()
+                    $user  = $this->user;
+                    $q     = SuppressionList::withoutTrashed()
                         ->whereIn('id', $listIds)
                         ->where(function ($q) use ($user) {
                             // Dissalow private list usage, unless the file of origin also belongs to the same user.
@@ -539,7 +539,7 @@ class File extends Model
                                 $q->orWhere('global', 1);
                             }
                         });
-                    $lists   = $q->get();
+                    $lists = $q->get();
                     if (!$lists->count()) {
                         throw new Exception(__('No appropriate lists were found for scrubbing with.'));
                     }
@@ -548,7 +548,7 @@ class File extends Model
                 }
                 /** @var FileSuppressionList $list */
                 foreach ($lists as $list) {
-                    $this->lists()->attach($list->id, [
+                    $this->suppressionLists()->attach($list->id, [
                         'created_at'   => Carbon::now('UTC'),
                         'updated_at'   => Carbon::now('UTC'),
                         'relationship' => FileSuppressionList::RELATIONSHIP_CHILD,
@@ -564,20 +564,20 @@ class File extends Model
     }
 
     /**
+     * @return BelongsToMany
+     */
+    public function suppressionLists()
+    {
+        return $this->belongsToMany(SuppressionList::class)
+            ->using(FileSuppressionList::class);
+    }
+
+    /**
      * @return BelongsTo
      */
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return BelongsToMany
-     */
-    public function lists()
-    {
-        return $this->belongsToMany(SuppressionList::class)
-            ->using(FileSuppressionList::class);
     }
 
     /**

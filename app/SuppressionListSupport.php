@@ -78,19 +78,19 @@ class SuppressionListSupport extends Model
             if (null === $this->hash_type && $this->content->getPersistedCount()) {
                 $list = $this->loadList();
 
-                if (!$list) {
+                if (!$this->suppressionList) {
                     throw new Exception(__('Suppression list parent no longer exists.'));
                 }
                 foreach ((new HashHelper())->listChoices() as $algo => $name) {
                     // Create new support if it doesn't already exist.
                     $newSupport = self::withoutTrashed()
-                        ->where('suppression_list_id', $list->id)
+                        ->where('suppression_list_id', $this->suppressionList->id)
                         ->where('column_type', $this->column_type)
                         ->where('hash_type', $algo)
                         ->first();
                     if (!$newSupport) {
                         $newSupport = new self([
-                            'suppression_list_id' => $list->id,
+                            'suppression_list_id' => $this->suppressionList->id,
                             'status'              => self::STATUS_BUILDING,
                             'column_type'         => $this->column_type,
                             'hash_type'           => $algo,
@@ -104,21 +104,13 @@ class SuppressionListSupport extends Model
             }
         }
 
-        return $this;
-    }
-
-    /**
-     * @return SuppressionList|null
-     */
-    public function loadList()
-    {
-        return $this->list()->withoutTrashed()->getRelated()->first();
+        return $persisted;
     }
 
     /**
      * @return BelongsTo
      */
-    public function list()
+    public function suppressionList()
     {
         return $this->belongsTo(SuppressionList::class);
     }

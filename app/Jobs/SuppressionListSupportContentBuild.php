@@ -57,7 +57,7 @@ class SuppressionListSupportContentBuild implements ShouldQueue
             return;
         }
 
-        $list = $support->list()->getRelated()->withoutTrashed()->first();
+        $list = $support->suppressionList;
         if (!$list) {
             $support->delete();
 

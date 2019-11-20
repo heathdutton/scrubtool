@@ -64,13 +64,12 @@ class SuppressionListContent extends Model
         $this->support = $support;
 
         if ($this->support) {
-            $list = $this->support->loadList();
-            if (!$list) {
+            if (!$this->support->suppressionList) {
                 throw new Exception(__('Suppression list origin no longer exists.'));
             }
 
             // Dynamic table name based on listID and SupportID.
-            $this->setTable(implode('_', [self::TABLE_PREFIX, $list->id, $support->id]));
+            $this->setTable(implode('_', [self::TABLE_PREFIX, $this->support->suppressionList->id, $support->id]));
         }
 
         parent::__construct($attributes);

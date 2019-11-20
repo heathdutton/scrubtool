@@ -43,7 +43,7 @@ class User extends Authenticatable
     /**
      * @return HasMany
      */
-    public function lists()
+    public function suppressionList()
     {
         return $this->hasMany(SuppressionList::class);
     }
