@@ -47,16 +47,23 @@ $action = '';
             </div>
             <div class="row">
                 <div class="col-xl-5 col-lg-6 col-12 mb-3">
-                    <a href="/defaults?action_defaults[file_mode]={{ App\File::MODE_SCRUB }}&target_action=/files" class="btn btn-warning pull-right">
+                    <a href="/defaults?action_defaults[mode]={{ App\File::MODE_SCRUB }}&target_action=/files" class="btn btn-warning pull-right">
                         <i class="fa fa-cut"></i>
                         Scrub Against this List
                     </a>
                 </div>
 
                 <div class="col-xl-5 col-lg-6 col-12 mb-3">
-                    <a href="#" class="btn btn-info pull-right">
+                    <a href="/defaults?action_defaults[mode]={{ App\File::MODE_LIST_APPEND }}&action_defaults[suppression_list_append]={{ $list->id }}&target_action={{ route('files') }}" class="btn btn-info pull-right">
                         <i class="fa fa-plus"></i>
                         Add to this List
+                    </a>
+                </div>
+
+                <div class="col-xl-5 col-lg-6 col-12 mb-3">
+                    <a href="/defaults?action_defaults[mode]={{ App\File::MODE_LIST_REPLACE }}&action_defaults[suppression_list_replace]={{ $list->id }}&target_action={{ route('files') }}" class="btn btn-primary pull-right">
+                        <i class="fa fa-plus"></i>
+                        Replace this List
                     </a>
                 </div>
             </div>
