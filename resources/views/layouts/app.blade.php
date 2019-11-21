@@ -40,9 +40,9 @@
                             </a>
                         </li>
                     @endif
-                    @if (Route::has('lists'))
+                    @if (Route::has('suppressionLists'))
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::segment(1) === 'lists' ? 'active' : null }}" href="{{ route('lists') }}">
+                            <a class="nav-link {{ Request::segment(1) === 'lists' ? 'active' : null }}" href="{{ route('suppressionLists') }}">
                                 <i class="fa fa-list"></i>
                                 {{ __('Lists') }}
                             </a>

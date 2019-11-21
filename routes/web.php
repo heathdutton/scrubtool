@@ -27,6 +27,6 @@ Route::get('/files/{id}', 'FileController@file')->name('file');
 Route::post('/files/{id}', 'FileController@store')->name('file.store');
 Route::get('/files/{id}/download', 'FileController@download')->name('file.download');
 
-Route::get('/lists', 'SuppressionListController@index')->name('lists');
+Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists');
 
 Route::any('/defaults', 'ActionDefaultsController')->name('defaults');

@@ -6,7 +6,7 @@
     <div class="container">
         <div class="col-md-12">
             <div class="justify-content-center mt-3">
-                @include('partials.lists')
+                @include('partials.suppressionList.list')
             </div>
         </div>
     </div>
