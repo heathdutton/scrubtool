@@ -3,6 +3,7 @@
 namespace App\Forms;
 
 use App\File;
+use App\Helpers\ActionDefaults;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
 use App\SuppressionList;
@@ -93,7 +94,7 @@ class FileForm extends Form
                 'label'         => __('Mode'),
                 'label_show'    => true,
                 'choices'       => $modeChoices,
-                'selected'      => $file->mode ?? File::MODE_HASH,
+                'selected'      => ActionDefaults::getDefault('mode') ?? $file->mode,
                 'default_value' => File::MODE_HASH,
                 // 'attr'          => [
                 //     'class' => 'btn btn-primary',
@@ -127,6 +128,7 @@ class FileForm extends Form
                     'label'      => __('List to Append'),
                     'label_show' => true,
                     'choices'    => $ownedListOptions,
+                    'selected'   => ActionDefaults::getDefault('suppression_list_append'),
                     'wrapper'    => [
                         'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_APPEND,
                     ],
@@ -135,6 +137,7 @@ class FileForm extends Form
                     'label'      => __('List to Replace'),
                     'label_show' => true,
                     'choices'    => $ownedListOptions,
+                    'selected'   => ActionDefaults::getDefault('suppression_list_replace'),
                     'wrapper'    => [
                         'class' => $classChoiceWrapper.' '.$classModePrefix.File::MODE_LIST_REPLACE,
                     ],

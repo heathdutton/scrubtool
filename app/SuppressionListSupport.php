@@ -17,6 +17,41 @@ class SuppressionListSupport extends Model
 
     const STATUS_READY    = 2;
 
+    /*
+     * Column Type Values
+     */
+    const TYPE_AGE        = 1;
+
+    const TYPE_DATETIME   = 2;
+
+    const TYPE_DOB        = 4;
+
+    const TYPE_EMAIL      = 8;
+
+    const TYPE_FLOAT      = 16;
+
+    const TYPE_HASH       = 32;
+
+    const TYPE_INTEGER    = 64;
+
+    const TYPE_L_ADDRESS1 = 128;
+
+    const TYPE_L_ADDRESS2 = 256;
+
+    const TYPE_L_CITY     = 512;
+
+    const TYPE_L_COUNTRY  = 1024;
+
+    const TYPE_L_ZIP      = 2048;
+
+    const TYPE_NAME_FIRST = 4096;
+
+    const TYPE_NAME_LAST  = 8192;
+
+    const TYPE_PHONE      = 16384;
+
+    const TYPE_STRING     = 32768;
+
     /** @var array */
     protected $guarded = [
         'id',
