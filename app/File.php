@@ -73,6 +73,8 @@ class File extends Model
     /** @var array */
     const STATS_DEFAULT       = [
         'rows_total'           => 0,
+        'rows_processed'       => 0,
+        'rows_persisted'       => 0,
         'rows_filled'          => 0,
         'rows_imported'        => 0,
         'rows_scrubbed'        => 0,
@@ -520,7 +522,7 @@ class File extends Model
             // @todo - Validate and associate lists via pivot.
             if ($this->mode & File::MODE_SCRUB) {
                 $listIds = [];
-                $prefix = 'suppression_list_use_';
+                $prefix  = 'suppression_list_use_';
                 foreach ($this->input_settings as $key => $value) {
                     if ($value && 0 === strpos($key, $prefix)) {
                         $listIds[] = (int) $value;
@@ -528,8 +530,8 @@ class File extends Model
                 }
                 $listIds = array_unique($listIds);
                 if ($listIds) {
-                    $user    = $this->user()->withoutTrashed()->getRelated()->first();
-                    $q       = SuppressionList::withoutTrashed()
+                    $user  = $this->user;
+                    $q     = SuppressionList::withoutTrashed()
                         ->whereIn('id', $listIds)
                         ->where(function ($q) use ($user) {
                             // Dissalow private list usage, unless the file of origin also belongs to the same user.
@@ -539,7 +541,7 @@ class File extends Model
                                 $q->orWhere('global', 1);
                             }
                         });
-                    $lists   = $q->get();
+                    $lists = $q->get();
                     if (!$lists->count()) {
                         throw new Exception(__('No appropriate lists were found for scrubbing with.'));
                     }
@@ -548,7 +550,7 @@ class File extends Model
                 }
                 /** @var FileSuppressionList $list */
                 foreach ($lists as $list) {
-                    $this->lists()->attach($list->id, [
+                    $this->suppressionLists()->attach($list->id, [
                         'created_at'   => Carbon::now('UTC'),
                         'updated_at'   => Carbon::now('UTC'),
                         'relationship' => FileSuppressionList::RELATIONSHIP_CHILD,
@@ -564,20 +566,20 @@ class File extends Model
     }
 
     /**
+     * @return BelongsToMany
+     */
+    public function suppressionLists()
+    {
+        return $this->belongsToMany(SuppressionList::class)
+            ->using(FileSuppressionList::class);
+    }
+
+    /**
      * @return BelongsTo
      */
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * @return BelongsToMany
-     */
-    public function lists()
-    {
-        return $this->belongsToMany(SuppressionList::class)
-            ->using(FileSuppressionList::class);
     }
 
     /**
@@ -633,29 +635,19 @@ class File extends Model
     }
 
     /**
-     * @return int
+     * @param  bool  $animated
+     *
+     * @return int|mixed
      */
-    public function progress($animated = true)
+    public function progress($animated = false)
     {
         $total = $this->rows_total ?? 0;
         if (!$total) {
             return 100;
         }
-        // if ($this->mode & self::MODE_HASH) {
-        //     $done = $this->rows_hashed;
-        // }
-        // if ($this->mode & self::MODE_SCRUB) {
-        //     $done = max($done, $this->rows_scrubbed);
-        // }
-        // if ($this->mode & (self::MODE_LIST_APPEND | self::MODE_LIST_CREATE | self::MODE_LIST_REPLACE)) {
-        //     $done = max($done, $this->rows_filled);
-        // }
-        $done = $this->rows_filled;
-
-        $percentage = min(100, max(0, floor(100 / $total * $done)));
-
+        $percentage = min(100, max(0, floor(100 / $total * $this->rows_processed)));
         if (!$percentage && $animated) {
-            $percentage = 100;
+            return 100;
         }
 
         return $percentage;

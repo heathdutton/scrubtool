@@ -38,7 +38,9 @@ class CreateFilesTable extends Migration
             $table->string('country');
             $table->json('sheets')->nullable();
             $table->unsignedBigInteger('rows_total'); // Total rows may include empty ones in XSL
+            $table->unsignedBigInteger('rows_processed'); // Rows that have been processed from the total.
             $table->unsignedBigInteger('rows_filled'); // Rows that actually got the import process. Records.
+            $table->unsignedBigInteger('rows_persisted'); // After insertion, the unique number of rows in the first support.
 
             $table->unsignedBigInteger('rows_imported');
             $table->unsignedBigInteger('rows_scrubbed');

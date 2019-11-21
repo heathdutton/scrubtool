@@ -13,13 +13,10 @@ use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class FileImportSheet implements ToModel, WithChunkReading
+class FileImportSheet implements ToModel
 {
     use SkipsFailures, SkipsErrors;
-
-    const CHUNK_SIZE = 1009;
 
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
@@ -137,18 +134,22 @@ class FileImportSheet implements ToModel, WithChunkReading
                     }
                 }
             }
+        }
 
-            if (0 == $this->rowIndex % 20) {
-                $now = microtime(true);
-                if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
-                    $this->persistStats();
-                }
+        if (0 == $this->rowIndex % 20) {
+            $now = microtime(true);
+            if (($now - $this->timeOfLastSave) >= self::TIME_BETWEEN_SAVES) {
+                $this->persistStats();
             }
         }
 
         if ($row && $this->rowIndex <= 10 && !$analysis->getRowIsHeader()) {
             $this->samples[] = $row;
         }
+
+        $this->stats['rows_processed']++;
+
+        return null;
     }
 
     /**
@@ -234,6 +235,7 @@ class FileImportSheet implements ToModel, WithChunkReading
 
     /**
      * @return $this
+     * @throws Exception
      */
     public function finish()
     {
@@ -243,7 +245,7 @@ class FileImportSheet implements ToModel, WithChunkReading
             && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)
         ) {
             // Finish saving changes to the suppression list and it's supports.
-            $this->FileSuppressionList->finish();
+            $this->stats['rows_persisted'] = $this->FileSuppressionList->finish();
         }
 
         $this->persistStats();
@@ -277,13 +279,5 @@ class FileImportSheet implements ToModel, WithChunkReading
         return [
             'columns' => $columns,
         ];
-    }
-
-    /**
-     * @return int
-     */
-    public function chunkSize(): int
-    {
-        return self::CHUNK_SIZE;
     }
 }

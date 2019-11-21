@@ -201,25 +201,27 @@ class FileSuppressionList extends Pivot
     {
         $messages     = [];
         $supportFound = false;
-        $listIds      = $this->lists()->modelKeys();
-        if ($listIds) {
-            foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
-                $hashType = array_values($columns)[0];
-                $supports = SuppressionListSupport::withoutTrashed()
-                    ->whereIn('suppression_list_id', $listIds)
-                    ->where('column_type', $columnType)
-                    ->where('hash_type', $hashType)
-                    ->where('status', SuppressionListSupport::STATUS_READY)
-                    ->get();
+        if ($this->file && $this->file->suppressionLists) {
+            $listIds = $this->file->suppressionLists->pluck('id')->toArray();
+            if ($listIds) {
+                foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+                    $hashType = array_values($columns)[0];
+                    $supports = SuppressionListSupport::query()
+                        ->whereIn('suppression_list_id', $listIds)
+                        ->where('column_type', $columnType)
+                        ->where('hash_type', $hashType)
+                        ->where('status', SuppressionListSupport::STATUS_READY)
+                        ->get();
 
-                if ($supports) {
-                    $supportFound = true;
-                    foreach (array_keys($columns) as $columnIndex) {
-                        $this->columnSupports[$columnIndex] = $supports;
+                    if ($supports) {
+                        $supportFound = true;
+                        foreach (array_keys($columns) as $columnIndex) {
+                            $this->columnSupports[$columnIndex] = $supports;
+                        }
+                    } else {
+                        $messages[$columnType.'_'.$hashType] = __('Unable to scrub $1 with $2.',
+                            [$columnType, $hashType ?? __('plaintext')]);
                     }
-                } else {
-                    $messages[$columnType.'_'.$hashType] = __('Unable to scrub $1 with $2.',
-                        [$columnType, $hashType ?? __('plaintext')]);
                 }
             }
         }
@@ -242,7 +244,7 @@ class FileSuppressionList extends Pivot
     public function scrubRow(&$row)
     {
         $scrub = false;
-        if ($this->lists && $this->columnSupports) {
+        if ($this->columnSupports) {
             /**
              * @var int $columnIndex
              * @var SuppressionListSupport $support
@@ -305,33 +307,19 @@ class FileSuppressionList extends Pivot
     }
 
     /**
-     * @return $this
+     * @return int|mixed
+     * @throws Exception
      */
     public function finish()
     {
+        $persisted = 0;
         foreach ($this->columnSupports as $columnIndex => $supports) {
             /** @var SuppressionListSupport $support */
             foreach ($supports as $support) {
-                $support->finish();
+                $persisted = max($persisted, $support->finish());
             }
         }
 
-        return $this;
-    }
-
-    /**
-     * @return Collection|null
-     * @throws Exception
-     */
-    private function lists()
-    {
-        if (!$this->lists && $this->file) {
-            $this->lists = $this->file->lists()->withoutTrashed()->get();
-            if (!$this->lists) {
-                throw new Exception(__('Lists chosen for scrubbing are not available.'));
-            }
-        }
-
-        return $this->lists;
+        return $persisted;
     }
 }

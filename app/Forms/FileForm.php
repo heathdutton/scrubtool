@@ -38,17 +38,14 @@ class FileForm extends Form
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
 
-            $user = $file->user_id ? $file->user()->getRelated()->first() : null;
+            $user = $file->user_id ? $file->user : null;
 
             // Get user's own suppression lists as options to scrub against.
-            if ($user) {
-                $lists = $user->lists()->getRelated()->all();
-                if ($lists) {
-                    foreach ($lists as $list) {
-                        $ownedListOptions[$list->id] = $list->name ?? $list->id;
-                        if ($list->required) {
-                            $requiredLists[$list->id] = true;
-                        }
+            if ($user && $user->suppressionList) {
+                foreach ($user->suppressionList as $list) {
+                    $ownedListOptions[$list->id] = $list->name ?? $list->id;
+                    if ($list->required) {
+                        $requiredLists[$list->id] = true;
                     }
                 }
             }
