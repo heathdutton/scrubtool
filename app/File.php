@@ -520,25 +520,31 @@ class File extends Model
             // @todo - Validate and associate lists via pivot.
             if ($this->mode & File::MODE_SCRUB) {
                 $listIds = [];
+                $prefix = 'suppression_list_use_';
                 foreach ($this->input_settings as $key => $value) {
-                    if ($value) {
+                    if ($value && 0 === strpos($key, $prefix)) {
                         $listIds[] = (int) $value;
                     }
                 }
                 $listIds = array_unique($listIds);
-                $user    = $this->user()->withoutTrashed()->getRelated()->first();
-                $q       = SuppressionList::withoutTrashed()
-                    ->whereIn('id', $listIds)
-                    ->where(function ($q) use ($user) {
-                        // Dissalow private list usage, unless the file of origin also belongs to the same user.
-                        $q->where('private', '!=', 1);
-                        if ($user) {
-                            $q->orWhere('user_id', $user->id);
-                        }
-                    });
-                $lists   = $q->get();
-                if (!$lists) {
-                    throw new Exception(__('No appropriate lists were found for scrubbing with.'));
+                if ($listIds) {
+                    $user    = $this->user()->withoutTrashed()->getRelated()->first();
+                    $q       = SuppressionList::withoutTrashed()
+                        ->whereIn('id', $listIds)
+                        ->where(function ($q) use ($user) {
+                            // Dissalow private list usage, unless the file of origin also belongs to the same user.
+                            $q->where('private', 0);
+                            if ($user) {
+                                $q->orWhere('user_id', $user->id);
+                                $q->orWhere('global', 1);
+                            }
+                        });
+                    $lists   = $q->get();
+                    if (!$lists->count()) {
+                        throw new Exception(__('No appropriate lists were found for scrubbing with.'));
+                    }
+                } else {
+                    throw new Exception(__('You must select a list.'));
                 }
                 /** @var FileSuppressionList $list */
                 foreach ($lists as $list) {

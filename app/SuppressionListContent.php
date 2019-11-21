@@ -175,4 +175,12 @@ class SuppressionListContent extends Model
     {
         return $this->persistQueue();
     }
+
+    /**
+     * @return int
+     */
+    public function getPersistedCount()
+    {
+        return $this->persistedCount;
+    }
 }

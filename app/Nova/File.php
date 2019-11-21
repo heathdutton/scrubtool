@@ -4,6 +4,7 @@ namespace App\Nova;
 
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\Boolean;
 use Laravel\Nova\Fields\DateTime;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Number;
@@ -51,24 +52,16 @@ class File extends Resource
             Text::make('name')->sortable(),
             BelongsTo::make('user'),
             Text::make('ip_address'),
+            Text::make('country'),
+            Text::make('md5'),
             DateTime::make('updated_at'),
             Number::make('mode'),
             Number::make('status'),
             Number::make('column_count'),
             Number::make('size')->sortable(),
+            Boolean::make('global')->sortable(),
+            Boolean::make('private')->sortable(),
             Text::make('message'),
-            Number::make('rows_total'),
-            Number::make('rows_imported'),
-            Number::make('rows_scrubbed'),
-            Number::make('rows_invalid'),
-            Number::make('rows_email_valid'),
-            Number::make('rows_email_invalid'),
-            Number::make('rows_email_duplicate'),
-            Number::make('rows_email_dnc'),
-            Number::make('rows_phone_valid'),
-            Number::make('rows_phone_invalid'),
-            Number::make('rows_phone_duplicate'),
-
         ];
     }
 

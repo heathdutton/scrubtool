@@ -51,6 +51,8 @@ class FileRun implements ShouldQueue
 
                 // @todo - Complete multiple sheet support and use FileImport here. Columns array must support multiple sheets to do this.
 
+                $input = $file->getValidatedInputLocation();
+
                 /** @var FileImportSheet $fileImport */
                 $fileImport = new FileImportSheet($file);
 
@@ -67,7 +69,7 @@ class FileRun implements ShouldQueue
                     $largeCsvReader->setEscapeCharacter(config('excel.imports.csv.escape_character'));
                     $largeCsvReader->setContiguous(config('excel.imports.csv.contiguous')); // Currently ignored.
                     $largeCsvReader->setInputEncoding(config('excel.imports.csv.input_encoding'));
-                    $largeCsvReader->loadIntoCallback($file->input_location,
+                    $largeCsvReader->loadIntoCallback($input,
                         function ($row, $rowIndex) use ($fileImport) {
                             $fileImport->model($row);
                         });
@@ -78,7 +80,7 @@ class FileRun implements ShouldQueue
                      */
                     $excel->import(
                         $fileImport,
-                        $file->input_location,
+                        $input,
                         null,
                         $file->type
                     );

@@ -116,7 +116,7 @@ class FileImportSheet implements ToModel, WithChunkReading
                         }
                     }
 
-                    if ($row && $this->file->mode & File::MODE_LIST_CREATE) {
+                    if ($row && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
                         if ($this->getFileSuppressionList()->appendRowToList($row, $this->rowIndex)) {
                             $this->stats['rows_imported']++;
                         } else {
@@ -237,9 +237,15 @@ class FileImportSheet implements ToModel, WithChunkReading
      */
     public function finish()
     {
-        if ($this->FileSuppressionList) {
+        if (
+            $this->FileSuppressionList
+            && $this->file
+            && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)
+        ) {
+            // Finish saving changes to the suppression list and it's supports.
             $this->FileSuppressionList->finish();
         }
+
         $this->persistStats();
 
         return $this;

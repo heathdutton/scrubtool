@@ -14,7 +14,8 @@ class SqlQueryLogger
 
     /**
      * SqlQueryLogger constructor.
-     * @param string|null $logMethod
+     *
+     * @param  string|null  $logMethod
      */
     public function __construct($logMethod = null)
     {
@@ -23,7 +24,6 @@ class SqlQueryLogger
 
     /**
      * Bind logging to DB::listen event
-     * @return mixed
      */
     public function bindQueryLogger()
     {
@@ -35,34 +35,8 @@ class SqlQueryLogger
                 );
             });
         }
-    }
 
-    /**
-     * @param $query
-     * @return string
-     */
-    private function getRawSql($query)
-    {
-        // Simulate ORM's treatment of integers/strings.
-        $bindings = [];
-        foreach ($query->bindings as $value) {
-            if (is_int($value)) {
-                $bindings[] = $value;
-            } else {
-                $bindings[] = "'".$value."'";
-            }
-        }
-
-        return vsprintf(str_replace('?', '%s', $query->sql), $bindings);
-    }
-
-    /**
-     * @param $string
-     * @return mixed
-     */
-    private function sendToLog($string)
-    {
-        return Log::{$this->logMethod}($string);
+        return null;
     }
 
     /**
@@ -71,5 +45,44 @@ class SqlQueryLogger
     private function checkConfig()
     {
         return (bool) config('app.log_sql');
+    }
+
+    /**
+     * @param $string
+     *
+     * @return mixed
+     */
+    private function sendToLog($string)
+    {
+        return Log::{$this->logMethod}($string);
+    }
+
+    /**
+     * @param $query
+     *
+     * @return string
+     */
+    private function getRawSql($query)
+    {
+        // Simulate ORM's treatment of integers/strings.
+        $sqlString = $query->sql;
+        $bindings  = $query->bindings;
+
+        while ($bindings && $pos = strpos($sqlString, '?')) {
+            $value = array_shift($bindings);
+            if (!is_int($value)) {
+                // Not perfect, but fairly good binary detection.
+                if (
+                    !mb_detect_encoding($value)
+                    || preg_match('~[^\x20-\x7E\t\r\n\a].*~', $value) > 0
+                ) {
+                    $value = 'BINARY';
+                }
+                $value = "'".$value."'";
+            }
+            $sqlString = substr_replace($sqlString, $value, $pos, 1);
+        }
+
+        return $sqlString;
     }
 }
