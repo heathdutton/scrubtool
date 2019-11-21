@@ -93,7 +93,7 @@ class FileSuppressionListHelper
                 ]);
 
             foreach (array_keys($columns) as $columnIndex) {
-                $this->columnSupports[$columnIndex] = collect($support);
+                $this->columnSupports[$columnIndex] = (new Collection)->add($support);
             }
         }
         if (!$this->columnSupports) {
@@ -127,20 +127,6 @@ class FileSuppressionListHelper
         }
 
         return $supportsNeeded;
-    }
-
-    /**
-     * @return SuppressionList
-     */
-    private function destinationSuppressionList()
-    {
-        if (!$this->destinationSuppressionList) {
-            $this->destinationSuppressionList = $this->file->suppressionLists
-                ->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST)
-                ->first();
-        }
-
-        return $this->destinationSuppressionList;
     }
 
     /**
@@ -288,6 +274,20 @@ class FileSuppressionListHelper
         }
 
         return $persisted;
+    }
+
+    /**
+     * @return SuppressionList
+     */
+    private function destinationSuppressionList()
+    {
+        if (!$this->destinationSuppressionList) {
+            $this->destinationSuppressionList = $this->file->suppressionLists
+                ->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST)
+                ->first();
+        }
+
+        return $this->destinationSuppressionList;
     }
 
 }
