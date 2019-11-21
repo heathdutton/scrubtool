@@ -1,19 +1,28 @@
 jQuery.countdown = require('jquery.countdown');
 
-st.classModePrefix = '.file-mode';
+st.classModePrefix = 'file-mode';
+st.classColumnEmpty = 'column-empty';
+st.classHiddenSuffix = '-hidden';
 st.refreshDelay = 1000;
 st.filesLoaded = function ($context) {
     // Hide fields irrelevant to the current file mode.
     $('select[name=mode]', $context).bind('change', function () {
         var $form = $(this).closest('form');
         var val = $(this).val();
-        $form.find(st.classModePrefix + ':not(' + st.classModePrefix + '-' + val + ')').hide();
-        $form.find(st.classModePrefix + '-' + val).show();
+        $form.find('.' + st.classModePrefix + ':not(.' + st.classModePrefix + '-' + val + ')').addClass(st.classModePrefix + st.classHiddenSuffix);
+        $form.find('.' + st.classModePrefix + '-' + val).removeClass(st.classModePrefix + st.classHiddenSuffix);
+        $form.find('button:submit:first')
     }).trigger('change');
 
     // Show all columns switch.
     $(':checkbox[name=show_all]', $context).bind('change', function () {
-        $(this).parent().parent().find('.column-empty').toggle();
+        var $form = $(this).closest('form');
+        if ($(this).is(':checked')) {
+            $form.find('.' + st.classColumnEmpty).removeClass(st.classColumnEmpty + st.classHiddenSuffix);
+        }
+        else {
+            $form.find('.' + st.classColumnEmpty).addClass(st.classColumnEmpty + st.classHiddenSuffix);
+        }
     });
 
     // Countdown timer till download is not available.

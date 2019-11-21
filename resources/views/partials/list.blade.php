@@ -23,7 +23,7 @@ $action = '';
                 @include('partials.stat', ['icon' => 'database', 'class' => '', 'value' => $list->statParent('rows_imported') ?? 0, 'label' => __('Total Records')])
             </div>
             <div class="row">
-                @foreach($list->supports()->where('status', 2)->get()->unique('column_type') as $support)
+                @foreach($list->suppressionListSupports->where('status', \App\SuppressionListSupport::STATUS_READY)->unique('column_type') as $support)
                     <div class="col-xl-3 col-lg-6 col-12 mb-3">
                         <div class="card ">
                             <div class="card-content">

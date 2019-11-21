@@ -7,7 +7,6 @@ use App\Helpers\ActionDefaults;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
 use App\SuppressionList;
-use App\User;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -34,13 +33,13 @@ class FileForm extends Form
             $ownedListOptions   = [];
             $globalListOptions  = [];
             $requiredLists      = [];
-            $classModePrefix    = 'file-mode file-mode-';
+            $classModePrefix    = 'file-mode file-mode-hidden file-mode-';
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
 
             // Get user's own suppression lists as options to scrub against.
-            if ($file->user && $file->user->suppressionList) {
-                foreach ($file->user->suppressionList as $list) {
+            if ($file->user && $file->user->suppressionLists) {
+                foreach ($file->user->suppressionLists as $list) {
                     $ownedListOptions[$list->id] = $list->name ?? $list->id;
                     if ($list->required) {
                         $requiredLists[$list->id] = true;
@@ -71,8 +70,7 @@ class FileForm extends Form
             //     'value'      => __('Settings'),
             // ]);
 
-            $modeChoices                  = [];
-            $modeChoices[File::MODE_HASH] = __('Hash');
+            $modeChoices = [];
             if ($ownedListOptions || $globalListOptions) {
                 $modeChoices[File::MODE_SCRUB] = __('Scrub');
             }
@@ -83,13 +81,14 @@ class FileForm extends Form
                     $modeChoices[File::MODE_LIST_REPLACE] = __('Replace list');
                 }
             }
+            $modeChoices[File::MODE_HASH] = __('Hash');
             $this->add('mode', Field::CHOICE, [
-                'rules'         => 'required',
-                'label'         => __('Mode'),
-                'label_show'    => true,
-                'choices'       => $modeChoices,
-                'selected'      => ActionDefaults::getDefault('mode') ?? $file->mode,
-                'default_value' => File::MODE_HASH,
+                'rules'      => 'required',
+                'label'      => __('Mode'),
+                'label_show' => true,
+                'choices'    => $modeChoices,
+                'selected'   => ActionDefaults::getDefault('mode') ?? $file->mode,
+                // 'default_value' => File::MODE_HASH,
                 // 'attr'          => [
                 //     'class' => 'btn btn-primary',
                 // ],
@@ -97,7 +96,7 @@ class FileForm extends Form
                 //     'class'       => 'btn-group btn-group-toggle',
                 //     'data-toggle' => 'buttons',
                 // ],
-                'wrapper'       => [
+                'wrapper'    => [
                     'class' => $classChoiceWrapper,
                 ],
             ]);
@@ -203,7 +202,7 @@ class FileForm extends Form
                     $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
                     $column['filled']  = $column['filled'] ?? false;
                     if (empty($column['filled'])) {
-                        $classChoiceWrapper .= ' column-empty';
+                        $classChoiceWrapper .= ' column-empty column-empty-hidden';
                     } else {
                         $classChoiceWrapper .= ' column-filled';
                     }
@@ -269,10 +268,34 @@ class FileForm extends Form
                 }
             }
 
-            $this->add('submit', Field::BUTTON_SUBMIT, [
-                'label' => '<i class="fa fa-check"></i> '.__('Begin'),
+            $this->add('submit_'.File::MODE_HASH, Field::BUTTON_SUBMIT, [
+                'label' => '<i class="fa fa-hashtag"></i> '.__('Hash File'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4',
+                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_HASH,
+                ],
+            ]);
+            $this->add('submit_'.File::MODE_LIST_APPEND, Field::BUTTON_SUBMIT, [
+                'label' => '<i class="fa fa-plus"></i> '.__('Append Suppression List'),
+                'attr'  => [
+                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_APPEND,
+                ],
+            ]);
+            $this->add('submit_'.File::MODE_LIST_CREATE, Field::BUTTON_SUBMIT, [
+                'label' => '<i class="fa fa-check"></i> '.__('Create Suppression List'),
+                'attr'  => [
+                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_CREATE,
+                ],
+            ]);
+            $this->add('submit_'.File::MODE_LIST_REPLACE, Field::BUTTON_SUBMIT, [
+                'label' => '<i class="fa fa-plus-square"></i> '.__('Replace Suppression List'),
+                'attr'  => [
+                    'class' => 'btn btn-warning pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_REPLACE,
+                ],
+            ]);
+            $this->add('submit_'.File::MODE_SCRUB, Field::BUTTON_SUBMIT, [
+                'label' => '<i class="fa fa-scissors"></i> '.__('Scrub File'),
+                'attr'  => [
+                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
                 ],
             ]);
 

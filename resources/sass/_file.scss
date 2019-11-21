@@ -1,7 +1,4 @@
-.card-file form .column-empty {
-    display: none;
-}
-
-.card-file form .file-mode {
+.card-file form .file-mode.file-mode-hidden,
+.card-file form .column-empty.column-empty-hidden {
     display: none;
 }
