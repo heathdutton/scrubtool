@@ -33,50 +33,34 @@ class SuppressionList extends Model
     private $statsParent = [];
 
     /**
-     * SuppressionList constructor.
+     * @param  array  $options
      *
-     * @param  array  $attributes
-     * @param  File|null  $file
+     * @return bool
      */
-    public function __construct($attributes = [], File $file = null)
+    public function save(array $options = [])
     {
-        $this->file = $file;
-
-        if (!empty($this->file->id)) {
-            $attributes['user_id']     = $this->file->user_id ?? null;
-            $attributes['name']        = $attributes['name'] ?? $this->choseListNameFromFileName();
-            $attributes['description'] = $attributes['description'] ?? '';
-            $attributes['token']       = $attributes['token'] ?? $this->generateToken($attributes);
+        if (is_null($this->name)) {
+            $this->name = __('Untitled');
         }
 
-        parent::__construct($attributes);
-    }
-
-    /**
-     * @return string|string[]|null
-     */
-    private function choseListNameFromFileName()
-    {
-        $fileName = trim($this->file->name);
-        $fileName = substr($fileName, 0, strrpos($fileName, '.'));
-        $fileName = preg_replace('/[^a-z0-9\-\.]/i', ' ', $fileName);
-        $fileName = preg_replace('/\s+/', ' ', $fileName);
-        $fileName = ucwords($fileName);
-        if (empty($fileName)) {
-            $fileName = __('Untitled');
+        if (is_null($this->description)) {
+            $this->description = '';
         }
 
-        return $fileName;
+        if (is_null($this->token)) {
+            $this->token = $this->generateToken();
+        }
+
+        return parent::save($options);
     }
 
+
     /**
-     * @param $attributes
-     *
      * @return string
      */
-    private function generateToken($attributes)
+    private function generateToken()
     {
-        $hash   = hash('crc32', uniqid(implode(chr(31), $attributes)), false);
+        $hash   = hash('crc32', uniqid(implode(chr(31), $this->getAttributes())), false);
         $base35 = base_convert($hash, 16, 35);
 
         return $base35;
@@ -102,7 +86,7 @@ class SuppressionList extends Model
         if (!$this->statsChildren) {
             $this->statsChildren = File::STATS_DEFAULT;
             /** @var File $file */
-            foreach (self::files()->where('relationship', FileSuppressionList::RELATIONSHIP_CHILD)->get() as $file) {
+            foreach ($this->files->where('pivot.relationship', FileSuppressionList::REL_LIST_USED_TO_SCRUB) as $file) {
                 foreach ($this->statsChildren as $key => &$value) {
                     if (!empty($file->{$key})) {
                         $value += $file->{$key};
@@ -120,7 +104,8 @@ class SuppressionList extends Model
     public function files()
     {
         return $this->belongsToMany(File::class)
-            ->using(FileSuppressionList::class);
+            ->using(FileSuppressionList::class)
+            ->withPivot(['relationship']);
     }
 
     /**
@@ -143,7 +128,7 @@ class SuppressionList extends Model
         if (!$this->statsParent) {
             $this->statsParent = File::STATS_DEFAULT;
             /** @var File $file */
-            foreach (self::files()->where('relationship', FileSuppressionList::RELATIONSHIP_PARENT)->get() as $file) {
+            foreach ($this->files->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST) as $file) {
                 foreach ($this->statsParent as $key => &$value) {
                     if (!empty($file->{$key})) {
                         $value += $file->{$key};
@@ -203,7 +188,7 @@ class SuppressionList extends Model
     /**
      * @return HasMany
      */
-    public function supports()
+    public function suppressionListSupports()
     {
         return $this->hasMany(SuppressionListSupport::class);
     }

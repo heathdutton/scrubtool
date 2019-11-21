@@ -26,7 +26,7 @@ class SuppressionListController extends Controller
     {
 
         if ($request->user()) {
-            return view('lists')->with(['lists' => collect($request->user()->lists()->get())]);
+            return view('lists')->with(['lists' => $request->user()->suppressionLists]);
         } else {
             return view('lists');
         }
