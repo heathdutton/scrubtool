@@ -7,6 +7,7 @@ use App\File;
 use App\FileSuppressionList;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
+use App\Helpers\FileSuppressionListHelper;
 use App\SuppressionList;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -21,8 +22,8 @@ class FileImportSheet implements ToModel
     /** @var int Time between saves of processing statistics. */
     const TIME_BETWEEN_SAVES = 1.0;
 
-    /** @var FileSuppressionList */
-    protected $FileSuppressionList;
+    /** @var FileSuppressionListHelper */
+    protected $fileSuppressionListHelper;
 
     /** @var array */
     private $stats;
@@ -31,10 +32,10 @@ class FileImportSheet implements ToModel
     private $rowIndex = 0;
 
     /** @var FileAnalysisHelper */
-    private $FileAnalysisHelper;
+    private $fileAnalysisHelper;
 
     /** @var FileHashHelper */
-    private $FileHashHelper;
+    private $fileHashHelper;
 
     /** @var FileExport export */
     private $export = null;
@@ -108,13 +109,13 @@ class FileImportSheet implements ToModel
                     $this->stats['rows_filled']++;
 
                     if ($this->file->mode & File::MODE_SCRUB) {
-                        if ($this->getFileSuppressionList()->scrubRow($row)) {
+                        if ($this->getFileSuppressionListHelper()->scrubRow($row)) {
                             $this->stats['rows_scrubbed']++;
                         }
                     }
 
                     if ($row && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
-                        if ($this->getFileSuppressionList()->appendRowToList($row, $this->rowIndex)) {
+                        if ($this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex)) {
                             $this->stats['rows_imported']++;
                         } else {
                             $this->stats['rows_invalid']++;
@@ -157,11 +158,11 @@ class FileImportSheet implements ToModel
      */
     private function getFileAnalysisHelper()
     {
-        if (!$this->FileAnalysisHelper) {
-            $this->FileAnalysisHelper = new FileAnalysisHelper($this->file);
+        if (!$this->fileAnalysisHelper) {
+            $this->fileAnalysisHelper = new FileAnalysisHelper($this->file);
         }
 
-        return $this->FileAnalysisHelper;
+        return $this->fileAnalysisHelper;
     }
 
     /**
@@ -192,16 +193,16 @@ class FileImportSheet implements ToModel
     }
 
     /**
-     * @return FileSuppressionList
+     * @return FileSuppressionListHelper
      * @throws Exception
      */
-    private function getFileSuppressionList()
+    private function getFileSuppressionListHelper()
     {
-        if (!$this->FileSuppressionList) {
-            $this->FileSuppressionList = new FileSuppressionList([], $this->file);
+        if (!$this->fileSuppressionListHelper) {
+            $this->fileSuppressionListHelper = new FileSuppressionListHelper($this->file);
         }
 
-        return $this->FileSuppressionList;
+        return $this->fileSuppressionListHelper;
     }
 
     /**
@@ -209,11 +210,11 @@ class FileImportSheet implements ToModel
      */
     private function getFileHashHelper()
     {
-        if (!$this->FileHashHelper) {
-            $this->FileHashHelper = new FileHashHelper($this->file);
+        if (!$this->fileHashHelper) {
+            $this->fileHashHelper = new FileHashHelper($this->file);
         }
 
-        return $this->FileHashHelper;
+        return $this->fileHashHelper;
     }
 
     /**
@@ -240,12 +241,12 @@ class FileImportSheet implements ToModel
     public function finish()
     {
         if (
-            $this->FileSuppressionList
+            $this->fileSuppressionListHelper
             && $this->file
             && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)
         ) {
             // Finish saving changes to the suppression list and it's supports.
-            $this->stats['rows_persisted'] = $this->FileSuppressionList->finish();
+            $this->stats['rows_persisted'] = $this->fileSuppressionListHelper->finish();
         }
 
         $this->persistStats();

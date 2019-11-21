@@ -21,7 +21,7 @@ Professionally utilize lead suppression lists.
     npm run watch &
     php artisan migrate
     php artisan db:seed
-    php artisan queue:work --queue=analyze,run,build,delete &
+    php artisan queue:listen --queue=analyze,run,build,delete &
     php artisan serve
 
 Default login `admin@scrubtool.com` password `secret`

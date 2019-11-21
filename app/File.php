@@ -141,7 +141,7 @@ class File extends Model
         $fileId = null,
         $limit = 20
     ) {
-        $q = self::withoutTrashed()
+        $q = self::query()
             ->where(
                 function ($q) use ($request) {
                     $q->where('session_id', $request->getSession()->getId());
@@ -519,45 +519,69 @@ class File extends Model
             $this->message        = '';
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
 
-            // @todo - Validate and associate lists via pivot.
             if ($this->mode & File::MODE_SCRUB) {
-                $listIds = [];
-                $prefix  = 'suppression_list_use_';
-                foreach ($this->input_settings as $key => $value) {
-                    if ($value && 0 === strpos($key, $prefix)) {
-                        $listIds[] = (int) $value;
-                    }
+                if (empty($this->user->id)) {
+                    throw new Exception(__('You must be logged in to scrub.'));
                 }
-                $listIds = array_unique($listIds);
+                $listIds = $this->getInputLists('suppression_list_use_');
                 if ($listIds) {
-                    $user  = $this->user;
-                    $q     = SuppressionList::withoutTrashed()
+                    $user = $this->user;
+                    $q    = SuppressionList::query()
                         ->whereIn('id', $listIds)
                         ->where(function ($q) use ($user) {
-                            // Dissalow private list usage, unless the file of origin also belongs to the same user.
+                            // Disallow private list usage, unless the file of origin also belongs to the same user.
                             $q->where('private', 0);
                             if ($user) {
                                 $q->orWhere('user_id', $user->id);
                                 $q->orWhere('global', 1);
                             }
                         });
+
+                    // @todo - Add validation for tokens to query here if applicable.
+
                     $lists = $q->get();
                     if (!$lists->count()) {
                         throw new Exception(__('No appropriate lists were found for scrubbing with.'));
                     }
+
+                    // @todo - If the count of the lists we can scrub with doesn't match the input we should let the user know.
+
                 } else {
-                    throw new Exception(__('You must select a list.'));
+                    throw new Exception(__('You must select a list to scrub with.'));
                 }
                 /** @var FileSuppressionList $list */
                 foreach ($lists as $list) {
                     $this->suppressionLists()->attach($list->id, [
                         'created_at'   => Carbon::now('UTC'),
                         'updated_at'   => Carbon::now('UTC'),
-                        'relationship' => FileSuppressionList::RELATIONSHIP_CHILD,
+                        'relationship' => FileSuppressionList::REL_LIST_USED_TO_SCRUB,
                     ]);
                 }
             }
-
+            if ($this->mode & File::MODE_LIST_CREATE) {
+                if (empty($this->user->id)) {
+                    throw new Exception(__('You must be logged in to create a list.'));
+                }
+                $this->suppressionLists()->create([
+                    'name'    => $this->listNameFromFileName($this->name),
+                    'user_id' => $this->user->id,
+                ], [
+                    'created_at'   => Carbon::now('UTC'),
+                    'updated_at'   => Carbon::now('UTC'),
+                    'relationship' => FileSuppressionList::REL_FILE_TO_LIST,
+                ]);
+            }
+            if ($this->mode & File::MODE_LIST_APPEND) {
+                if (empty($this->user->id)) {
+                    throw new Exception(__('You must be logged in to append a list.'));
+                }
+                $listIds = $this->getInputLists('suppression_list_append_');
+                if ($listIds) {
+                    $lists = $this->user->lists->whereIn('id', $listIds);
+                } else {
+                    throw new Exception(__('You must select a list to append.'));
+                }
+            }
             unset($this->form);
             $this->save();
 
@@ -566,12 +590,51 @@ class File extends Model
     }
 
     /**
+     * @param $prefix
+     *
+     * @return array
+     */
+    private function getInputLists($prefix)
+    {
+        $listIds = [];
+        if ($this->input_settings) {
+            foreach ($this->input_settings as $key => $value) {
+                if ($value && 0 === strpos($key, $prefix)) {
+                    $listIds[] = (int) $value;
+                }
+            }
+        }
+
+        return array_unique($listIds);
+    }
+
+    /**
      * @return BelongsToMany
      */
     public function suppressionLists()
     {
         return $this->belongsToMany(SuppressionList::class)
-            ->using(FileSuppressionList::class);
+            ->using(FileSuppressionList::class)
+            ->withPivot(['relationship']);
+    }
+
+    /**
+     * @param $fileName
+     *
+     * @return array|false|\Illuminate\Contracts\Translation\Translator|string|string[]|null
+     */
+    private function listNameFromFileName($fileName)
+    {
+        $fileName = trim($fileName);
+        $fileName = substr($fileName, 0, strrpos($fileName, '.'));
+        $fileName = preg_replace('/[^a-z0-9\-\.]/i', ' ', $fileName);
+        $fileName = preg_replace('/\s+/', ' ', $fileName);
+        $fileName = ucwords($fileName);
+        if (empty($fileName)) {
+            $fileName = __('Untitled');
+        }
+
+        return $fileName;
     }
 
     /**

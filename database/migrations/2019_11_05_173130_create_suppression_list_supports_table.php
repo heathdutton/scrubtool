@@ -21,6 +21,7 @@ class CreateSuppressionListSupportsTable extends Migration
             $table->unsignedTinyInteger('status');
             $table->unsignedInteger('column_type');
             $table->string('hash_type')->nullable();
+            $table->unique(['suppression_list_id', 'column_type', 'hash_type'], 'unique_supports');
         });
     }
 

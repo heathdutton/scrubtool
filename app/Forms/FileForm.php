@@ -38,11 +38,9 @@ class FileForm extends Form
             $classChoiceWrapper = config('laravel-form-builder.defaults.choice.choice_options.wrapper_class');
             $classCheckWrapper  = config('laravel-form-builder.defaults.checkbox.wrapper_class');
 
-            $user = $file->user_id ? $file->user : null;
-
             // Get user's own suppression lists as options to scrub against.
-            if ($user && $user->suppressionList) {
-                foreach ($user->suppressionList as $list) {
+            if ($file->user && $file->user->suppressionList) {
+                foreach ($file->user->suppressionList as $list) {
                     $ownedListOptions[$list->id] = $list->name ?? $list->id;
                     if ($list->required) {
                         $requiredLists[$list->id] = true;
@@ -73,13 +71,12 @@ class FileForm extends Form
             //     'value'      => __('Settings'),
             // ]);
 
-            /** @var User $user */
             $modeChoices                  = [];
             $modeChoices[File::MODE_HASH] = __('Hash');
             if ($ownedListOptions || $globalListOptions) {
                 $modeChoices[File::MODE_SCRUB] = __('Scrub');
             }
-            if ($user) {
+            if ($file->user) {
                 $modeChoices[File::MODE_LIST_CREATE] = __('New list');
                 if ($ownedListOptions) {
                     $modeChoices[File::MODE_LIST_APPEND]  = __('Append list');
@@ -105,7 +102,7 @@ class FileForm extends Form
                 ],
             ]);
 
-            if (!$user) {
+            if (!$file->user) {
                 $this->add('static_login', Field::STATIC, [
                     'tag'        => 'a',
                     'label_show' => false,
