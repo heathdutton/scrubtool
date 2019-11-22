@@ -30,6 +30,12 @@ class SuppressionListContent extends Model
     /** @var string */
     const TABLE_PREFIX = 'suppression_list_content';
 
+    /** @var string */
+    const TABLE_REPLACED = 'old';
+
+    /** @var string */
+    const TABLE_REPLACEMENT = 'new';
+
     /** @var bool */
     public $timestamps = false;
 
@@ -51,6 +57,8 @@ class SuppressionListContent extends Model
     /** @var int */
     private $persistedCount = 0;
 
+    private $isReplacement = false;
+
     /**
      * SuppressionListSupportContent constructor.
      *
@@ -67,14 +75,41 @@ class SuppressionListContent extends Model
             if (!$this->support->suppressionList) {
                 throw new Exception(__('Suppression list origin no longer exists.'));
             }
-
-            // Dynamic table name based on listID and SupportID.
-            $this->setTable(implode('_', [self::TABLE_PREFIX, $this->support->suppressionList->id, $support->id]));
+            if ($support->status == SuppressionListSupport::STATUS_TO_BE_REPLACED) {
+                $this->isReplacement = true;
+                $this->setTable($this->tableNameReplacement());
+            } else {
+                $this->setTable($this->tableName());
+            }
         }
 
         parent::__construct($attributes);
 
         return $this;
+    }
+
+    private function tableNameReplacement()
+    {
+        return $this->tableName(self::TABLE_REPLACEMENT);
+    }
+
+    /**
+     * @param  string  $suffix
+     *
+     * @return string
+     */
+    private function tableName($suffix = '')
+    {
+        $pieces = [
+            self::TABLE_PREFIX,
+            $this->support->suppressionList->id,
+            $this->support->id,
+        ];
+        if ($suffix) {
+            $pieces[] = $suffix;
+        }
+
+        return implode('_', $pieces);
     }
 
     /**
@@ -172,7 +207,39 @@ class SuppressionListContent extends Model
      */
     public function finish()
     {
-        return $this->persistQueue();
+        $this->persistQueue();
+
+        // Lots of stupidity insurance here cause we're about to do a table swap.
+        if (
+            $this->persistedCount
+            && $this->isReplacement
+            && $this->getTable() !== $this->tableName()
+            && $this->getTable() == $this->tableNameReplacement()
+            && Schema::hasTable($this->tableName())
+        ) {
+            // Swap the table names to replace any pre-existing version with the new version.
+            if (DB::connection() instanceof MySqlConnection) {
+                // MySQL can do this in a single command.
+                $transaction = DB::statement('RENAME TABLE :existing TO :replaced, :replacement TO :existing', [
+                    'existing'    => $this->tableName(),
+                    'replaced'    => $this->tableNameReplaced(),
+                    'replacement' => $this->tableNameReplacement(),
+                ]);
+            } else {
+                $transaction = DB::transaction(function () {
+                    Schema::rename($this->tableName(), $this->tableNameReplaced());
+                    Schema::rename($this->tableNameReplacement(), $this->tableName());
+                });
+            }
+            // @todo - Perform cleanup if all went well.
+        }
+
+        return $this->persistedCount;
+    }
+
+    private function tableNameReplaced()
+    {
+        return $this->tableName(self::TABLE_REPLACED);
     }
 
     /**

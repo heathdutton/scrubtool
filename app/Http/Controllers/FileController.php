@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class FileController extends Controller
 {
 
-    use FormBuilderTrait;
+    use FormBuilderTrait, ForceLoginTrait;
 
     /**
      * @param  Request  $request
@@ -37,24 +37,23 @@ class FileController extends Controller
     }
 
     /**
-     * Later can be a page for the results of a single file upload.
-     *
+     * @param  int  $id
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return Factory|RedirectResponse|View
+     * @return bool|Factory|JsonResponse|RedirectResponse|View
      */
-    public function file(Request $request, FormBuilder $formBuilder)
+    public function file($id, Request $request, FormBuilder $formBuilder)
     {
-        if (empty($request->id) || (int) $request->id < 1) {
+        if (!$id) {
             return redirect()->back();
         }
 
         /** @var File $file */
-        $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id, 1)->first();
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $id, 1)->first();
 
         if (!$file) {
-            return $this->forceLogin($request) ?? response()->isNotFound();
+            return $this->forceLogin($request);
         }
 
         if ($request->ajax()) {
@@ -72,53 +71,23 @@ class FileController extends Controller
     }
 
     /**
-     * @param  Request  $request
-     *
-     * @return bool|RedirectResponse
-     */
-    private function forceLogin(Request $request)
-    {
-        $redirectPath = null;
-        if (
-            !$request->user()
-            && $request->getRequestUri() !== $request->session()->get('url.intended')
-        ) {
-            // User likely needs to log in.
-            $request->session()->put('url.intended', $request->getRequestUri());
-            $redirectPath = 'login';
-        } else {
-            // File no longer exists.
-            $redirectPath = 'files';
-        }
-        if ($redirectPath) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success'  => true,
-                    'redirect' => route($redirectPath),
-                ]);
-            } else {
-                return response()->redirectTo($redirectPath);
-            }
-        }
-    }
-
-    /**
+     * @param $id
      * @param  Request  $request
      *
      * @return bool|RedirectResponse|BinaryFileResponse
      * @throws Exception
      */
-    public function download(Request $request)
+    public function download($id, Request $request)
     {
-        if (empty($request->id) || (int) $request->id < 1) {
+        if (!$id) {
             return redirect()->back();
         }
 
         /** @var File $file */
-        $file = File::findByCurrentUser($request, null, (int) $request->id, 1)->first();
+        $file = File::findByCurrentUser($request, null, (int) $id, 1)->first();
 
         if (!$file) {
-            return $this->forceLogin($request) ?? response()->isNotFound();
+            return $this->forceLogin($request);
         }
 
         if (Carbon::now() > new Carbon($file->available_til ?? '', 'UTC')) {
@@ -132,26 +101,28 @@ class FileController extends Controller
     }
 
     /**
+     * @param $id
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return RedirectResponse
+     * @return bool|RedirectResponse|\Illuminate\Routing\Redirector
+     * @throws Exception
      */
-    public function store(Request $request, FormBuilder $formBuilder)
+    public function store($id, Request $request, FormBuilder $formBuilder)
     {
-        if (empty($request->id) || (int) $request->id < 1) {
+        if (!$id) {
             return redirect()->back();
         }
 
         /** @var File $file */
-        $file = File::findByCurrentUser($request, $formBuilder, (int) $request->id)->first();
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $id)->first();
+
+        if (!$file) {
+            return $this->forceLogin($request);
+        }
 
         if ($file->status ^ File::STATUS_INPUT_NEEDED) {
             return redirect()->back();
-        }
-
-        if (!$file) {
-            return $this->forceLogin($request) ?? response()->isNotFound();
         }
 
         if (!$file->form->isValid()) {

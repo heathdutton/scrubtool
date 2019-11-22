@@ -2,12 +2,11 @@
 
 namespace App\Helpers;
 
-use App\Http\Controllers\ActionDefaultsController;
-
 class ActionDefaults
 {
-    const TARGET_ACTION_PARAM = 'target_action';
     const DEFAULTS_PARAM      = 'action_defaults';
+
+    const TARGET_ACTION_PARAM = 'target_action';
 
     public static function getDefault($name)
     {
@@ -16,9 +15,9 @@ class ActionDefaults
         if ($session->has(self::DEFAULTS_PARAM)) {
             if (array_key_exists($name, $session->get(self::DEFAULTS_PARAM))) {
                 return $session->get(self::DEFAULTS_PARAM)[$name];
-            } else {
-                return null;
             }
         }
+
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 <section id="lists">
     @if(count($suppressionLists))
-        <h1>{{ __('Suppression Lists') }}</h1>
         <div id="accordion" role="tablist" aria-multiselectable="true">
             @foreach($suppressionLists as $suppressionList)
                 @include('partials.suppressionList.item')

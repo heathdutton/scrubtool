@@ -12,6 +12,10 @@
                 <h1 id="file-list-header" class="@if(!count($files)) d-none @endif">
                     {{ __('Files') }}
                 </h1>
+            @elseif (count($files) == 1)
+                <h1 id="file-list-header" class="">
+                    {{ __('File') }}
+                </h1>
             @endif
             <div class="justify-content-center mt-3">
                 @include('partials.file.list')

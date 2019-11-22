@@ -24,11 +24,39 @@ class SuppressionListController extends Controller
      */
     public function index(Request $request)
     {
+        return view('suppressionLists')->with(['suppressionLists' => $request->user()->suppressionLists]);
+    }
 
-        if ($request->user()) {
-            return view('suppressionLists')->with(['suppressionLists' => $request->user()->suppressionLists]);
-        } else {
-            return view('suppressionLists');
+    /**
+     * @param $id
+     * @param  Request  $request
+     *
+     * @return bool|Factory|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|View
+     */
+    public function suppressionList($id, Request $request)
+    {
+        if (!$id) {
+            return redirect()->back();
         }
+
+        $suppressionList = $request->user()->suppressionLists->where('id', (int) $id)->first();
+        if (!$suppressionList) {
+            return response()->isNotFound();
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html'       => view('partials.suppressionLists.item')
+                    ->with(['suppressionList' => $suppressionList])
+                    ->toHtml(),
+                'updated_at' => $suppressionList->updated_at,
+                'success'    => true,
+            ]);
+        } else {
+            return view('suppressionLists')->with([
+                'suppressionLists' => [$suppressionList],
+            ]);
+        }
+
     }
 }

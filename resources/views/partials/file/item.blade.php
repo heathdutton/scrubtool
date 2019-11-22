@@ -31,7 +31,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
     $class  = 'danger';
     $action = __('Cancelled');
 } elseif ($file->status & \App\File::STATUS_WHOLE) {
-    $class  = 'success';
+    $class = 'success';
     if ($file->mode & \App\File::MODE_HASH) {
         $action = __('File Hashed');
     } elseif ($file->mode & \App\File::MODE_SCRUB) {
@@ -111,7 +111,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
                         @include('partials.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
                     @endif
                     @if($file->mode & \App\File::MODE_SCRUB)
-                        @include('partials.stat', ['icon' => 'remove', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
+                        @include('partials.stat', ['icon' => 'filter', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
                     @endif
                     @if($file->mode & (\App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_REPLACE))
                         @include('partials.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
@@ -157,6 +157,18 @@ if ($file->status & \App\File::STATUS_ADDED) {
                                                }).appendTo(body); return false;">
                                             <i class="fa fa-download"></i>
                                             {{ __('Download') }}
+                                        </a>
+                                    @endif
+                                @endif
+
+                                @if($file->mode & (\App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_REPLACE))
+                                    @if($file->status & \App\File::STATUS_WHOLE)
+                                        <a class="form-control btn btn-{{ $class }}"
+                                           href="{{ route('suppressionList', [
+                                                'id' => $file->suppressionLists->where('pivot.relationship', \App\FileSuppressionList::REL_FILE_INTO_LIST)->first()->id
+                                            ]) }}">
+                                            <i class="fa fa-list"></i>
+                                            {{ __('Suppression List') }}
                                         </a>
                                     @endif
                                 @endif

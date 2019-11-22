@@ -499,14 +499,6 @@ class File extends Model
     }
 
     /**
-     * @return array
-     */
-    public function getAttributesForOutput()
-    {
-        return array_diff_key($this->getAttributes(), array_flip(self::STAT_PROPERTY_BLACKLIST));
-    }
-
-    /**
      * @param $values
      *
      * @throws Exception
@@ -568,18 +560,50 @@ class File extends Model
                 ], [
                     'created_at'   => Carbon::now('UTC'),
                     'updated_at'   => Carbon::now('UTC'),
-                    'relationship' => FileSuppressionList::REL_FILE_TO_LIST,
+                    'relationship' => FileSuppressionList::REL_FILE_INTO_LIST,
                 ]);
             }
             if ($this->mode & File::MODE_LIST_APPEND) {
                 if (empty($this->user->id)) {
                     throw new Exception(__('You must be logged in to append a list.'));
                 }
-                $listIds = $this->getInputLists('suppression_list_append_');
-                if ($listIds) {
-                    $lists = $this->user->lists->whereIn('id', $listIds);
+                if ($suppressionListIds = $this->getInputLists('suppression_list_append')) {
+                    if ($suppressionLists = $this->user->suppressionLists->whereIn('id', $suppressionListIds)) {
+                        $ids = [];
+                        foreach ($suppressionLists as $suppressionList) {
+                            $ids[$suppressionList->id] = [
+                                'created_at'   => Carbon::now('UTC'),
+                                'updated_at'   => Carbon::now('UTC'),
+                                'relationship' => FileSuppressionList::REL_FILE_INTO_LIST,
+                            ];
+                        }
+                        $this->suppressionLists()->sync($ids);
+                    }
                 } else {
                     throw new Exception(__('You must select a list to append.'));
+                }
+            }
+            if ($this->mode & File::MODE_LIST_REPLACE) {
+                if (empty($this->user->id)) {
+                    throw new Exception(__('You must be logged in to replace a list.'));
+                }
+                if ($suppressionListIds = $this->getInputLists('suppression_list_replace')) {
+                    if ($suppressionLists = $this->user->suppressionLists->whereIn('id', $suppressionListIds)) {
+                        if (count($suppressionLists) > 1) {
+                            throw new Exception(__('You may not replace more than one suppression list at a time.'));
+                        }
+                        $ids = [];
+                        foreach ($suppressionLists as $suppressionList) {
+                            $ids[$suppressionList->id] = [
+                                'created_at'   => Carbon::now('UTC'),
+                                'updated_at'   => Carbon::now('UTC'),
+                                'relationship' => FileSuppressionList::REL_FILE_REPLACE_LIST,
+                            ];
+                        }
+                        $this->suppressionLists()->sync($ids);
+                    }
+                } else {
+                    throw new Exception(__('You must select a list to replace.'));
                 }
             }
             unset($this->form);

@@ -75,7 +75,7 @@ class SuppressionList extends Model
     {
         $this->getStatsChildren();
 
-        return $this->statsChildren[$stat] ?? 0;
+        return number_format($this->statsChildren[$stat]) ?? 0;
     }
 
     /**
@@ -86,10 +86,11 @@ class SuppressionList extends Model
         if (!$this->statsChildren) {
             $this->statsChildren = File::STATS_DEFAULT;
             /** @var File $file */
-            foreach ($this->files->where('pivot.relationship', FileSuppressionList::REL_LIST_USED_TO_SCRUB) as $file) {
+            foreach ($this->files->where('pivot.relationship',
+                FileSuppressionList::REL_LIST_USED_TO_SCRUB) as $file) {
                 foreach ($this->statsChildren as $key => &$value) {
                     if (!empty($file->{$key})) {
-                        $value += $file->{$key};
+                        $value += (int) $file->{$key};
                     }
                 }
             }
@@ -105,7 +106,8 @@ class SuppressionList extends Model
     {
         return $this->belongsToMany(File::class)
             ->using(FileSuppressionList::class)
-            ->withPivot(['relationship']);
+            ->withPivot(['relationship'])
+            ->withTrashed();
     }
 
     /**
@@ -117,7 +119,7 @@ class SuppressionList extends Model
     {
         $this->getStatsParent();
 
-        return $this->statsParent[$stat] ?? 0;
+        return number_format($this->statsParent[$stat]) ?? 0;
     }
 
     /**
@@ -128,10 +130,13 @@ class SuppressionList extends Model
         if (!$this->statsParent) {
             $this->statsParent = File::STATS_DEFAULT;
             /** @var File $file */
-            foreach ($this->files->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST) as $file) {
+            foreach ($this->files->whereIn('pivot.relationship', [
+                FileSuppressionList::REL_FILE_INTO_LIST,
+                FileSuppressionList::REL_FILE_REPLACE_LIST,
+            ]) as $file) {
                 foreach ($this->statsParent as $key => &$value) {
                     if (!empty($file->{$key})) {
-                        $value += $file->{$key};
+                        $value += (int) $file->{$key};
                     }
                 }
             }

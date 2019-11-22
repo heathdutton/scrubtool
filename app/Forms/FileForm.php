@@ -330,18 +330,11 @@ class FileForm extends Form
                 ],
             ]);
             $this->add('submit_'.File::MODE_SCRUB, Field::BUTTON_SUBMIT, [
-                'label' => '<i class="fa fa-scissors"></i> '.__('Scrub File'),
+                'label' => '<i class="fa fa-filter"></i> '.__('Scrub File'),
                 'attr'  => [
                     'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
                 ],
             ]);
-
-            // Placeholder for now:
-            // $this->add('file_'.$file->id.'_progress', Field::STATIC, [
-            //     'tag'        => 'span',
-            //     'label_show' => false,
-            //     'value'      => '',
-            // ]);
         }
     }
 

@@ -13,13 +13,22 @@ class SuppressionListSupport extends Model
 {
     use SoftDeletes;
 
+    /** @var int The first tile the support is being constructed/filled. */
     const STATUS_BUILDING = 1;
 
-    const STATUS_READY    = 2;
+    /** @var int The support has been built and is ready for use. */
+    const STATUS_READY = 2;
+
+    /** @var int Records are being added to the list, but it can still be used. */
+    const STATUS_TO_BE_APPENDED = 4;
+
+    /** @var int A new table of support content is being formed to replace the existing one, however the existing one can still be used in the meantime. */
+    const STATUS_TO_BE_REPLACED = 8;
 
     /*
      * Column Type Values
      */
+
     const TYPE_AGE        = 1;
 
     const TYPE_DATETIME   = 2;

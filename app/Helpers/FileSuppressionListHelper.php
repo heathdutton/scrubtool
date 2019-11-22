@@ -50,18 +50,12 @@ class FileSuppressionListHelper
             throw new Exception(__('File not associated to a user.'));
         }
 
-        if ($this->file->mode & File::MODE_LIST_CREATE) {
-            $this->destinationSupports();
-        }
-
-        if ($this->file->mode & File::MODE_LIST_APPEND) {
-            // @todo - Load and confirm existing list.
-            throw new Exception(__('List append function does not yet exist.'));
+        if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
+            $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST);
         }
 
         if ($this->file->mode & File::MODE_LIST_REPLACE) {
-            // @todo - Drop all tables associated with the list to start fresh.
-            throw new Exception(__('List replace function does not yet exist.'));
+            $this->destinationSupports(FileSuppressionList::REL_FILE_REPLACE_LIST);
         }
 
         // Scrub against an existing Suppression List.
@@ -73,27 +67,41 @@ class FileSuppressionListHelper
     }
 
     /**
+     * @param $relationship
+     *
      * @return $this
      * @throws Exception
      */
-    private function destinationSupports()
+    private function destinationSupports($relationship)
     {
-        /** @var SuppressionList $list */
-        $list = $this->file->suppressionLists
-            ->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST)
-            ->first();
-        foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
-
-            $support = $list->suppressionListSupports()
-                ->firstOrCreate([
-                    'column_type' => $columnType,
-                    'hash_type'   => array_values($columns)[0],
-                ], [
-                    'status' => SuppressionListSupport::STATUS_BUILDING,
-                ]);
-
-            foreach (array_keys($columns) as $columnIndex) {
-                $this->columnSupports[$columnIndex] = (new Collection)->add($support);
+        /** @var SuppressionList $suppressionList */
+        if ($suppressionList = $this->file->suppressionLists->whereIn('pivot.relationship', $relationship)->first()) {
+            foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+                $support = $suppressionList->suppressionListSupports()
+                    ->firstOrCreate([
+                        'column_type' => $columnType,
+                        'hash_type'   => array_values($columns)[0],
+                    ], [
+                        'status' => SuppressionListSupport::STATUS_BUILDING,
+                    ]);
+                if ($support->status !== SuppressionListSupport::STATUS_BUILDING) {
+                    // Pre-existing supports can continue to be used during the update process (appending or replacing).
+                    if ($relationship == FileSuppressionList::REL_FILE_REPLACE_LIST) {
+                        $support->status = SuppressionListSupport::STATUS_TO_BE_REPLACED;
+                    } else {
+                        $support->status = SuppressionListSupport::STATUS_TO_BE_APPENDED;
+                    }
+                    $support->save();
+                }
+                foreach (array_keys($columns) as $columnIndex) {
+                    if (!isset($this->columnSupports[$columnIndex])) {
+                        $this->columnSupports[$columnIndex] = (new Collection)->add($support);
+                    } else {
+                        if (!$this->columnSupports[$columnIndex]->contains('id', $support->id)) {
+                            $this->columnSupports[$columnIndex]->add($support);
+                        }
+                    }
+                }
             }
         }
         if (!$this->columnSupports) {
@@ -141,12 +149,11 @@ class FileSuppressionListHelper
         $messages     = [];
         $supportFound = false;
         if ($this->file) {
-            $listIds = $this->scrubSuppressionLists()->pluck('id');
-            if ($listIds) {
+            if ($suppressionListIds = $this->scrubSuppressionLists()->pluck('id')) {
                 foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
                     $hashType = array_values($columns)[0];
                     $supports = SuppressionListSupport::query()
-                        ->whereIn('suppression_list_id', $listIds)
+                        ->whereIn('suppression_list_id', $suppressionListIds)
                         ->where('column_type', $columnType)
                         ->where('hash_type', $hashType)
                         ->where('status', SuppressionListSupport::STATUS_READY)
@@ -276,18 +283,21 @@ class FileSuppressionListHelper
         return $persisted;
     }
 
-    /**
-     * @return SuppressionList
-     */
-    private function destinationSuppressionList()
-    {
-        if (!$this->destinationSuppressionList) {
-            $this->destinationSuppressionList = $this->file->suppressionLists
-                ->where('pivot.relationship', FileSuppressionList::REL_FILE_TO_LIST)
-                ->first();
-        }
-
-        return $this->destinationSuppressionList;
-    }
+    // /**
+    //  * @return SuppressionList
+    //  */
+    // private function destinationSuppressionList()
+    // {
+    //     if (!$this->destinationSuppressionList) {
+    //         $this->destinationSuppressionList = $this->file->suppressionLists
+    //             ->whereIn('pivot.relationship', [
+    //                 FileSuppressionList::REL_FILE_INTO_LIST,
+    //                 FileSuppressionList::REL_FILE_REPLACE_LIST,
+    //             ])
+    //             ->first();
+    //     }
+    //
+    //     return $this->destinationSuppressionList;
+    // }
 
 }
