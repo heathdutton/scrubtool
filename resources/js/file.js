@@ -4,6 +4,7 @@ st.classModePrefix = 'file-mode';
 st.classColumnEmpty = 'column-empty';
 st.classHiddenSuffix = '-hidden';
 st.refreshDelay = 1000;
+
 st.filesLoaded = function ($context) {
     // Hide fields irrelevant to the current file mode.
     $('select[name=mode]', $context).bind('change', function () {
@@ -50,6 +51,7 @@ st.filesLoaded = function ($context) {
     }
 
     st.filesRefresh($context);
+    st.tooltips($context);
 };
 
 st.fileLoad = function ($route, $destination) {

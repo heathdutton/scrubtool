@@ -16,10 +16,10 @@ class FileGetChecksums implements ShouldQueue
 
     public $deleteWhenMissingModels = true;
 
-    private $fileId;
-
     /** @var int */
     public $timeout = 600;
+
+    private $fileId;
 
     public function __construct($fileId)
     {
