@@ -12,7 +12,7 @@ st.filesLoaded = function ($context) {
         var val = $(this).val();
         $form.find('.' + st.classModePrefix + ':not(.' + st.classModePrefix + '-' + val + ')').addClass(st.classModePrefix + st.classHiddenSuffix);
         $form.find('.' + st.classModePrefix + '-' + val).removeClass(st.classModePrefix + st.classHiddenSuffix);
-        $form.find('button:submit:first')
+        $form.find('button:submit:first');
     }).trigger('change');
 
     // Show all columns switch.
@@ -52,6 +52,7 @@ st.filesLoaded = function ($context) {
 
     st.filesRefresh($context);
     st.tooltips($context);
+    st.form($context);
 };
 
 st.fileLoad = function ($route, $destination) {

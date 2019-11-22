@@ -11757,6 +11757,104 @@ form#dropzone .dz-message {
   animation: pb 4s ease-in-out 0.5s forwards, progress-bar-stripes 1s linear infinite;
 }
 
+.custom-control-label::after {
+  top: calc(0.15625rem + 2px);
+  left: calc(-2.25rem + 2px);
+  width: calc(1rem - 4px);
+  height: calc(1rem - 4px);
+}
+
+.custom-select {
+  padding-left: 0.9rem;
+}
+
+a.btn,
+input[type=submit],
+input[type=button] {
+  text-align: center;
+  outline: 0;
+}
+
+:focus {
+  outline: 0;
+}
+
+.submit-animate.btn-info {
+  border-color: #1F9BCF;
+}
+
+.submit-animate.btn-primary {
+  border-color: #1a1a1a;
+}
+
+.submit-animate.btn-secondary {
+  border-color: #fff;
+}
+
+.submit-animate.btn-warning {
+  border-color: #f0ad4e;
+}
+
+.submit-animate.btn-danger {
+  border-color: #d9534f;
+}
+
+.submit-animate.btn-info {
+  border-color: #1F9BCF;
+}
+
+.submit-animate {
+  -webkit-transition: border-radius 0.25s ease-in-out, background-color 2s ease-in-out, width 1s ease-in-out, height 1s ease-in-out;
+  transition: border-radius 0.25s ease-in-out, background-color 2s ease-in-out, width 1s ease-in-out, height 1s ease-in-out;
+  border-radius: 50% !important;
+  background: transparent;
+  color: transparent;
+  border-width: 4px !important;
+  border-style: solid !important;
+  border-left-color: #eceeef !important;
+  border-left-width: 3px !important;
+  -webkit-animation: submit-rotating 1.5s ease-in, submit-rotating 1s linear infinite 1.5s;
+          animation: submit-rotating 1.5s ease-in, submit-rotating 1s linear infinite 1.5s;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+}
+
+.submit-animate:focus,
+.submit-animate:active,
+.submit-animate:visited,
+.submit-animate:hover {
+  outline: 0 !important;
+  background: transparent !important;
+  color: transparent !important;
+  box-shadow: none !important;
+}
+
+@-webkit-keyframes submit-rotating {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
+@keyframes submit-rotating {
+  from {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+
+  to {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+
 /*!
  *  Font Awesome 4.6.3 by @davegandy - http://fontawesome.io - @fontawesome
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
@@ -14637,16 +14735,5 @@ div.tooltip-inner {
   white-space: nowrap;
   width: auto;
   min-width: 300px;
-}
-
-.custom-control-label::after {
-  top: calc(0.15625rem + 2px);
-  left: calc(-2.25rem + 2px);
-  width: calc(1rem - 4px);
-  height: calc(1rem - 4px);
-}
-
-.custom-select {
-  padding-left: 0.9rem;
 }
 

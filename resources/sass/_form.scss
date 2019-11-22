@@ -1,0 +1,87 @@
+// Fix the lux switch alignment (somehow this style is missing from the scss compilation)
+.custom-control-label::after {
+    top: calc(0.15625rem + 2px);
+    left: calc(-2.25rem + 2px);
+    width: calc(1rem - 4px);
+    height: calc(1rem - 4px);
+}
+
+// Fix the excessive padding on the left of text boxes.
+.custom-select {
+    padding-left: .9rem;
+}
+
+a.btn,
+input[type=submit],
+input[type=button] {
+    text-align: center;
+    outline: 0;
+}
+
+:focus {
+    outline: 0;
+}
+
+.submit-animate.btn-info {
+    border-color: $info;
+}
+
+.submit-animate.btn-primary {
+    border-color: $primary;
+}
+
+.submit-animate.btn-secondary {
+    border-color: $secondary;
+}
+
+.submit-animate.btn-warning {
+    border-color: $warning;
+}
+
+.submit-animate.btn-danger {
+    border-color: $danger;
+}
+
+.submit-animate.btn-info {
+    border-color: $info;
+}
+
+.submit-animate {
+    transition: border-radius 0.25s ease-in-out,
+    background-color 2s ease-in-out,
+    width 1s ease-in-out,
+    height 1s ease-in-out;
+    border-radius: 50% !important;
+    background: transparent;
+    color: transparent;
+    border-width: 4px !important;
+    border-style: solid !important;
+    border-left-color: $gray-300 !important;
+    border-left-width: 3px !important;
+    animation: submit-rotating 1.5s ease-in,
+    submit-rotating 1s linear infinite 1.5s;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+}
+
+.submit-animate:focus,
+.submit-animate:active,
+.submit-animate:visited,
+.submit-animate:hover {
+    outline: 0 !important;
+    background: transparent !important;
+    color: transparent !important;
+    box-shadow: none !important;
+}
+
+@keyframes submit-rotating {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+

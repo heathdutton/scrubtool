@@ -3,6 +3,7 @@ require('./bootstrap');
 require('./fileupload');
 require('./tooltips');
 require('./file');
+require('./form');
 
 st.animationSpeed = '900';
 

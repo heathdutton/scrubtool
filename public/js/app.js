@@ -41010,6 +41010,8 @@ __webpack_require__(/*! ./tooltips */ "./resources/js/tooltips.js");
 
 __webpack_require__(/*! ./file */ "./resources/js/file.js");
 
+__webpack_require__(/*! ./form */ "./resources/js/form.js");
+
 st.animationSpeed = '900';
 
 st.loadContent = function (url, $destination, prepend, done) {
@@ -41148,6 +41150,7 @@ st.filesLoaded = function ($context) {
 
   st.filesRefresh($context);
   st.tooltips($context);
+  st.form($context);
 };
 
 st.fileLoad = function ($route, $destination) {
@@ -41275,6 +41278,44 @@ st.dropzone = function ($context) {
 
 $(function () {
   st.dropzone($('form#dropzone:first'));
+});
+
+/***/ }),
+
+/***/ "./resources/js/form.js":
+/*!******************************!*\
+  !*** ./resources/js/form.js ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+st.form = function ($context) {
+  $('a.btn, input:submit.btn, input:button.btn', $context).off('click.submit-animate').on('click.submit-animate', function () {
+    var $t = $(this);
+
+    if (!$t.hasClass('submit-animate')) {
+      var $wrap = $('<div class="text-center">').css({
+        'width': $t.outerWidth(),
+        'height': $t.outerHeight(),
+        'left': $t.position().left,
+        'right': $t.position().right,
+        'margin': '0 auto'
+      });
+      $t.wrap($wrap);
+      setTimeout(function () {
+        // $icon = $t.find('i:first');
+        // if ($icon.length) {
+        //     var $newIcon = $icon.first().clone().appendTo($wrap);
+        // }
+        $t.addClass('submit-animate');
+      }, 10);
+    } // return false;
+
+  });
+};
+
+$(function () {
+  st.form($('body'));
 });
 
 /***/ }),
