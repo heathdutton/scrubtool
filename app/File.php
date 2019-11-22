@@ -105,10 +105,7 @@ class File extends Model
 
     const STATUS_WHOLE        = 64;
 
-    /** @var array Attributes we do not wish to expose to the user. */
-    const STAT_PROPERTY_BLACKLIST = ['input_location', 'output_location', 'user_id', 'session_id'];
-
-    const STORAGE                 = 'local';
+    const STORAGE             = 'local';
 
     protected $dateFormat = self::DATE_FORMAT;
 

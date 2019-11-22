@@ -190,9 +190,7 @@ return [
         /**
          * Scrubtool specific
          */
-        // Collective\Html\HtmlServiceProvider::class,
-        // Maatwebsite\Excel\ExcelServiceProvider::class,
-        \App\Providers\ExcelCustomServiceProvider::class,
+        App\Providers\ExcelCustomServiceProvider::class,
         Maatwebsite\LaravelNovaExcel\LaravelNovaExcelServiceProvider::class,
         Kris\LaravelFormBuilder\FormBuilderServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
@@ -246,14 +244,23 @@ return [
         'URL'          => Illuminate\Support\Facades\URL::class,
         'Validator'    => Illuminate\Support\Facades\Validator::class,
         'View'         => Illuminate\Support\Facades\View::class,
-        // 'Form' => Collective\Html\FormFacade::class,
-        // 'HTML' => Collective\Html\HtmlFacade::class,
 
         /**
          * Scrubtool specific
          */
-        // 'Excel'        => Maatwebsite\Excel\Facades\Excel::class,
         'FormBuilder'  => Kris\LaravelFormBuilder\Facades\FormBuilder::class,
         'DataTables'   => Yajra\DataTables\Facades\DataTables::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scrubtool File Deletion
+    |--------------------------------------------------------------------------
+    |
+    | After a successful scrub/hash action, the file will be available for
+    | download for this number of minutes (by the same user), after which
+    | it will be deleted for HIPAA/PCI compliance and peace of mind.
+    |
+    */
+    'file_minutes_available' => env('FILE_MINUTES_AVAILABLE', 1440),
 ];

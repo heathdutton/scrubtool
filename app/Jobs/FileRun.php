@@ -6,7 +6,6 @@ use App\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheet;
 use App\Imports\LargeCsvReader;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,17 +15,14 @@ use Maatwebsite\Excel\Excel;
 
 class FileRun implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable;
-
-    /** @var int */
-    const MINUTES_TILL_DELETION = 59;
+    use Dispatchable, InteractsWithQueue, Queueable, ScheduleDeletionTrait;
 
     public $deleteWhenMissingModels = true;
 
-    private $fileId;
-
     /** @var int */
     public $timeout = 21600;
+
+    private $fileId;
 
     public function __construct($fileId)
     {
@@ -98,22 +94,9 @@ class FileRun implements ShouldQueue
                 $file->status  = File::STATUS_WHOLE;
                 $file->message = '';
 
-                $this->saveAndQueueForDelete($file, self::MINUTES_TILL_DELETION);
+                $this->scheduleDeletion($file, config('app.file_minutes_available'));
             }
         }
-    }
-
-    /**
-     * @param  File  $file
-     * @param  int  $minTillDelete
-     */
-    private function saveAndQueueForDelete(File $file, $minTillDelete)
-    {
-        $file->available_till = Carbon::now('UTC')->addMinutes($minTillDelete);
-        $file->save();
-
-        FileDelete::dispatch($file->id)
-            ->delay($file->available_till);
     }
 
     /**
@@ -128,7 +111,7 @@ class FileRun implements ShouldQueue
             $file->status  = File::STATUS_STOPPED;
             $file->message = 'An error was encountered while processing your file. It was purged for your security. '.$exception->getMessage();
 
-            $this->saveAndQueueForDelete($file, 15);
+            $this->scheduleDeletion($file, 15);
         }
     }
 }

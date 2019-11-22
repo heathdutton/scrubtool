@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheetAnalysis;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,14 +14,14 @@ use Maatwebsite\Excel\Excel;
 
 class FileAnalyze implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, ScheduleDeletionTrait;
 
     public $deleteWhenMissingModels = true;
 
-    private $fileId;
-
     /** @var int */
     public $timeout = 900;
+
+    private $fileId;
 
     public function __construct($fileId)
     {
@@ -49,7 +48,7 @@ class FileAnalyze implements ShouldQueue
             list($excel, $reader) = resolve('excelCustom');
 
             // Take shortcuts with ultra-large plaintext files.
-            $sheets                  = [];
+            $sheets = [];
             if ($file->isLargeCsv()) {
                 $totalRows = 0;
                 if (
@@ -124,20 +123,8 @@ class FileAnalyze implements ShouldQueue
             $file->status  = File::STATUS_STOPPED;
             $file->message = 'An error was encountered while analyzing your file. It was purged for your security. '.$exception->getMessage();
 
-            $this->saveAndQueueForDelete($file, 1);
+            $this->scheduleDeletion($file, 1);
         }
     }
 
-    /**
-     * @param  File  $file
-     * @param  int  $minTillDelete
-     */
-    private function saveAndQueueForDelete(File $file, $minTillDelete)
-    {
-        $file->available_till = Carbon::now('UTC')->addMinutes($minTillDelete);
-        $file->save();
-
-        FileDelete::dispatch($file->id)
-            ->delay($file->available_till);
-    }
 }

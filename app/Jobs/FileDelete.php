@@ -14,10 +14,10 @@ class FileDelete implements ShouldQueue
 
     public $deleteWhenMissingModels = true;
 
-    private $fileId;
-
     /** @var int */
     public $timeout = 60;
+
+    private $fileId;
 
     public function __construct($fileId)
     {
