@@ -53,11 +53,8 @@ class FileSuppressionListHelper
             throw new Exception(__('File not associated to a user.'));
         }
 
-        if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_REPLACE)) {
-            $this->insertIds = true;
-        } else {
-            $this->insertIds = false;
-        }
+        // Do not insert IDs for append mode, because that could prevent insertion or overwrite.
+        $this->insertIds = (bool) ($this->file->mode ^ File::MODE_LIST_APPEND);
 
         if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
             $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST);

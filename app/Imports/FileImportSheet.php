@@ -3,10 +3,10 @@
 namespace App\Imports;
 
 use App\Exports\FileExport;
-use App\Models\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
 use App\Helpers\FileSuppressionListHelper;
+use App\Models\File;
 use App\Models\SuppressionList;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -242,7 +242,7 @@ class FileImportSheet implements ToModel
         if (
             $this->fileSuppressionListHelper
             && $this->file
-            && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)
+            && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
         ) {
             // Finish saving changes to the suppression list and it's supports.
             $this->stats['rows_persisted'] = $this->fileSuppressionListHelper->finish();

@@ -113,6 +113,14 @@ class SuppressionListContent extends Model
     }
 
     /**
+     * @return bool
+     */
+    public function isReplacement()
+    {
+        return $this->isReplacement;
+    }
+
+    /**
      * Generate the table if it doesn't exist to fill the data based on the Suppression List Support type.
      *
      * @return $this
@@ -218,20 +226,11 @@ class SuppressionListContent extends Model
             && Schema::hasTable($this->tableName())
         ) {
             // Swap the table names to replace any pre-existing version with the new version.
-            if (DB::connection() instanceof MySqlConnection) {
-                // MySQL can do this in a single command.
-                $transaction = DB::statement('RENAME TABLE :existing TO :replaced, :replacement TO :existing', [
-                    'existing'    => $this->tableName(),
-                    'replaced'    => $this->tableNameReplaced(),
-                    'replacement' => $this->tableNameReplacement(),
-                ]);
-            } else {
-                $transaction = DB::transaction(function () {
-                    Schema::rename($this->tableName(), $this->tableNameReplaced());
-                    Schema::rename($this->tableNameReplacement(), $this->tableName());
-                });
-            }
-            // @todo - Perform cleanup if all went well.
+            DB::transaction(function () {
+                Schema::rename($this->tableName(), $this->tableNameReplaced());
+                Schema::rename($this->tableNameReplacement(), $this->tableName());
+            });
+            Schema::dropIfExists($this->tableNameReplaced());
         }
 
         return $this->persistedCount;

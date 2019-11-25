@@ -16,8 +16,11 @@ class SuppressionListSupport extends Model
     /** @var int The first tile the support is being constructed/filled. */
     const STATUS_BUILDING = 1;
 
+    /** @var int Something went wrong with the support creation. */
+    const STATUS_ERROR = 2;
+
     /** @var int The support has been built and is ready for use. */
-    const STATUS_READY = 2;
+    const STATUS_READY = 4;
 
     /** @var int Records are being added to the list, but it can still be used. */
     const STATUS_TO_BE_APPENDED = 4;
@@ -128,23 +131,18 @@ class SuppressionListSupport extends Model
                 }
                 foreach ((new HashHelper())->listChoices() as $algo => $name) {
                     // Create new support if it doesn't already exist.
-                    $newSupport = self::withoutTrashed()
-                        ->where('suppression_list_id', $this->suppressionList->id)
-                        ->where('column_type', $this->column_type)
-                        ->where('hash_type', $algo)
-                        ->first();
-                    if (!$newSupport) {
-                        $newSupport = new self([
+                    $newSupport             = self::withTrashed()
+                        ->firstOrCreate([
                             'suppression_list_id' => $this->suppressionList->id,
-                            'status'              => self::STATUS_BUILDING,
                             'column_type'         => $this->column_type,
                             'hash_type'           => $algo,
+                        ], [
+                            'status' => self::STATUS_BUILDING,
                         ]);
-                    } else {
-                        $newSupport->status = self::STATUS_BUILDING;
-                    }
+                    $newSupport->deleted_at = null;
+                    $newSupport->status     = self::STATUS_BUILDING;
                     $newSupport->save();
-                    SuppressionListSupportContentBuild::dispatch($newSupport->id);
+                    SuppressionListSupportContentBuild::dispatch($newSupport->id, $this->content->isReplacement());
                 }
             }
         }
