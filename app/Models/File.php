@@ -27,6 +27,8 @@ use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
 use Maatwebsite\Excel\Helpers\FileTypeDetector;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -43,9 +45,9 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  *
  * @package App
  */
-class File extends Model
+class File extends Model implements Auditable
 {
-    use SoftDeletes;
+    use SoftDeletes, AuditableTrait;
 
     const DATE_FORMAT         = 'Y-m-d H:i:s.u';
 
@@ -121,6 +123,12 @@ class File extends Model
         'input_settings' => 'array',
         'columns'        => 'array',
         'sheets'         => 'array',
+    ];
+
+    protected $auditInclude = [
+        'name',
+        'input_settings',
+        'download_count',
     ];
 
     /** @var Storage */

@@ -194,6 +194,7 @@ return [
         Maatwebsite\LaravelNovaExcel\LaravelNovaExcelServiceProvider::class,
         Kris\LaravelFormBuilder\FormBuilderServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
+        OwenIt\Auditing\AuditingServiceProvider::class,
     ],
 
     /*
