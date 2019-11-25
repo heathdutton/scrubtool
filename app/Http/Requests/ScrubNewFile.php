@@ -24,7 +24,7 @@ class ScrubNewFile extends FormRequest
     public function rules()
     {
         return [
-            'target_list' => 'int|required'
+            'target_list' => 'int|required',
         ];
     }
 }

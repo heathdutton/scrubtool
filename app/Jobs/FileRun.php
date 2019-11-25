@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\File;
+use App\Models\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheet;
 use App\Imports\LargeCsvReader;

@@ -2,8 +2,8 @@
 
 namespace App\Helpers;
 
-use App\File;
-use App\SuppressionListSupport;
+use App\Models\File;
+use App\Models\SuppressionListSupport;
 use libphonenumber\Leniency;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;

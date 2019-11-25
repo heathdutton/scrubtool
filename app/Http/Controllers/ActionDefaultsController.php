@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ActionDefaults;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
-use App\Helpers\ActionDefaults;
 
 class ActionDefaultsController extends Controller
 {
 
     /**
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     * @param  Request  $request
+     *
+     * @return RedirectResponse|Redirector
      */
     public function __invoke(Request $request)
     {
@@ -27,7 +29,8 @@ class ActionDefaultsController extends Controller
 
     /**
      * @param $routeString
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     *
+     * @return RedirectResponse|Redirector
      */
     private function returnRedirect($routeString)
     {

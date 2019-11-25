@@ -2,7 +2,7 @@
 
 namespace App\Nova\Metrics;
 
-use App\File;
+use App\Models\File;
 use DateInterval;
 use DateTimeInterface;
 use Illuminate\Http\Request;

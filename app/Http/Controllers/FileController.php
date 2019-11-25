@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\File;
+use App\Models\File;
 use Exception;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Kris\LaravelFormBuilder\FormBuilder;
@@ -105,7 +106,7 @@ class FileController extends Controller
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return bool|RedirectResponse|\Illuminate\Routing\Redirector
+     * @return bool|RedirectResponse|Redirector
      * @throws Exception
      */
     public function store($id, Request $request, FormBuilder $formBuilder)

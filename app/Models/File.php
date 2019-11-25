@@ -1,14 +1,17 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use App\Forms\FileForm;
 use App\Jobs\FileAnalyze;
 use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
 use Carbon\Carbon;
+use DateTimeImmutable;
 use Exception;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Excel;
@@ -336,7 +340,7 @@ class File extends Model
     /**
      * Permit microtime from MySQL
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function newQuery()
     {
@@ -642,7 +646,7 @@ class File extends Model
     /**
      * @param $fileName
      *
-     * @return array|false|\Illuminate\Contracts\Translation\Translator|string|string[]|null
+     * @return array|false|Translator|string|string[]|null
      */
     private function listNameFromFileName($fileName)
     {
@@ -749,8 +753,8 @@ class File extends Model
     {
         try {
             return parent::asDateTime($value);
-        } catch (\InvalidArgumentException $e) {
-            return parent::asDateTime(new \DateTimeImmutable($value));
+        } catch (InvalidArgumentException $e) {
+            return parent::asDateTime(new DateTimeImmutable($value));
         }
     }
 }

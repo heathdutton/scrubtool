@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Helpers\HashHelper;
-use App\SuppressionListContent;
-use App\SuppressionListSupport;
+use App\Models\SuppressionListContent;
+use App\Models\SuppressionListSupport;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

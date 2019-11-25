@@ -21,11 +21,12 @@ $action = '';
         <div class="card-body">
             <div class="row mt-3">
                 @include('partials.stat', ['icon' => 'align-left', 'class' => '', 'value' => $suppressionList->statParent('rows_imported') ?? 0, 'label' => __('Total Records')])
-                @foreach($suppressionList->suppressionListSupports->where('status', \App\SuppressionListSupport::STATUS_READY)->unique('column_type') as $support)
+{{--                ->where('status', \App\Models\SuppressionListSupport::STATUS_READY)--}}
+                @foreach($suppressionList->suppressionListSupports->sortBy('id')->unique('column_type') as $support)
                     @include('partials.stat', [
                         'icon' => __("column_types.icons.{$support->column_type}"),
                         'class' => '',
-                        'value' => number_format((new App\SuppressionListContent([], $support))->count()),
+                        'value' => number_format((new \App\Models\SuppressionListContent([], $support))->count()),
                         'label' => __('Unique :type', ['type' => __('column_types.plural.'.$support->column_type)]),
                     ])
                 @endforeach
@@ -37,7 +38,7 @@ $action = '';
                         <div class="btn-group float-right">
                             <a href="{{ route('defaults', [
                                 'action_defaults' => [
-                                    'mode' => App\File::MODE_LIST_APPEND,
+                                    'mode' => App\Models\File::MODE_LIST_APPEND,
                                     'suppression_list_append' => $suppressionList->id,
                                 ],
                                 'target_action' => route('files')
@@ -47,7 +48,7 @@ $action = '';
                             </a>
                             <a href="{{ route('defaults', [
                                 'action_defaults' => [
-                                    'mode' => App\File::MODE_LIST_REPLACE,
+                                    'mode' => App\Models\File::MODE_LIST_REPLACE,
                                     'suppression_list_append' => $suppressionList->id,
                                 ],
                                 'target_action' => route('files')
@@ -57,7 +58,7 @@ $action = '';
                             </a>
                             <a href="{{ route('defaults', [
                                 'action_defaults' => [
-                                    'mode' => App\File::MODE_SCRUB,
+                                    'mode' => App\Models\File::MODE_SCRUB,
                                     'suppression_list_use_'.$suppressionList->id => $suppressionList->id,
                                 ],
                                 'target_action' => route('files')

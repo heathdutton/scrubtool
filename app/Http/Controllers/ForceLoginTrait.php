@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,7 @@ trait ForceLoginTrait
     /**
      * @param  Request  $request
      *
-     * @return \Illuminate\Http\JsonResponse|RedirectResponse
+     * @return JsonResponse|RedirectResponse
      */
     private function forceLogin(Request $request)
     {

@@ -207,7 +207,7 @@ return [
     |
     */
 
-    'aliases' => [
+    'aliases'                => [
 
         'App'          => Illuminate\Support\Facades\App::class,
         'Arr'          => Illuminate\Support\Arr::class,

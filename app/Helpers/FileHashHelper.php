@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\File;
+use App\Models\File;
 
 class FileHashHelper
 {

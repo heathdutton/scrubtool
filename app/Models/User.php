@@ -1,17 +1,19 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
+use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
 
-class User extends Authenticatable
+class User extends AuthUser implements CanResetPassword
 {
-    use Notifiable, Billable, SoftDeletes;
+    use Notifiable, Billable, SoftDeletes, CanResetPasswordTrait;
 
     /**
      * The attributes that are mass assignable.

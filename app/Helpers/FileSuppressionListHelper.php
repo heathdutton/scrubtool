@@ -2,10 +2,10 @@
 
 namespace App\Helpers;
 
-use App\File;
-use App\FileSuppressionList;
-use App\SuppressionList;
-use App\SuppressionListSupport;
+use App\Models\File;
+use App\Models\FileSuppressionList;
+use App\Models\SuppressionList;
+use App\Models\SuppressionListSupport;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -32,6 +32,9 @@ class FileSuppressionListHelper
     /** @var array */
     private $columnSupports = [];
 
+    /** @var bool */
+    private $insertIds;
+
     /**
      * FileSuppressionListHelper constructor.
      *
@@ -48,6 +51,12 @@ class FileSuppressionListHelper
             && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
         ) {
             throw new Exception(__('File not associated to a user.'));
+        }
+
+        if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_REPLACE)) {
+            $this->insertIds = true;
+        } else {
+            $this->insertIds = false;
         }
 
         if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
@@ -250,6 +259,9 @@ class FileSuppressionListHelper
     {
         $valid = false;
         if ($this->columnSupports) {
+            if (!$this->insertIds && $rowIndex) {
+                $rowIndex = 0;
+            }
             foreach ($this->columnSupports as $columnIndex => $supports) {
                 /** @var SuppressionListSupport $support */
                 foreach ($supports as $support) {

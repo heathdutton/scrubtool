@@ -19,7 +19,7 @@ class File extends Resource
      *
      * @var string
      */
-    public static $model = \App\File::class;
+    public static $model = \App\Models\File::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.

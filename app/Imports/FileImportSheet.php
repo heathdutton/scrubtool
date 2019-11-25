@@ -3,12 +3,11 @@
 namespace App\Imports;
 
 use App\Exports\FileExport;
-use App\File;
-use App\FileSuppressionList;
+use App\Models\File;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\FileHashHelper;
 use App\Helpers\FileSuppressionListHelper;
-use App\SuppressionList;
+use App\Models\SuppressionList;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
@@ -114,7 +113,7 @@ class FileImportSheet implements ToModel
                         }
                     }
 
-                    if ($row && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
+                    if ($row && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
                         if ($this->getFileSuppressionListHelper()->appendRowToList($row, $this->rowIndex)) {
                             $this->stats['rows_imported']++;
                         } else {

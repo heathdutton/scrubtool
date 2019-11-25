@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\File;
+use App\Models\File;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 

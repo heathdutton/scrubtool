@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\File;
+use App\Models\File;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class FileImport implements WithMultipleSheets

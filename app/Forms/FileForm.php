@@ -2,11 +2,11 @@
 
 namespace App\Forms;
 
-use App\File;
+use App\Models\File;
 use App\Helpers\ActionDefaults;
 use App\Helpers\FileAnalysisHelper;
 use App\Helpers\HashHelper;
-use App\SuppressionList;
+use App\Models\SuppressionList;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 

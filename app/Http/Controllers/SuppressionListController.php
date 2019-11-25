@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Contracts\View\Factory;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,7 +33,7 @@ class SuppressionListController extends Controller
      * @param $id
      * @param  Request  $request
      *
-     * @return bool|Factory|\Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|View
+     * @return bool|Factory|JsonResponse|RedirectResponse|View
      */
     public function suppressionList($id, Request $request)
     {

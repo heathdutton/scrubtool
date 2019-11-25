@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\File;
+use App\Models\File;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Request;
 

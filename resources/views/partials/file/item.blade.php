@@ -2,45 +2,45 @@
 $class  = 'secondary';
 $action = '';
 $card   = '';
-if ($file->status & \App\File::STATUS_ADDED) {
+if ($file->status & \App\Models\File::STATUS_ADDED) {
     $card   = 'file-refresh';
     $class  = 'secondary';
     $action = __('Queued');
-} elseif ($file->status & \App\File::STATUS_ANALYSIS) {
+} elseif ($file->status & \App\Models\File::STATUS_ANALYSIS) {
     $card   = 'file-refresh';
     $class  = 'secondary';
     $action = __('Analyzing');
-} elseif ($file->status & \App\File::STATUS_INPUT_NEEDED) {
+} elseif ($file->status & \App\Models\File::STATUS_INPUT_NEEDED) {
     $class  = 'info';
     $action = __('Setup');
-} elseif ($file->status & (\App\File::STATUS_READY | \App\File::STATUS_RUNNING)) {
+} elseif ($file->status & (\App\Models\File::STATUS_READY | \App\Models\File::STATUS_RUNNING)) {
     $card  = 'file-refresh';
     $class = 'secondary';
-    if ($file->mode & \App\File::MODE_HASH) {
+    if ($file->mode & \App\Models\File::MODE_HASH) {
         $action = __('Hashing');
-    } elseif ($file->mode & \App\File::MODE_SCRUB) {
+    } elseif ($file->mode & \App\Models\File::MODE_SCRUB) {
         $action = __('Scrubbing');
-    } elseif ($file->mode & \App\File::MODE_LIST_APPEND) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_APPEND) {
         $action = __('Appending Suppression List');
-    } elseif ($file->mode & \App\File::MODE_LIST_CREATE) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_CREATE) {
         $action = __('Creating Suppression List');
-    } elseif ($file->mode & \App\File::MODE_LIST_REPLACE) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_REPLACE) {
         $action = __('Replacing Suppression List');
     }
-} elseif ($file->status & \App\File::STATUS_STOPPED) {
+} elseif ($file->status & \App\Models\File::STATUS_STOPPED) {
     $class  = 'danger';
     $action = __('Cancelled');
-} elseif ($file->status & \App\File::STATUS_WHOLE) {
+} elseif ($file->status & \App\Models\File::STATUS_WHOLE) {
     $class = 'success';
-    if ($file->mode & \App\File::MODE_HASH) {
+    if ($file->mode & \App\Models\File::MODE_HASH) {
         $action = __('File Hashed');
-    } elseif ($file->mode & \App\File::MODE_SCRUB) {
+    } elseif ($file->mode & \App\Models\File::MODE_SCRUB) {
         $action = __('File Scrubbed');
-    } elseif ($file->mode & \App\File::MODE_LIST_APPEND) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_APPEND) {
         $action = __('Suppression List Appended');
-    } elseif ($file->mode & \App\File::MODE_LIST_CREATE) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_CREATE) {
         $action = __('Suppression List Created');
-    } elseif ($file->mode & \App\File::MODE_LIST_REPLACE) {
+    } elseif ($file->mode & \App\Models\File::MODE_LIST_REPLACE) {
         $action = __('Suppression List Replaced');
     }
 }
@@ -49,7 +49,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
      data-file-id="{{ $file->id }}"
      data-file-status="{{ $file->status }}"
      data-file-origin="{{ route('file', ['id' => $file->id]) }}"
-     data-updated-at="{{ $file->updated_at->format(\App\File::DATE_FORMAT) }}"
+     data-updated-at="{{ $file->updated_at->format(\App\Models\File::DATE_FORMAT) }}"
 >
     <a href="#file{{ $file->id }}" class="card-header text-{{ $class }}"
        role="tab" id="heading{{ $file->id }}"
@@ -91,7 +91,7 @@ if ($file->status & \App\File::STATUS_ADDED) {
                 <p class="card-text text-{{ $class }}">{{ $file->message }}</p>
             @endif
 
-            @if($file->status & \App\File::STATUS_ADDED || $file->status & \App\File::STATUS_ANALYSIS || $file->status & \App\File::STATUS_READY || $file->status & \App\File::STATUS_RUNNING)
+            @if($file->status & \App\Models\File::STATUS_ADDED || $file->status & \App\Models\File::STATUS_ANALYSIS || $file->status & \App\Models\File::STATUS_READY || $file->status & \App\Models\File::STATUS_RUNNING)
                 <div class="progress">
                     <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
                         {{ $action }}
@@ -102,21 +102,21 @@ if ($file->status & \App\File::STATUS_ADDED) {
             @if($file->form)
                 {!! form($file->form) !!}
             @endif
-            @if($file->status & (\App\File::STATUS_WHOLE | \App\File::STATUS_RUNNING))
+            @if($file->status & (\App\Models\File::STATUS_WHOLE | \App\Models\File::STATUS_RUNNING))
                 <div class="row mt-3">
                     @include('partials.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'label' => __('Rows')])
                     @include('partials.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'label' => __('Records')])
                     @include('partials.stat', ['icon' => 'close', 'class' => 'warning', 'value' => $file->stat('rows_invalid'), 'label' => __('Invalid')])
-                    @if($file->mode & \App\File::MODE_HASH)
+                    @if($file->mode & \App\Models\File::MODE_HASH)
                         @include('partials.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
                     @endif
-                    @if($file->mode & \App\File::MODE_SCRUB)
+                    @if($file->mode & \App\Models\File::MODE_SCRUB)
                         @include('partials.stat', ['icon' => 'filter', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
                     @endif
-                    @if($file->mode & (\App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_REPLACE))
+                    @if($file->mode & (\App\Models\File::MODE_LIST_CREATE | \App\Models\File::MODE_LIST_APPEND | \App\Models\File::MODE_LIST_REPLACE))
                         @include('partials.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
                     @endif
-                    @if($file->mode & (\App\File::MODE_HASH | \App\File::MODE_SCRUB))
+                    @if($file->mode & (\App\Models\File::MODE_HASH | \App\Models\File::MODE_SCRUB))
                         @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => $file->stat('download_count'), 'label' => __('Downloads')])
                     @endif
                 </div>
@@ -124,8 +124,8 @@ if ($file->status & \App\File::STATUS_ADDED) {
                     <div class="col-md-12 mt-3 mb-1">
                         <div class="">
                             <div class="btn-group float-right">
-                                @if($file->mode & (\App\File::MODE_SCRUB | \App\File::MODE_HASH))
-                                    @if($file->status & \App\File::STATUS_WHOLE)
+                                @if($file->mode & (\App\Models\File::MODE_SCRUB | \App\Models\File::MODE_HASH))
+                                    @if($file->status & \App\Models\File::STATUS_WHOLE)
                                         {{-- @todo - This needs contextual awareness --}}
                                         <a class="btn btn-secondary"
                                            href="{{ route('files') }}"
@@ -161,15 +161,17 @@ if ($file->status & \App\File::STATUS_ADDED) {
                                     @endif
                                 @endif
 
-                                @if($file->mode & (\App\File::MODE_LIST_APPEND | \App\File::MODE_LIST_CREATE | \App\File::MODE_LIST_REPLACE))
-                                    @if($file->status & \App\File::STATUS_WHOLE)
-                                        <a class="form-control btn btn-{{ $class }}"
-                                           href="{{ route('suppressionList', [
-                                                'id' => $file->suppressionLists->where('pivot.relationship', \App\FileSuppressionList::REL_FILE_INTO_LIST)->first()->id
+                                @if($file->mode & (\App\Models\File::MODE_LIST_APPEND | \App\Models\File::MODE_LIST_CREATE | \App\Models\File::MODE_LIST_REPLACE))
+                                    @if($file->status & \App\Models\File::STATUS_WHOLE)
+                                        @if ($suppressionList = $file->suppressionLists->whereIn('pivot.relationship',[\App\Models\FileSuppressionList::REL_FILE_INTO_LIST, \App\Models\FileSuppressionList::REL_FILE_REPLACE_LIST])->first())
+                                            <a class="form-control btn btn-{{ $class }}"
+                                               href="{{ route('suppressionList', [
+                                                'id' => $suppressionList->id
                                             ]) }}">
-                                            <i class="fa fa-list"></i>
-                                            {{ __('Suppression List') }}
-                                        </a>
+                                                <i class="fa fa-list"></i>
+                                                {{ __('Suppression List') }}
+                                            </a>
+                                        @endif
                                     @endif
                                 @endif
                             </div>

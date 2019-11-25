@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use App\Helpers\HashHelper;
 use App\Jobs\SuppressionListSupportContentBuild;

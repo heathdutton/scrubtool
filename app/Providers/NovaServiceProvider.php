@@ -7,7 +7,7 @@ use App\Nova\Metrics\FilesPerDay;
 use App\Nova\Metrics\NewFiles;
 use App\Nova\Metrics\NewUsers;
 use App\Nova\Metrics\UsersPerDay;
-use App\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Nova\Nova;
 use Laravel\Nova\NovaApplicationServiceProvider;

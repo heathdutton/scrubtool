@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\File;
+use App\Models\File;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

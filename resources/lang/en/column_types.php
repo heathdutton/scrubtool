@@ -1,6 +1,6 @@
 <?php
 
-use App\SuppressionListSupport;
+use \App\Models\SuppressionListSupport;
 
 return [
     SuppressionListSupport::TYPE_AGE        => 'Age',
