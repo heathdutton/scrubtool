@@ -33,7 +33,7 @@ class SuppressionListController extends Controller
      * @param $id
      * @param  Request  $request
      *
-     * @return bool|Factory|JsonResponse|RedirectResponse|View
+     * @return Factory|JsonResponse|RedirectResponse|View|void
      */
     public function suppressionList($id, Request $request)
     {
@@ -43,7 +43,7 @@ class SuppressionListController extends Controller
 
         $suppressionList = $request->user()->suppressionLists->where('id', (int) $id)->first();
         if (!$suppressionList) {
-            return response()->isNotFound();
+            return abort(404);
         }
 
         if ($request->ajax()) {

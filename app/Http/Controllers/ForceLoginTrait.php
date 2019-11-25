@@ -38,6 +38,6 @@ trait ForceLoginTrait
             }
         }
 
-        return response()->isNotFound();
+        return abort(404);
     }
 }

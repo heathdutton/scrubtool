@@ -95,7 +95,7 @@ class FileController extends Controller
             // The file should have been deleted by now, likely the job failed.
             $file->delete();
 
-            return response()->isNotFound();
+            return abort(404);
         }
 
         return $file->download();
