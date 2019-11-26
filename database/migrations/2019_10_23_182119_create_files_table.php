@@ -24,7 +24,6 @@ class CreateFilesTable extends Migration
             $table->text('output_location')->nullable();
             $table->integer('user_id')->unsigned()->nullable();
             $table->json('input_settings')->nullable();
-            $table->ipAddress('ip_address');
             $table->string('session_id');
             $table->unsignedInteger('status');
             $table->unsignedInteger('mode');
@@ -37,27 +36,14 @@ class CreateFilesTable extends Migration
             $table->string('md5')->nullable();
             $table->string('country');
             $table->json('sheets')->nullable();
-            $table->unsignedBigInteger('rows_total'); // Total rows may include empty ones in XSL
-            $table->unsignedBigInteger('rows_processed'); // Rows that have been processed from the total.
-            $table->unsignedBigInteger('rows_filled'); // Rows that actually got the import process. Records.
-            $table->unsignedBigInteger('rows_persisted'); // After insertion, the unique number of rows in the first support.
-
+            $table->unsignedBigInteger('rows_total');
+            $table->unsignedBigInteger('rows_processed');
+            $table->unsignedBigInteger('rows_filled');
+            $table->unsignedBigInteger('rows_persisted');
             $table->unsignedBigInteger('rows_imported');
+            $table->unsignedBigInteger('rows_invalid');
             $table->unsignedBigInteger('rows_scrubbed');
             $table->unsignedBigInteger('rows_hashed');
-
-            $table->unsignedBigInteger('rows_invalid');
-            $table->unsignedBigInteger('rows_email_valid');
-            $table->unsignedBigInteger('rows_email_invalid');
-            $table->unsignedBigInteger('rows_email_duplicate');
-            $table->unsignedBigInteger('rows_email_dnc');
-
-            $table->unsignedBigInteger('rows_phone_valid');
-            $table->unsignedBigInteger('rows_phone_invalid');
-            $table->unsignedBigInteger('rows_phone_duplicate');
-            $table->unsignedBigInteger('rows_phone_dnc');
-
-            $table->unsignedInteger('download_count');
             $table->index(['user_id', 'created_at']);
             $table->index(['session_id', 'created_at']);
             $table->index('size');

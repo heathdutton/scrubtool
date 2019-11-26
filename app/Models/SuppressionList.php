@@ -148,6 +148,14 @@ class SuppressionList extends Model implements Auditable
     }
 
     /**
+     * @return HasMany
+     */
+    public function actions()
+    {
+        return $this->hasMany(Action::class);
+    }
+
+    /**
      * @return string|null
      */
     public function getIdToken()

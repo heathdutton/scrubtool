@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -78,23 +79,14 @@ class File extends Model implements Auditable
 
     /** @var array */
     const STATS_DEFAULT       = [
-        'rows_total'           => 0,
-        'rows_processed'       => 0,
-        'rows_persisted'       => 0,
-        'rows_filled'          => 0,
-        'rows_imported'        => 0,
-        'rows_scrubbed'        => 0,
-        'rows_hashed'          => 0,
-        'rows_invalid'         => 0,
-        'rows_email_valid'     => 0,
-        'rows_email_invalid'   => 0,
-        'rows_email_duplicate' => 0,
-        'rows_email_dnc'       => 0,
-        'rows_phone_valid'     => 0,
-        'rows_phone_invalid'   => 0,
-        'rows_phone_duplicate' => 0,
-        'rows_phone_dnc'       => 0,
-        'download_count'       => 0,
+        'rows_total'     => 0,
+        'rows_processed' => 0,
+        'rows_persisted' => 0,
+        'rows_filled'    => 0,
+        'rows_imported'  => 0,
+        'rows_scrubbed'  => 0,
+        'rows_hashed'    => 0,
+        'rows_invalid'   => 0,
     ];
 
     const STATUS_ADDED        = 1;
@@ -128,7 +120,6 @@ class File extends Model implements Auditable
     protected $auditInclude = [
         'name',
         'input_settings',
-        'download_count',
     ];
 
     /** @var Storage */
@@ -223,7 +214,6 @@ class File extends Model implements Auditable
                 'output_location' => null,
                 'user_id'         => $request->user() ? $request->user()->id : null,
                 'input_settings'  => null,
-                'ip_address'      => $request->getClientIp(),
                 'session_id'      => $request->getSession()->getId(),
                 'status'          => self::STATUS_ADDED,
                 'mode'            => File::MODE_SCRUB,
@@ -305,6 +295,14 @@ class File extends Model implements Auditable
         }
 
         return $this->storage;
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function downloads()
+    {
+        return $this->hasMany(FileDownload::class);
     }
 
     /**
@@ -497,9 +495,7 @@ class File extends Model implements Auditable
             $name .= '.'.pathinfo($this->name, PATHINFO_EXTENSION);
 
             if ($this->getStorage()->exists($this->getRelativeLocation($location))) {
-                $this->download_count++;
-                $this->save();
-
+                $this->downloads()->create();
                 return response()->download($location, $name);
             }
         }

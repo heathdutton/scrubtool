@@ -14,6 +14,7 @@ class CreateJobsTable extends Migration
     public function up()
     {
         Schema::create('jobs', function (Blueprint $table) {
+            $table->collation = 'utf8mb4_unicode_ci';
             $table->bigIncrements('id');
             $table->string('queue')->index();
             $table->longText('payload');
