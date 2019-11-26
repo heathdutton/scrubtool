@@ -14,6 +14,7 @@ class CreateSuppressionListSupportsTable extends Migration
     public function up()
     {
         Schema::create('suppression_list_supports', function (Blueprint $table) {
+            $table->collation = 'utf8mb4_unicode_ci';
             $table->bigIncrements('id');
             $table->timestamps();
             $table->softDeletes();

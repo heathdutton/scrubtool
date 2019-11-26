@@ -41269,9 +41269,25 @@ st.dropzone = function ($context) {
                 }, st.animationSpeed);
               }
             });
-          }, 1000);
+          }, 500);
         }
       });
+    },
+    error: function error(file, response, xhr) {
+      var $text = $(file.previewElement).find('.text-danger > span:first');
+
+      if (typeof response.errors !== 'undefined' && typeof response.errors[file.name] !== 'undefined') {
+        if (typeof console.warn == 'function') {
+          console.warn(file.name + ' - ' + response.errors[file.name]);
+        }
+
+        $text.text(response.errors[file.name]);
+      } else {
+        $text.text('An unexpected error occurred. Please try again.');
+      }
+
+      $(file.previewElement).addClass('dz-error').addClass('border-danger').removeClass('border-secondary');
+      $(file.previewElement).find('.progress:first').slideToggle();
     }
   });
 };

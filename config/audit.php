@@ -24,7 +24,7 @@ return [
     |
     */
 
-    'user' => [
+    'user'     => [
         'morph_prefix' => 'user',
         'guards'       => [
             'web',
@@ -45,6 +45,8 @@ return [
         'ip_address' => OwenIt\Auditing\Resolvers\IpAddressResolver::class,
         'user_agent' => OwenIt\Auditing\Resolvers\UserAgentResolver::class,
         'url'        => OwenIt\Auditing\Resolvers\UrlResolver::class,
+        'token'      => App\Resolvers\TokenResolver::class,
+        'referrer'   => App\Resolvers\ReferrerResolver::class,
     ],
 
     /*

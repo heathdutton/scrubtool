@@ -168,6 +168,6 @@ class FileController extends Controller
             'success' => $uploaded,
             'errors'  => $errors,
             'routes'  => $routes,
-        ]);
+        ], count($uploaded) ? 200 : 409);
     }
 }
