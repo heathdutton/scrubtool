@@ -8,15 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Query\Builder;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class SuppressionList
  *
  * @package App
  */
-class SuppressionList extends Model
+class SuppressionList extends Model implements Auditable
 {
-    use SoftDeletes;
+    use SoftDeletes, AuditableTrait;
 
     /** @var array */
     protected $guarded = [

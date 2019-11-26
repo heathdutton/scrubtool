@@ -27,6 +27,7 @@
         "maatwebsite/laravel-nova-excel": "^1.1",
         "marianvlad/nova-ssl-card": "^1.0",
         "nova-cards/system-information-card": "^1.0",
+        "owen-it/laravel-auditing": "^9.3",
         "php-junior/nova-logs": "^1.0",
         "radermacher/nova-current-environment-card": "^2.0",
         "themsaid/nova-cashier-manager": "^0.2.1",

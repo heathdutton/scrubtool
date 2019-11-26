@@ -14678,8 +14678,11 @@ input[type=button] {
 }
 
 .submit-animate {
-  -webkit-transition: border-radius 0.25s ease-in-out, background-color 2s ease-in-out, width 1s ease-in-out, height 1s ease-in-out;
-  transition: border-radius 0.25s ease-in-out, background-color 2s ease-in-out, width 1s ease-in-out, height 1s ease-in-out;
+  -webkit-transition: border-radius 0.25s ease-in-out, background-color 0.4s ease-in-out, width 0.2s ease-in-out, height 0.2s ease-in-out;
+  transition: border-radius 0.25s ease-in-out, background-color 0.4s ease-in-out, width 0.2s ease-in-out, height 0.2s ease-in-out;
+}
+
+.submit-animate.submit-animating {
   border-radius: 50% !important;
   background: transparent;
   color: transparent;
@@ -14687,18 +14690,18 @@ input[type=button] {
   border-style: solid !important;
   border-left-color: #eceeef !important;
   border-left-width: 3px !important;
-  -webkit-animation: submit-rotating 1.5s ease-in, submit-rotating 1s linear infinite 1.5s;
-          animation: submit-rotating 1.5s ease-in, submit-rotating 1s linear infinite 1.5s;
+  -webkit-animation: submit-rotating 1s ease-in, submit-rotating 0.7s linear infinite 1s, submit-rotating 0.5s linear infinite 1.7s;
+          animation: submit-rotating 1s ease-in, submit-rotating 0.7s linear infinite 1s, submit-rotating 0.5s linear infinite 1.7s;
   width: 44px;
   height: 44px;
   margin: 0;
   padding: 0;
 }
 
-.submit-animate:focus,
-.submit-animate:active,
-.submit-animate:visited,
-.submit-animate:hover {
+.submit-animate.submit-animating:focus,
+.submit-animate.submit-animating:active,
+.submit-animate.submit-animating:visited,
+.submit-animate.submit-animating:hover {
   outline: 0 !important;
   background: transparent !important;
   color: transparent !important;

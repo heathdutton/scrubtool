@@ -10,10 +10,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
+use OwenIt\Auditing\Auditable as AuditableTrait;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class User extends AuthUser implements CanResetPassword
+class User extends AuthUser implements CanResetPassword, Auditable
 {
-    use Notifiable, Billable, SoftDeletes, CanResetPasswordTrait;
+    use Notifiable, Billable, SoftDeletes, CanResetPasswordTrait, AuditableTrait;
 
     /**
      * The attributes that are mass assignable.
