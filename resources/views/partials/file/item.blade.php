@@ -117,7 +117,7 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                         @include('partials.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
                     @endif
                     @if($file->mode & (\App\Models\File::MODE_HASH | \App\Models\File::MODE_SCRUB))
-                        @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => $file->stat('download_count'), 'label' => __('Downloads')])
+                        @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => number_format($file->downloads->count()), 'label' => __('Downloads')])
                     @endif
                 </div>
                 <div class="row">
