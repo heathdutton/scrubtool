@@ -17,6 +17,6 @@ class TokenResolver implements UrlResolver
             return 'console';
         }
 
-        return session()->get(TokenCapture::TOKEN_KEY) ?? '';
+        return session()->get(TokenCapture::TOKEN_SESSION_KEY) ?? '';
     }
 }
