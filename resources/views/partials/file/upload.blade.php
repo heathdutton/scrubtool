@@ -15,7 +15,7 @@
     @csrf
 </form>
 <div id="dropzone-preview-template" class="d-none">
-    <div class="card border-secondary mb-4">
+    <div class="card border-secondary">
         <span class="card-header text-secondary" role="tab">
             <div class="file-icon" class="bg-info">
                 <div>

@@ -14692,8 +14692,6 @@ input[type=button] {
   border-left-width: 3px !important;
   -webkit-animation: submit-rotating 1s ease-in, submit-rotating 0.7s linear infinite 1s, submit-rotating 0.5s linear infinite 1.7s;
           animation: submit-rotating 1s ease-in, submit-rotating 0.7s linear infinite 1s, submit-rotating 0.5s linear infinite 1.7s;
-  width: 44px;
-  height: 44px;
   margin: 0;
   padding: 0;
 }
@@ -14730,6 +14728,25 @@ input[type=button] {
     -webkit-transform: rotate(360deg);
             transform: rotate(360deg);
   }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+#app {
+  min-height: 100%;
+  overflow: auto;
+  padding-bottom: 3.28125rem;
+}
+
+footer {
+  position: relative;
+  margin-top: -6.5625rem;
+  height: 6.5625rem;
+  clear: both;
+  padding-top: 1.640625rem;
 }
 
 div.tooltip-inner {

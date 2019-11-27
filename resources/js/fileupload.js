@@ -31,11 +31,15 @@ st.dropzone = function ($context) {
                                 // Upload succeeded.
 
                                 // Clone the file card in the lower content
-                                var $card = $(file.previewElement);
-                                var $destination = $card.clone().css({
-                                    'opacity': 0,
-                                    'max-height': '0px'
-                                }, st.animationSpeed);
+                                var $card = $(file.previewElement),
+                                    height = $card.height(),
+                                    $destination = $card.clone().css({
+                                        'opacity': 0,
+                                        'max-height': 0
+                                    }, st.animationSpeed);
+
+                                // Put the destination in place even though it
+                                // is empty.
                                 $filelist.prepend($destination);
 
                                 // Ajax load into the clone while animating.
@@ -44,24 +48,23 @@ st.dropzone = function ($context) {
                                 // Animate the preview card down to the
                                 // destination.
                                 $card
-                                    .css({'position': 'relative'})
+                                    .css({
+                                        'position': 'relative'
+                                    })
                                     .animate({
-                                        'top': '220px',
+                                        'top': ($destination.offset().top - $card.offset().top - height) + 'px',
                                         'margin-left': '-1.5em',
                                         'margin-right': '-1.5em',
+                                        'margin-bottom': -height,
                                         'opacity': 0
                                     }, st.animationSpeed, function () {
-                                        $(this).animate({
-                                            'height': '0px'
-                                        }, st.animationSpeed, function () {
-                                            $(this).remove();
-                                        });
+                                        $(this).remove();
                                     });
 
-                                // Fade in new card during hte ajax req.
+                                // Start making room at the destination.
                                 $destination.animate({
-                                    'opacity': 1,
-                                    'max-height': '600px'
+                                    'max-height': height,
+                                    'opacity': 1
                                 }, st.animationSpeed, function () {
                                     $(this).css({'max-height': 'auto'});
                                 });
@@ -75,7 +78,7 @@ st.dropzone = function ($context) {
                                     }, st.animationSpeed);
                             }
                         });
-                    }, 500);
+                    }, 800);
                 }
             });
         },

@@ -26,6 +26,8 @@
         "bootswatch": "^4.3.1",
         "dropzone": "^5.5.1",
         "font-awesome-scss": "^1.0.0",
-        "jquery.countdown": "^1.2.8"
+        "jquery.countdown": "^1.2.8",
+        "laravel-echo": "^1.6.1",
+        "pusher-js": "^5.0.3"
     }
 }
