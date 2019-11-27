@@ -16,9 +16,11 @@
     "require": {
         "php": "^7.2",
         "ext-json": "^1.6",
+        "aws/aws-sdk-php": "^3.123",
         "fideloper/proxy": "^4.0",
         "giggsey/libphonenumber-for-php": "^8.10",
         "kris/laravel-form-builder": "^1.22",
+        "laravel-notification-channels/pusher-push-notifications": "^1.1",
         "laravel/cashier": "^10.4",
         "laravel/framework": "^6.0",
         "laravel/nova": "~2.0",

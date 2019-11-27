@@ -196,6 +196,7 @@ return [
         Yajra\DataTables\DataTablesServiceProvider::class,
         OwenIt\Auditing\AuditingServiceProvider::class,
         Spatie\Referer\RefererServiceProvider::class,
+        NotificationChannels\PusherPushNotifications\PusherPushNotificationsServiceProvider::class,
     ],
 
     /*

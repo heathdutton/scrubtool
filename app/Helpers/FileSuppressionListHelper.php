@@ -6,6 +6,7 @@ use App\Models\File;
 use App\Models\FileSuppressionList;
 use App\Models\SuppressionList;
 use App\Models\SuppressionListSupport;
+use App\Notifications\ListReady;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -289,24 +290,31 @@ class FileSuppressionListHelper
             }
         }
 
+        if ($persisted) {
+            $suppressionList = null;
+
+            if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
+                $suppressionList = $this->file->suppressionLists
+                    ->whereIn('pivot.relationship', FileSuppressionList::REL_FILE_INTO_LIST)
+                    ->first();
+            }
+
+            if ($this->file->mode & File::MODE_LIST_REPLACE) {
+                $suppressionList = $this->file->suppressionLists
+                    ->whereIn('pivot.relationship', FileSuppressionList::REL_FILE_REPLACE_LIST)
+                    ->first();
+            }
+
+            if ($suppressionList) {
+                if ($this->file->user) {
+                    // @todo - Notify user by email (if desired) and push notification.
+                    // $this->file->user->notify(new ListReady($suppressionList->id));
+                } else {
+                    // @todo - Notify by email if provided.
+                }
+            }
+        }
+
         return $persisted;
     }
-
-    // /**
-    //  * @return SuppressionList
-    //  */
-    // private function destinationSuppressionList()
-    // {
-    //     if (!$this->destinationSuppressionList) {
-    //         $this->destinationSuppressionList = $this->file->suppressionLists
-    //             ->whereIn('pivot.relationship', [
-    //                 FileSuppressionList::REL_FILE_INTO_LIST,
-    //                 FileSuppressionList::REL_FILE_REPLACE_LIST,
-    //             ])
-    //             ->first();
-    //     }
-    //
-    //     return $this->destinationSuppressionList;
-    // }
-
 }
