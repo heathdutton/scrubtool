@@ -98,6 +98,7 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middlewarePriority = [
+        HttpsForce::class,
         StartSession::class,
         ShareErrorsFromSession::class,
         Authenticate::class,
