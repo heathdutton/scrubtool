@@ -2,7 +2,7 @@
 
 namespace App\Resolvers;
 
-use App\Http\Middleware\TokenCapture;
+use App\Http\Middleware\CaptureToken;
 use Illuminate\Support\Facades\App;
 use OwenIt\Auditing\Contracts\UrlResolver;
 
@@ -17,6 +17,6 @@ class TokenResolver implements UrlResolver
             return 'console';
         }
 
-        return session()->get(TokenCapture::TOKEN_SESSION_KEY) ?? '';
+        return session()->get(CaptureToken::TOKEN_SESSION_KEY) ?? '';
     }
 }

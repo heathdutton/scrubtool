@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Foundation\Http\Middleware\TrimStrings as Middleware;
 use Illuminate\Http\Request;
 
-class TokenCapture extends Middleware
+class CaptureToken extends Middleware
 {
 
     /** @var array */
