@@ -10,6 +10,18 @@ echo '%   %%%        %%%%%%%%%%%%%%  %%%  %%%%%%%%%%%  %%%%  %%%%%  %%%%%%  %%% 
 echo '%     %%       %%%%%%%        %%%%%        %%%%  %%%%%  %%%%%       *%%%%         %%%%%%%  %%%%%%%        %%%%%%%        %%%%%        %'
 echo '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
 
+queue='artisan queue:listen --queue=analyze,run,notify,build,delete --timeout=0 -vv'
+npm='npm run development -- --watch --display errors-only'
+PrevCI=$CI
+
+function ctrl_c() {
+    echo ; echo "Terminating (expect an exception)."
+    ps ax | grep "$queue" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+    ps ax | grep "$npm" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+    export CI=$PrevCI
+    exit
+}
+
 if [ -z "$(which php73)" ]
 then
   php=$(which php)
@@ -19,25 +31,41 @@ fi
 
 $php --version
 
-if [ -z "$(which composer)" ]
-then
-  echo "Could not find composer"
-else
-  $php -n "$(which composer)" install
-fi
+# Start trapping Ctrl-C to terminate everything we start here.
+trap ctrl_c INT
 
-rm -rf ./storage/app/private
+echo ; echo "Starting asset compilation."
+export CI=true
 npm run watch &
 
+echo ; echo "Cleaninng private folder to preserve space."
+rm -rf ./storage/app/private
+
+if [ -z "$(which composer)" ]
+then
+    echo "Could not find composer"
+    exit 1;
+else
+    echo ; echo "Running composer install."
+    $php -n "$(which composer)" install
+fi
+
+echo ; echo "Clearing/optimizing cache."
 $php artisan optimize -v
 $php artisan cache:clear -v
-$php artisan route:clear -v
-$php artisan view:clear -v
+$php artisan route:cache -v
+$php artisan view:cache -v
 $php artisan migrate:fresh --seed -v
-queue='artisan queue:listen --queue=analyze,run,notify,build,delete --timeout=0 -v'
+
+echo ; echo "Starting queue processor."
 $php $queue &
 
-$php artisan serve --port=1234 -v
-
-ps ax | grep "$queue" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
-ps ax | grep "npm run watch" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+while true
+do
+    echo ; echo "Starting server."
+    $php artisan serve --port=1234 -vv
+    if [[ "$?" == "130" ]]
+    then
+        ctrl_c
+    fi
+done
