@@ -39,6 +39,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         TrustProxies::class,
+        HttpsForce::class,
         CheckForMaintenanceMode::class,
         ValidatePostSize::class,
         TrimStrings::class,
@@ -52,7 +53,6 @@ class Kernel extends HttpKernel
      */
     protected $middlewareGroups = [
         'web' => [
-            HttpsForce::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             StartSession::class,
@@ -98,7 +98,6 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middlewarePriority = [
-        HttpsForce::class,
         StartSession::class,
         ShareErrorsFromSession::class,
         Authenticate::class,
