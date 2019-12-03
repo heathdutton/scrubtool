@@ -2,10 +2,10 @@
 
 namespace App\Forms;
 
-use App\Models\File;
 use App\Helpers\ActionDefaults;
-use App\Helpers\FileAnalysisHelper;
+use App\Helpers\FileSuppressionListHelper;
 use App\Helpers\HashHelper;
+use App\Models\File;
 use App\Models\SuppressionList;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
@@ -210,6 +210,11 @@ class FileForm extends Form
                 $hashOptionsIn  = [null => __('Is plain text')];
                 $hashOptionsOut = [null => __('Leave as-is')];
                 $hiddenColumns  = 0;
+                $columnTypes    = [];
+                foreach (FileSuppressionListHelper::COLUMN_TYPES as $type) {
+                    $columnTypes[$type] = __('column_types.plural.'.$type);
+                }
+                $columnTypes[null] = __('Other data');
                 foreach ($hashHelper->listChoices() as $key => $value) {
                     $hashOptionsIn[$key]  = __('Is a :hash hash', ['hash' => $value]);
                     $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
@@ -219,6 +224,9 @@ class FileForm extends Form
                     $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
                     $column['filled']  = $column['filled'] ?? false;
                     $class             = $classChoiceWrapper;
+                    $columnName        = !empty($column['type']) && !empty($columnTypes[$column['type']]) ? $columnTypes[$column['type']] : __('data');
+                    $columnIcon        = !empty($column['type']) ? '<i class="fa fa-'.__('column_types.icons.'.$column['type']).'"></i>&nbsp;' : '';
+                    $hashName          = !empty($column['hash']) ? $hashOptionsIn[$column['hash']] : __('Plaintext');
                     if (empty($column['filled'])) {
                         $class .= ' column-empty column-empty-hidden';
                     } else {
@@ -227,19 +235,19 @@ class FileForm extends Form
                     array_walk($column['samples'], 'strip_tags');
                     if (!$column['filled']) {
                         $hiddenColumns++;
-                        $tooltip = __('Column appears to be empty');
+                        $tooltip = __('Column appears to be empty.');
                     } else {
-                        $tooltip = '<strong>'.__('Samples').':</strong><br/>'.
-                            implode('<br/>', $column['samples']);
+                        $tooltip = __(':hash :name detected.', [
+                                'hash' => $hashName,
+                                'name' => $columnIcon . ' ' . $columnName,
+                            ]).'</br>'.
+                            __('Samples').':<br/>&nbsp;&nbsp;'.
+                            implode('<br/>&nbsp;&nbsp;', $column['samples']);
                     }
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
-                        'choices'       => [
-                            FileAnalysisHelper::TYPE_EMAIL => __('Email addresses'),
-                            FileAnalysisHelper::TYPE_PHONE => __('Phone numbers'),
-                            null                           => __('Other data'),
-                        ],
+                        'choices'       => $columnTypes,
                         'selected'      => $column['type'] ?? null,
                         'default_value' => null,
                         'attr'          => [
