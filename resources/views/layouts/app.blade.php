@@ -2,12 +2,14 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
+    <title>{{ config('app.name', 'Laravel') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <meta name="user-id" content="{{ auth()->check() ? auth()->user()->id : null }}">
+    <meta name="pusher-key" content="{{ config('broadcasting.connections.pusher.key') }}">
+    <meta name="pusher-cluster" content="{{ config('broadcasting.connections.pusher.options.cluster') }}">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <script src="{{ asset('js/app.js') }}" defer></script>
-    @include('partials.echo')
     @if(config('theme.external_css'))
         <link href="{{ config('theme.external_css') }}" rel="stylesheet">
     @endif

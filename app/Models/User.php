@@ -103,4 +103,14 @@ class User extends AuthUser implements CanResetPassword, Auditable
     {
         return null !== $this->roles()->where('name', $role)->first();
     }
+
+    /**
+     * The channels the user receives notification broadcasts on.
+     *
+     * @return string
+     */
+    public function receivesBroadcastNotificationsOn()
+    {
+        return 'App.Models.User.'.$this->id;
+    }
 }

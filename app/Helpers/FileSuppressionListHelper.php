@@ -306,12 +306,13 @@ class FileSuppressionListHelper
             }
 
             if ($suppressionList) {
-                if ($this->file->user) {
-                    // @todo - Notify user by email (if desired) and push notification.
-                    // $this->file->user->notify(new ListReady($suppressionList->id));
-                } else {
-                    // @todo - Notify by email if provided.
+                // Fires standard notification.
+                $notification = new ListReady($suppressionList->id);
+                if ($suppressionList->user) {
+                    $suppressionList->user->notify($notification);
                 }
+                // Dispatches push notifications.
+                event($notification);
             }
         }
 

@@ -1,10 +1,10 @@
 @component('mail::message')
-# Introduction
+# Your Suppression List is Ready
 
-The body of your message.
+Your suppression list has been fully uploaded and is ready for use.
 
-@component('mail::button', ['url' => ''])
-Button Text
+@component('mail::button', ['url' => route('suppressionList', ['id' => $id])])
+Open Suppression List
 @endcomponent
 
 Thanks,<br>

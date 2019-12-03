@@ -2,22 +2,26 @@
 
 namespace App\Notifications;
 
+use App\Events\Broadcast;
 use App\Models\SuppressionList;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use NotificationChannels\PusherPushNotifications\PusherChannel;
-use NotificationChannels\PusherPushNotifications\PusherMessage;
 
-class ListReady extends Notification implements ShouldQueue
+class ListReady extends Notification implements ShouldBroadcast
 {
-    use Queueable;
+    use Dispatchable, Queueable;
 
     public $timeout = 60;
 
     /** @var int */
     protected $suppressionListId;
+
+    protected $suppressionList;
 
     /**
      * ListReady constructor.
@@ -39,7 +43,7 @@ class ListReady extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['mail', 'database', PusherChannel::class];
+        return ['mail', 'broadcast'];
     }
 
     /**
@@ -51,7 +55,7 @@ class ListReady extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)->markdown('mail.list.ready');
+        return (new MailMessage)->markdown('mail.list.ready', $this->toArray($notifiable));
     }
 
     /**
@@ -64,17 +68,39 @@ class ListReady extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         return [
-            //
+            'message' => __('Your suppression list is ready to use.'),
+            'name'    => $this->suppressionList()->name,
+            'id'      => $this->suppressionList()->id,
+            'user'    => $this->suppressionList()->user,
         ];
     }
 
-    public function toPushNotification($notifiable)
+    /**
+     * @return \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model
+     */
+    private function suppressionList()
     {
-        $suppressionList = SuppressionList::query()->findOrFail($this->suppressionListId);
+        if (!$this->suppressionList) {
+            $this->suppressionList = SuppressionList::query()->findOrFail($this->suppressionListId);
+        }
 
-        return PusherMessage::create()
-            ->badge(1)
-            ->sound('success')
-            ->body('Suppression list '.$suppressionList->name.' is ready for you.');
+        return $this->suppressionList;
+    }
+
+    public function broadcastOn()
+    {
+        return new PrivateChannel('App.Models.User.'.$this->suppressionList()->user->id); // 'App.User.'.$this->userId
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     *
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

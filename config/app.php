@@ -181,7 +181,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\NovaServiceProvider::class,
         App\Providers\NovaServiceProvider::class,
@@ -193,7 +193,7 @@ return [
         App\Providers\ExcelCustomServiceProvider::class,
         Maatwebsite\LaravelNovaExcel\LaravelNovaExcelServiceProvider::class,
         Kris\LaravelFormBuilder\FormBuilderServiceProvider::class,
-        Yajra\DataTables\DataTablesServiceProvider::class,
+        // Yajra\DataTables\DataTablesServiceProvider::class,
         OwenIt\Auditing\AuditingServiceProvider::class,
         Spatie\Referer\RefererServiceProvider::class,
         NotificationChannels\PusherPushNotifications\PusherPushNotificationsServiceProvider::class,
