@@ -14112,6 +14112,23 @@ th {
   clip: auto;
 }
 
+.has-badge[data-count]:after {
+  position: absolute;
+  right: 0;
+  top: 1%;
+  content: attr(data-count);
+  font-size: 30%;
+  padding: 0.6em;
+  border-radius: 999px;
+  line-height: 0.75em;
+  color: #fff;
+  background: #d9534f;
+  text-align: center;
+  min-width: 2em;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
 /*
  * The MIT License
  * Copyright (c) 2012 Matias Meno <m@tias.me>

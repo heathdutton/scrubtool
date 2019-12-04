@@ -59,6 +59,21 @@
                         @endif
                     @else
                         <li class="nav-item dropdown">
+                            <a id="notifications" class="nav-link" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                <span class="fa fa-bell has-badge" data-count="{{ Auth::user()->unreadNotifications->count() }}"></span>
+                            </a>
+                            <ul class="dropdown-menu notify-drop" aria-labelledby="notifications">
+                                @foreach(Auth::user()->unreadNotifications as $notification)
+                                    @if($notification->data['message'])
+                                        <a class="dropdown-item" href="{{ $notification->data['url'] ?? '#' }}">
+                                            <i class="fa fa-{{ $notification->data['icon'] ?? 'info' }}"></i>
+                                            {{ $notification->data['message'] ?? '' }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
                             <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                 @isset(Auth::user()->email)
                                     <img
