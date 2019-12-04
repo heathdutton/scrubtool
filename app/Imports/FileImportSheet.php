@@ -8,7 +8,7 @@ use App\Helpers\FileHashHelper;
 use App\Helpers\FileSuppressionListHelper;
 use App\Models\File;
 use App\Models\SuppressionList;
-use App\Notifications\ListReady;
+use App\Notifications\ListReadyNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;

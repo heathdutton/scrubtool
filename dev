@@ -27,11 +27,11 @@ $php --version
 dir=$(pwd)
 queue="artisan queue:listen --queue=analyze,run,notify,build,delete --timeout=0 -vv"
 npm="npm run development -- --watch --display errors-only"
-serve="$php $dir/artisan serve --port=1234 -vv"
+serve="artisan serve --port=1234 -vv"
 PrevCI=$CI
 
 function killqueue() {
-    ps ax | grep "$queue" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+    ps ax | grep "artisan queue:listen" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
 }
 
 function killnpm() {
@@ -47,14 +47,14 @@ function ctrl_c() {
     killqueue
     killnpm
     export CI=$PrevCI
-    exit
+    exit 0
 }
 
 if [ "$1" == "tinker" ]; then
     echo "Prepping Tinker"
-    $php $dir/artisan config:clear -v
-    $php $dir/artisan cache:clear -v
-    $php $dir/artisan tinker
+    $php artisan config:clear -v
+    $php artisan cache:clear -v
+    $php artisan tinker
     exit;
 fi
 
@@ -79,28 +79,28 @@ else
 fi
 
 echo ; echo "Clearing/optimizing cache."
-$php $dir/artisan optimize -v
-$php $dir/artisan cache:clear -v
-$php $dir/artisan route:cache -v
-$php $dir/artisan view:cache -v
-$php $dir/artisan config:cache -v
+$php artisan optimize -v
+$php artisan cache:clear -v
+$php artisan route:cache -v
+$php artisan view:cache -v
+$php artisan config:cache -v
 
 if [ "$1" == "fresh" ]; then
     echo ; echo "Building fresh database."
-    $php $dir/artisan migrate:fresh --seed -v
+    $php artisan migrate:fresh --seed -v
 else
     echo ; echo "Running any new migrations."
-    $php $dir/artisan migrate -v
+    $php artisan migrate -v
 fi
 
 echo ; echo "Starting queue processor."
 killqueue
-$php $dir/$queue &
+$php $queue &
 
 while true
 do
     echo ; echo "Starting server."
-    $serve
+    $php $dir/$serve
     echo "Terminated: $?"
     if [[ "$?" == "130" ]]
     then

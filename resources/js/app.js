@@ -6,5 +6,5 @@ require('./fileupload');
 require('./tooltips');
 require('./file');
 require('./form');
-require('./echo');
 require('./content');
+require('./echo');

@@ -3,7 +3,7 @@
 
 Your suppression list has been fully uploaded and is ready for use.
 
-@component('mail::button', ['url' => route('suppressionList', ['id' => $id])])
+@component('mail::button', ['url' => $url])])
 Open Suppression List
 @endcomponent
 

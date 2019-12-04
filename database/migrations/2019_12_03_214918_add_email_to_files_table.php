@@ -15,7 +15,7 @@ class AddEmailToFilesTable extends Migration
     {
         Schema::table('files', function (Blueprint $table) {
             if (!Schema::hasColumn('files', 'email')) {
-                $table->string('email');
+                $table->string('email')->nullable();
             }
         });
     }

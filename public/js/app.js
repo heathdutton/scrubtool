@@ -50876,9 +50876,9 @@ __webpack_require__(/*! ./file */ "./resources/js/file.js");
 
 __webpack_require__(/*! ./form */ "./resources/js/form.js");
 
-__webpack_require__(/*! ./echo */ "./resources/js/echo.js");
-
 __webpack_require__(/*! ./content */ "./resources/js/content.js");
+
+__webpack_require__(/*! ./echo */ "./resources/js/echo.js");
 
 /***/ }),
 
@@ -50966,33 +50966,24 @@ __webpack_require__.r(__webpack_exports__);
  * for events that are broadcast by Laravel. Echo and event broadcasting
  * allows your team to easily build robust real-time web applications.
  */
+
 window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
 
-
 st.echoStart = function () {
-  var key = $('meta[name="pusher-key"]:first').attr('content');
+  var key = $('meta[name="pusher-key"]:first').attr('content'),
+      cluster = $('meta[name="pusher-cluster"]:first').attr('content'),
+      userId = $('meta[name="user-id"]:first').attr('content');
 
-  if (key.length) {
+  if (key.length && cluster.length && userId.length) {
     window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
       broadcaster: 'pusher',
       key: key,
-      cluster: $('meta[name="pusher-cluster"]:first').attr('content') // ,
-      // encrypted: true
-
+      cluster: cluster,
+      encrypted: true
     });
-    var userId = $('meta[name="user-id"]:first').attr('content');
-
-    if (userId.length) {
-      var privateChannel = 'users.' + userId;
-      window.Echo.channel(privateChannel).listen('list.ready', function (data) {
-        alert(JSON.stringify(data));
-      });
-      console.log('listening to ' + privateChannel);
-    } // var channel = Echo.channel('scrubtool');
-    // channel.listen('.scrubtool', function (data) {
-    //     alert(JSON.stringify(data));
-    // });
-
+    window.Echo["private"]('App.Models.User.' + userId).notification(function (n) {
+      console.log(n);
+    });
   }
 };
 

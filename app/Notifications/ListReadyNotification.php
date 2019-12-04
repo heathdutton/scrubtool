@@ -2,21 +2,17 @@
 
 namespace App\Notifications;
 
-use App\Events\Broadcast;
 use App\Models\SuppressionList;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ListReady extends Notification implements ShouldBroadcast
+class ListReadyNotification extends Notification // implements ShouldQueue
 {
-    use Dispatchable, Queueable;
+    // use Queueable;
 
-    public $timeout = 60;
+    public $data;
 
     /** @var int */
     protected $suppressionListId;
@@ -43,7 +39,7 @@ class ListReady extends Notification implements ShouldBroadcast
      */
     public function via($notifiable)
     {
-        return ['mail', 'broadcast'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -68,10 +64,12 @@ class ListReady extends Notification implements ShouldBroadcast
     public function toArray($notifiable)
     {
         return [
-            'message' => __('Your suppression list is ready to use.'),
-            'name'    => $this->suppressionList()->name,
-            'id'      => $this->suppressionList()->id,
-            'user'    => $this->suppressionList()->user,
+            'message'  => __('Your suppression list is ready to use.'),
+            'id'       => $this->suppressionList()->id,
+            'name'     => $this->suppressionList()->name,
+            'url'      => route('suppressionList', ['id' => $this->suppressionList()->id]),
+            'userId'   => $this->suppressionList()->user->id,
+            'userName' => $this->suppressionList()->user->name,
         ];
     }
 
@@ -87,20 +85,16 @@ class ListReady extends Notification implements ShouldBroadcast
         return $this->suppressionList;
     }
 
-    public function broadcastOn()
-    {
-        return new PrivateChannel('App.Models.User.'.$this->suppressionList()->user->id); // 'App.User.'.$this->userId
-    }
-
     /**
-     * Get the broadcastable representation of the notification.
-     *
-     * @param  mixed  $notifiable
+     * @param $notifiable
      *
      * @return BroadcastMessage
      */
     public function toBroadcast($notifiable)
     {
-        return new BroadcastMessage($this->toArray($notifiable));
+        $message        = new BroadcastMessage($this->toArray($notifiable));
+        $message->queue = $this->queue;
+
+        return $message;
     }
 }
