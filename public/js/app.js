@@ -51285,15 +51285,15 @@ st.notifications = function ($context) {
       $dropdown = $nav.parent('.nav-item'),
       $template = $dropdown.find('.dropdown-item.d-none:first'),
       $notifications = $dropdown.find('ul:first'),
+      unreadCount = $bell.attr('data-count') || 0,
       markAllAsRead = function markAllAsRead() {
-    if (st.notificationCount) {
+    if (unreadCount) {
       $bell.removeClass('has-badge').attr('data-count', '0');
       $.getJSON($nav.attr('href'));
-      st.notificationCount = 0;
+      unreadCount = 0;
     }
   };
 
-  st.notificationCount = parseInt($bell.attr('data-count'));
   $nav.click(markAllAsRead);
   $dropdown.click(markAllAsRead);
 
@@ -51310,10 +51310,10 @@ st.notifications = function ($context) {
     }
 
     if (typeof d.message !== 'undefined') {
-      st.notificationCount++;
+      unreadCount++;
       $new.find('.message').text(d.message);
       $notifications.prepend($new);
-      $bell.addClass('has-badge').attr('data-count', st.notificationCount);
+      $bell.addClass('has-badge').attr('data-count', unreadCount);
     }
   };
 };
