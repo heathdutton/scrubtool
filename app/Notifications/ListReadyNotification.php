@@ -3,14 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\SuppressionList;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ListReadyNotification extends Notification // implements ShouldQueue
+class ListReadyNotification extends Notification
 {
-    // use Queueable;
 
     public $data;
 
@@ -64,9 +62,11 @@ class ListReadyNotification extends Notification // implements ShouldQueue
     public function toArray($notifiable)
     {
         return [
-            'message'  => __('Your suppression list is ready to use.'),
-            'id'       => $this->suppressionList()->id,
-            'name'     => $this->suppressionList()->name,
+            'message'  => __('Suppression list :suppressionList is ready.',
+                ['suppressionList' => $this->suppressionList()->name]),
+            // 'id'       => $this->suppressionList()->id,
+            // 'name'     => $this->suppressionList()->name,
+            'icon'     => 'list',
             'url'      => route('suppressionList', ['id' => $this->suppressionList()->id]),
             'userId'   => $this->suppressionList()->user->id,
             'userName' => $this->suppressionList()->user->name,

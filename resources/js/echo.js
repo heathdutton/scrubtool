@@ -19,8 +19,8 @@ st.echoStart = function () {
             encrypted: true
         });
         window.Echo.private('App.Models.User.' + userId)
-            .notification((n) => {
-                console.log(n);
+            .notification((d) => {
+                st.notificationNew(d);
             });
     }
 };

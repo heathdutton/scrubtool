@@ -31,3 +31,5 @@ Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists'
 Route::get('/lists/{id}', 'SuppressionListController@suppressionList')->name('suppressionList');
 
 Route::any('/defaults', 'ActionDefaultsController')->name('defaults');
+
+Route::get('/notification/read/all', 'NotificationController@readAll')->name('notificationReadAll');

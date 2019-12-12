@@ -8,3 +8,4 @@ require('./file');
 require('./form');
 require('./content');
 require('./echo');
+require('./notification');

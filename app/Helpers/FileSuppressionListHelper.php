@@ -311,8 +311,6 @@ class FileSuppressionListHelper
                 if ($suppressionList->user) {
                     $suppressionList->user->notify($notification);
                 }
-                // Dispatches push notifications.
-                event($notification);
             }
         }
 
