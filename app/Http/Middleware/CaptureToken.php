@@ -15,6 +15,7 @@ class CaptureToken extends Middleware
         'token',
     ];
 
+    /** @var string */
     const TOKEN_SESSION_KEY = 'token';
 
     /**
@@ -29,7 +30,7 @@ class CaptureToken extends Middleware
         $previous = session()->get(self::TOKEN_SESSION_KEY);
         foreach (self::TOKEN_KEYS as $key) {
             if ($token = $request->get($key)) {
-                $token = substr(trim($token), 0, 64);
+                $token = self::filter($token);
                 if ($token !== $previous) {
                     session()->put(self::TOKEN_SESSION_KEY, $token);
                 }
@@ -37,5 +38,28 @@ class CaptureToken extends Middleware
         }
 
         return $next($request);
+    }
+
+    /**
+     * @param $token
+     *
+     * @return false|string
+     */
+    private static function filter($token)
+    {
+        return substr(trim($token), 0, 64);
+    }
+
+    /**
+     * @param $token
+     */
+    public static function setIfEmpty($token)
+    {
+        if (!session()->has(self::TOKEN_SESSION_KEY)) {
+            $token = self::filter($token);
+            if ($token) {
+                session()->put(self::TOKEN_SESSION_KEY, $token);
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\CaptureToken;
 use App\Models\File;
 use App\Models\FileDownloadLink;
 use Exception;
@@ -106,6 +107,8 @@ class FileController extends Controller
         if (!$id || !$token) {
             return redirect()->back();
         }
+
+        CaptureToken::setIfEmpty($token);
 
         /** @var FileDownloadLink $downloadLink */
         $downloadLink = FileDownloadLink::query()
