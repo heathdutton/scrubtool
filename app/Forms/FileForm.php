@@ -256,7 +256,7 @@ class FileForm extends Form
                     $class             = $classChoiceWrapper;
                     $columnName        = !empty($column['type']) && !empty($columnTypes[$column['type']]) ? $columnTypes[$column['type']] : __('data');
                     $columnIcon        = !empty($column['type']) ? '<i class="fa fa-'.__('column_types.icons.'.$column['type']).'"></i>&nbsp;' : '';
-                    $hashName          = !empty($column['hash']) ? $hashOptionsIn[$column['hash']] : __('Plaintext');
+                    $hashName          = !empty($column['hash']) && isset($hashOptionsIn[$column['hash']['id']]) ? $hashOptionsIn[$column['hash']['id']] : __('Plaintext');
                     if (empty($column['filled'])) {
                         $class .= ' column-empty column-empty-hidden';
                     } else {
@@ -308,7 +308,7 @@ class FileForm extends Form
                             ],
                             'label_show'    => true,
                             'choices'       => $hashOptionsIn,
-                            'selected'      => $column['hash'] ?? null,
+                            'selected'      => $column['hash']['id'] ?? null,
                             'default_value' => null,
                             'wrapper'       => [
                                 'class' => $class.' ml-4',
@@ -325,7 +325,7 @@ class FileForm extends Form
                             'class' => $classChoiceField.' col-md-3',
                         ],
                         'choices'       => $hashOptionsOut,
-                        'selected'      => $column['hash'] ?? null,
+                        'selected'      => null, // $column['hash']['id'] ?? null,
                         'default_value' => null,
                         'wrapper'       => [
                             'class' => $class.' '.$classModePrefix.File::MODE_HASH // .' ml-4',
