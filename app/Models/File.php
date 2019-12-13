@@ -743,6 +743,64 @@ class File extends Model implements Auditable
     }
 
     /**
+     * @return array
+     * @throws Exception
+     */
+    public function stats()
+    {
+        $stats = self::STATS_DEFAULT;
+        foreach (self::STATS_DEFAULT as $stat => $v) {
+            if (!empty($this->{$stat})) {
+                $stats[$stat] = $this->{$stat};
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Approximate the time the action will be complete.
+     *
+     * @return mixed|string
+     * @throws Exception
+     */
+    public function eta()
+    {
+        if ($this->run_started
+            && !$this->run_completed
+            && $this->progress() >= .5
+        ) {
+            /** @var Carbon $start */
+            $startMs = $this->run_started->getPreciseTimestamp(3);
+            $nowMs   = (new Carbon())->getPreciseTimestamp(3);
+            $etaMs   = (($nowMs - $startMs) * 100 / max(.5, $this->progress())) + $nowMs;
+            $eta     = (new Carbon())->setTimestamp($etaMs / 1000);
+
+            return $eta->format(File::DATE_FORMAT);
+        }
+
+        return '';
+    }
+
+    /**
+     * @return int|mixed
+     */
+    public function progress()
+    {
+        static $percentage;
+
+        if (!$percentage) {
+            $total = $this->rows_total ?? 0;
+            if (!$total) {
+                return 100;
+            }
+            $percentage = min(100, max(0, 100 / $total * $this->rows_processed));
+        }
+
+        return $percentage;
+    }
+
+    /**
      * To be used to discern if an alternative treatment is necessary
      *
      * @return bool
@@ -751,25 +809,6 @@ class File extends Model implements Auditable
     {
         return $this->size > File::LARGE_FILE_BYTES
             && in_array($this->type, [Excel::CSV, Excel::TSV, Excel::HTML]);
-    }
-
-    /**
-     * @param  bool  $animated
-     *
-     * @return int|mixed
-     */
-    public function progress($animated = false)
-    {
-        $total = $this->rows_total ?? 0;
-        if (!$total) {
-            return 100;
-        }
-        $percentage = min(100, max(0, floor(100 / $total * $this->rows_processed)));
-        if (!$percentage && $animated) {
-            return 100;
-        }
-
-        return $percentage;
     }
 
     /**
