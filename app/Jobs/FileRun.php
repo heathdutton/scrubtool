@@ -2,16 +2,16 @@
 
 namespace App\Jobs;
 
-use App\Models\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheet;
 use App\Imports\LargeCsvReader;
-use App\Notifications\SuppressionListReadyNotification;
+use App\Models\File;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Date;
 use Maatwebsite\Excel\Excel;
 
 class FileRun implements ShouldQueue
@@ -42,8 +42,9 @@ class FileRun implements ShouldQueue
         $file = File::query()->findOrFail($this->fileId);
         if ($file) {
             if ($file->status & File::STATUS_READY) {
-                $file->status  = File::STATUS_RUNNING;
-                $file->message = '';
+                $file->status      = File::STATUS_RUNNING;
+                $file->run_started = Date::now();
+                $file->message     = '';
                 $file->save();
 
                 // @todo - Complete multiple sheet support and use FileImport here. Columns array must support multiple sheets to do this.
@@ -92,8 +93,9 @@ class FileRun implements ShouldQueue
 
                 $fileImport->finish();
 
-                $file->status  = File::STATUS_WHOLE;
-                $file->message = '';
+                $file->status        = File::STATUS_WHOLE;
+                $file->message       = '';
+                $file->run_completed = Date::now();
 
                 $this->scheduleDeletion($file, config('app.file_minutes_available'));
             }
