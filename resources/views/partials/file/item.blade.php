@@ -91,12 +91,12 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                 <p class="card-text text-{{ $class }}">{{ $file->message }}</p>
             @endif
             @if($file->status & \App\Models\File::STATUS_ADDED || $file->status & \App\Models\File::STATUS_ANALYSIS || $file->status & \App\Models\File::STATUS_READY || $file->status & \App\Models\File::STATUS_RUNNING)
-                <div>
-                    <div class="progress progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
+                <div class="progress">
+                    <div class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenofw="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
                         {{ $action }}
                     </div>
                 </div>
-                <time datetime="{{ $file->eta() }} UTC" class="eta countdown" style="opacity: 0;"></time>
+                <time datetime="{{ $file->eta() }} UTC" class="eta countdown text-center" style="opacity: 0;"></time>
             @else
             @endif
             @if($file->form)

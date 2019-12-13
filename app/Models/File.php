@@ -787,14 +787,16 @@ class File extends Model implements Auditable
      */
     public function progress()
     {
-        static $percentage;
+        static $percentage = 0;
 
         if (!$percentage) {
             $total = $this->rows_total ?? 0;
             if (!$total) {
                 return 100;
             }
-            $percentage = min(100, max(0, 100 / $total * $this->rows_processed));
+            if ($total * $this->rows_processed) {
+                $percentage = min(100, max(0, 100 / $total * $this->rows_processed));
+            }
         }
 
         return $percentage;

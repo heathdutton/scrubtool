@@ -7,6 +7,11 @@
     }
 }
 
+.progress .progress-bar.jquery {
+    -webkit-transition: none !important;
+    transition: none !important;
+}
+
 .progress-bar-auto-1 {
     -webkit-animation: pb 1s ease-in-out .5s forwards, progress-bar-stripes 1s linear infinite;
     animation: pb 1s ease-in-out .5s forwards, progress-bar-stripes 1s linear infinite;

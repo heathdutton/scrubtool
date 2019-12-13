@@ -45,12 +45,14 @@ input[type=button] {
 .submit-animate.btn-info {
     border-color: $info;
 }
+
 .submit-animate {
     transition: border-radius 0.25s ease-in-out,
     background-color .4s ease-in-out,
     width .2s ease-in-out,
     height .2s ease-in-out;
 }
+
 .submit-animate.submit-animating {
     border-radius: 50% !important;
     background: transparent;
@@ -87,3 +89,7 @@ input[type=button] {
     }
 }
 
+// Strange button height after npm update.
+.form-control {
+    height: auto;
+}

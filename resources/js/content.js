@@ -1,11 +1,16 @@
 st.loadContent = function (url, $destination, prepend, done) {
     $.getJSON(url, function (data) {
-        if (typeof data.success !== 'undefined' && data.html.length) {
+        if (
+            typeof data.success !== 'undefined'
+            && data.success
+            && typeof data.html !== 'undefined'
+            && data.html.length
+        ) {
             if (prepend) {
                 var $result = $(data.html);
                 $destination.prepend($result);
                 if (typeof done == 'function') {
-                    return done($result);
+                    return done($result, data);
                 }
             }
             else {
@@ -17,12 +22,17 @@ st.loadContent = function (url, $destination, prepend, done) {
 
                     $destination.replaceWith($result);
                     if (typeof done == 'function') {
-                        return done($result);
+                        return done($result, data);
                     }
                 }
             }
             if (typeof done == 'function') {
-                return done($destination);
+                return done($destination, data);
+            }
+        }
+        else {
+            if (typeof done == 'function') {
+                return done(null, data);
             }
         }
     });
