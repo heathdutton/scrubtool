@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\FileDownloadLink;
 use Exception;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
@@ -10,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Kris\LaravelFormBuilder\FormBuilderTrait;
@@ -91,14 +91,33 @@ class FileController extends Controller
             return $this->forceLogin($request);
         }
 
-        if (Carbon::now() > new Carbon($file->available_til ?? '', 'UTC')) {
-            // The file should have been deleted by now, likely the job failed.
-            $file->delete();
+        return $file->download();
+    }
 
-            return abort(404);
+    /**
+     * @param $id
+     * @param $token
+     * @param  Request  $request
+     *
+     * @return JsonResponse|RedirectResponse|void
+     */
+    public function downloadWithToken($id, $token, Request $request)
+    {
+        if (!$id || !$token) {
+            return redirect()->back();
         }
 
-        return $file->download();
+        /** @var FileDownloadLink $downloadLink */
+        $downloadLink = FileDownloadLink::query()
+            ->where('file_id', (int) $id)
+            ->where('token', (string) $token)
+            ->first();
+
+        if (!$downloadLink) {
+            return $this->forceLogin($request);
+        }
+
+        return $downloadLink->file->download();
     }
 
     /**

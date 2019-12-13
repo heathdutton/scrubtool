@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
@@ -48,7 +49,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class File extends Model implements Auditable
 {
-    use SoftDeletes, AuditableTrait;
+    use SoftDeletes, AuditableTrait, Notifiable;
 
     const DATE_FORMAT         = 'Y-m-d H:i:s.u';
 
@@ -298,14 +299,6 @@ class File extends Model implements Auditable
     }
 
     /**
-     * @return HasMany
-     */
-    public function downloads()
-    {
-        return $this->hasMany(FileDownload::class);
-    }
-
-    /**
      * Get the maximum file size the system currently supports for upload.
      *
      * @return float
@@ -469,10 +462,14 @@ class File extends Model implements Auditable
 
     /**
      * @return bool|BinaryFileResponse
+     * @throws Exception
      */
     public function download()
     {
-        if ($this->status & self::STATUS_WHOLE) {
+        if (
+            $this->status & self::STATUS_WHOLE
+            && Carbon::now() < new Carbon($this->available_til ?? '', 'UTC')
+        ) {
             // Use the original file name with a minor addition for clarity.
             $name = pathinfo($this->name, PATHINFO_FILENAME);
 
@@ -496,11 +493,28 @@ class File extends Model implements Auditable
 
             if ($this->getStorage()->exists($this->getRelativeLocation($location))) {
                 $this->downloads()->create();
+
                 return response()->download($location, $name);
             }
         }
 
         return response()->isNotFound();
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function downloads()
+    {
+        return $this->hasMany(FileDownload::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function downloadLinks()
+    {
+        return $this->hasMany(FileDownloadLink::class);
     }
 
     /**
@@ -515,6 +529,11 @@ class File extends Model implements Auditable
             $this->input_settings = (array) $values;
             $this->message        = '';
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
+            $this->email          = !empty($values['email']) ? filter_var($values['email'],
+                FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE) : ($this->user->email ?? null);
+            if ($this->email) {
+                session()->put('email', $this->email);
+            }
 
             if ($this->mode & File::MODE_SCRUB) {
                 if (empty($this->user->id)) {

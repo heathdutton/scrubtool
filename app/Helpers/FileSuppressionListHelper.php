@@ -6,7 +6,7 @@ use App\Models\File;
 use App\Models\FileSuppressionList;
 use App\Models\SuppressionList;
 use App\Models\SuppressionListSupport;
-use App\Notifications\ListReadyNotification;
+use App\Notifications\SuppressionListReadyNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -290,26 +290,27 @@ class FileSuppressionListHelper
             }
         }
 
-        if ($persisted) {
+        // Notify that the Suppression List is ready.
+        if ($persisted && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
             $suppressionList = null;
-
             if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
                 $suppressionList = $this->file->suppressionLists
                     ->whereIn('pivot.relationship', FileSuppressionList::REL_FILE_INTO_LIST)
                     ->first();
             }
-
             if ($this->file->mode & File::MODE_LIST_REPLACE) {
                 $suppressionList = $this->file->suppressionLists
                     ->whereIn('pivot.relationship', FileSuppressionList::REL_FILE_REPLACE_LIST)
                     ->first();
             }
-
             if ($suppressionList) {
-                // Fires standard notification.
-                $notification = new ListReadyNotification($suppressionList->id);
+                $notification = new SuppressionListReadyNotification($suppressionList);
                 if ($suppressionList->user) {
+                    // Notify the user.
                     $suppressionList->user->notify($notification);
+                } else {
+                    // Notify the owner of the file if possible.
+                    $suppressionList->file->notify($notification);
                 }
             }
         }

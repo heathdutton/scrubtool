@@ -66,25 +66,7 @@ class FileForm extends Form
                 'url'    => route('file.store', ['id' => $file->id]),
             ];
 
-            // $this->add('static_action', Field::STATIC, [
-            //     'tag'        => 'h5',
-            //     'label_show' => false,
-            //     'value'      => __('Settings'),
-            // ]);
-
-            $modeChoices = [];
-            if ($ownedListOptions || $globalListOptions) {
-                $modeChoices[File::MODE_SCRUB] = __('Scrub this file');
-            }
-            if ($file->user) {
-                $modeChoices[File::MODE_LIST_CREATE] = __('Create a new list');
-                if ($ownedListOptions) {
-                    $modeChoices[File::MODE_LIST_APPEND]  = __('Append a list');
-                    $modeChoices[File::MODE_LIST_REPLACE] = __('Replace a list');
-                }
-            }
-            $modeChoices[File::MODE_HASH] = __('Hash this file');
-            $this->add('mode', Field::CHOICE, [
+            $modeOptions = [
                 'rules'      => 'required',
                 'label'      => __('I want to'),
                 'label_attr' => [
@@ -94,27 +76,57 @@ class FileForm extends Form
                     'class' => $classChoiceField.' col-md-2',
                 ],
                 'label_show' => true,
-                'choices'    => $modeChoices,
+                'choices'    => [],
                 'selected'   => ActionDefaults::getDefault('mode') ?? $file->mode,
                 'wrapper'    => [
                     'class' => $classChoiceWrapper,
                 ],
-            ]);
-
-            if (!$file->user) {
-                $this->add('static_login', Field::STATIC, [
-                    'tag'        => 'a',
-                    'label_show' => false,
-                    'value'      => __('Login for more options'),
-                    'attr'       => [
-                        'href'  => route('login'),
-                        'class' => 'btn btn-secondary btn-sm ml-4 mt-3',
-                    ],
-                    'wrapper'    => [
-                        'class' => '',
-                    ],
-                ]);
+            ];
+            if ($ownedListOptions || $globalListOptions) {
+                $modeOptions['choices'][File::MODE_SCRUB] = __('Scrub this file');
             }
+            if ($file->user) {
+                $modeOptions['choices'][File::MODE_LIST_CREATE] = __('Create a new list');
+                if ($ownedListOptions) {
+                    $modeOptions['choices'][File::MODE_LIST_APPEND]  = __('Append a list');
+                    $modeOptions['choices'][File::MODE_LIST_REPLACE] = __('Replace a list');
+                }
+            }
+            $modeOptions['choices'][File::MODE_HASH] = __('Hash this file');
+            if (!$file->user) {
+                $modeOptions['attr']['data-toggle']         = 'tooltip';
+                $modeOptions['attr']['data-trigger']        = 'focus';
+                $modeOptions['attr']['data-placement']      = 'right';
+                $modeOptions['attr']['data-original-title'] = __(
+                    'You can scrub or hash your file anonymously. '.
+                    'To manage your own suppression lists<br/>'.
+                    'please <a href=":login">Login</a> or <a href=":register">Register</a>.',
+                    [
+                        'login'    => route('login'),
+                        'register' => route('register'),
+                    ]
+                );
+            }
+            $this->add('mode', Field::CHOICE, $modeOptions);
+
+            // if (!$file->user) {
+            //     $this->add('static_login', Field::STATIC, [
+            //         'tag'        => 'a',
+            //         'label'      => ' ',
+            //         'label_show' => true,
+            //         'label_attr' => [
+            //             'class' => $classChoiceLabel,
+            //         ],
+            //         'value'      => __('Login for more options'),
+            //         'attr'       => [
+            //             'href'  => route('login'),
+            //             'class' => 'btn-sm col-md-3 text-left',
+            //         ],
+            //         'wrapper'    => [
+            //             'class' => 'custom-control mb-3 row',
+            //         ],
+            //     ]);
+            // }
 
             if ($ownedListOptions) {
                 $this->add('suppression_list_append', Field::CHOICE, [
@@ -197,6 +209,24 @@ class FileForm extends Form
                 // }
             }
 
+            $this->add('email', $file->user ? Field::HIDDEN : Field::EMAIL, [
+                'label'         => __('Email'),
+                'label_show'    => true,
+                'label_attr'    => [
+                    'class' => $classChoiceLabel,
+                ],
+                'attr'          => [
+                    'class'               => 'form-control custom-control-inline col-md-3 pl-3',
+                    'data-toggle'         => 'tooltip',
+                    'data-placement'      => 'right',
+                    'data-original-title' => __('Optional: Address to be notified when this is done with a temporary download link.'),
+                ],
+                'wrapper'       => [
+                    'class' => $classChoiceWrapper,
+                ],
+                'default_value' => $file->user ? $file->user->email : session()->get('email', ''),
+            ]);
+
             if ($file->columns) {
                 $this->add('static_columns', Field::STATIC, [
                     'tag'        => 'h5',
@@ -239,7 +269,7 @@ class FileForm extends Form
                     } else {
                         $tooltip = __(':hash :name detected.', [
                                 'hash' => $hashName,
-                                'name' => $columnIcon . ' ' . $columnName,
+                                'name' => $columnIcon.' '.$columnName,
                             ]).'</br>'.
                             __('Samples').':<br/>&nbsp;&nbsp;'.
                             implode('<br/>&nbsp;&nbsp;', $column['samples']);
@@ -307,7 +337,7 @@ class FileForm extends Form
                         'label'   => $hiddenColumns > 1 ? __('Show :count extra columns',
                             ['count' => $hiddenColumns]) : __('Show 1 extra column'),
                         'wrapper' => [
-                            'class' => $classCheckWrapper.' pull-left mt-5',
+                            'class' => $classCheckWrapper.' col-md-3 pull-left mt-5',
                         ],
                     ]);
                 }

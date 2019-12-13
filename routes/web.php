@@ -26,6 +26,7 @@ Route::get('/file', 'FileController@file');
 Route::get('/files/{id}', 'FileController@file')->name('file');
 Route::post('/files/{id}', 'FileController@store')->name('file.store');
 Route::get('/files/{id}/download', 'FileController@download')->name('file.download');
+Route::get('/files/{id}/download/{token}', 'FileController@downloadWithToken')->name('file.download.with.token');
 
 Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists');
 Route::get('/lists/{id}', 'SuppressionListController@suppressionList')->name('suppressionList');

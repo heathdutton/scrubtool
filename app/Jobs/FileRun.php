@@ -6,6 +6,7 @@ use App\Models\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheet;
 use App\Imports\LargeCsvReader;
+use App\Notifications\SuppressionListReadyNotification;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -52,7 +53,7 @@ class FileRun implements ShouldQueue
                 /** @var FileImportSheet $fileImport */
                 $fileImport = new FileImportSheet($file);
 
-                list($excel, $reader) = resolve('excelCustom');
+                [$excel, $reader] = resolve('excelCustom');
                 $reader->setTotalRows($file->sheets);
 
                 if ($file->isLargeCsv()) {
