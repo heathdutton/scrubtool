@@ -159,10 +159,14 @@ class File extends Model implements Auditable
         }
         /** @var Collection $files */
         $files = $q->take((int) $limit)->get();
+
+        // Append forms if relevant and able for input or validation.
         if ($formBuilder) {
             foreach (collect($files) as $file) {
-                /** File $file */
-                $file->form = $file->buildForm($formBuilder);
+                if ($file->status & File::STATUS_INPUT_NEEDED) {
+                    /** File $file */
+                    $file->form = $file->buildForm($formBuilder);
+                }
             }
         }
 

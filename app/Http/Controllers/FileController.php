@@ -40,12 +40,14 @@ class FileController extends Controller
 
     /**
      * @param  int  $id
+     * @param  int  $status
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return bool|Factory|JsonResponse|RedirectResponse|View
+     * @return Factory|JsonResponse|RedirectResponse|View|void
+     * @throws Exception
      */
-    public function file($id, Request $request, FormBuilder $formBuilder)
+    public function file($id, $status = 0, Request $request, FormBuilder $formBuilder)
     {
         if (!$id) {
             return redirect()->back();
@@ -59,11 +61,23 @@ class FileController extends Controller
         }
 
         if ($request->ajax()) {
-            return response()->json([
-                'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
-                'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
-                'success'    => true,
-            ]);
+            if (!empty($file->form) || (int) $status !== $file->status) {
+                // Either input is needed, or the file mode has changed, produce a new template.
+                return response()->json([
+                    'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
+                    'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
+                    'success'    => true,
+                ]);
+            } else {
+                // Only stats may have changed since the last time the file was rendered.
+                return response()->json([
+                    'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
+                    'stats'      => $file->stats(),
+                    'progress'   => $file->progress(),
+                    'eta'        => $file->eta(),
+                    'success'    => true,
+                ]);
+            }
         } else {
             return view('files')->with([
                 'files'  => [$file],
