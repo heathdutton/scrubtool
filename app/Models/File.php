@@ -210,6 +210,8 @@ class File extends Model implements Auditable
         /** @var File $file */
         $file = self::create(self::STATS_DEFAULT + [
                 'name'            => $uploadedFile->getClientOriginalName() ?? 'na',
+                'run_started'     => null,
+                'run_completed'   => null,
                 'available_till'  => null,
                 'input_location'  => $uploadedFile->getRealPath(),
                 'output_location' => null,
@@ -361,6 +363,8 @@ class File extends Model implements Auditable
     {
         $dates   = parent::getDates();
         $dates[] = 'available_till';
+        $dates[] = 'run_started';
+        $dates[] = 'run_completed';
 
         return $dates;
     }
