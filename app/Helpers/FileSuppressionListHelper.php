@@ -6,7 +6,7 @@ use App\Models\File;
 use App\Models\FileSuppressionList;
 use App\Models\SuppressionList;
 use App\Models\SuppressionListSupport;
-use App\Notifications\SuppressionListReadyNotificationAbstract;
+use App\Notifications\SuppressionListReadyNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -304,7 +304,7 @@ class FileSuppressionListHelper
                     ->first();
             }
             if ($suppressionList) {
-                $notification = new SuppressionListReadyNotificationAbstract($suppressionList);
+                $notification = new SuppressionListReadyNotification($suppressionList);
                 if ($suppressionList->user) {
                     // Notify the user.
                     $suppressionList->user->notify($notification);

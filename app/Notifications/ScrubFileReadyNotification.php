@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-class ScrubFileReadyNotification extends AbstractNotification
+class ScrubFileReadyNotification extends NotificationAbstract
 {
 
     /** @var string */

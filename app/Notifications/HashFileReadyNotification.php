@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-class HashFileReadyNotification extends AbstractNotification
+class HashFileReadyNotification extends NotificationAbstract
 {
 
     /** @var string */

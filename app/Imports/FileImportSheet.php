@@ -8,8 +8,8 @@ use App\Helpers\FileHashHelper;
 use App\Helpers\FileSuppressionListHelper;
 use App\Models\File;
 use App\Models\SuppressionList;
-use App\Notifications\HashFileReadyNotificationAbstract;
-use App\Notifications\ScrubFileReadyNotificationAbstract;
+use App\Notifications\HashFileReadyNotification;
+use App\Notifications\ScrubFileReadyNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
@@ -252,7 +252,7 @@ class FileImportSheet implements ToModel
         }
         if ($this->file->mode & File::MODE_HASH) {
             // Notify the user of a file ready to download.
-            $notification = new HashFileReadyNotificationAbstract($this->file);
+            $notification = new HashFileReadyNotification($this->file);
             if ($this->file->user) {
                 // Notify the user.
                 $this->file->user->notify($notification);
@@ -263,7 +263,7 @@ class FileImportSheet implements ToModel
         }
         if ($this->file->mode & File::MODE_SCRUB) {
             // Notify the user of a file ready to download.
-            $notification = new ScrubFileReadyNotificationAbstract($this->file);
+            $notification = new ScrubFileReadyNotification($this->file);
             if ($this->file->user) {
                 // Notify the user.
                 $this->file->user->notify($notification);

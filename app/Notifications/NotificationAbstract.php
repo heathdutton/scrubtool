@@ -7,7 +7,7 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AbstractNotification extends Notification
+abstract class NotificationAbstract extends Notification
 {
 
     /** @var array */

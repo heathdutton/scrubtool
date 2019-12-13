@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-class SuppressionListReadyNotification extends AbstractNotification
+class SuppressionListReadyNotification extends NotificationAbstract
 {
 
     /** @var string */
