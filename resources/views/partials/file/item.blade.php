@@ -90,13 +90,13 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
             @if($file->message)
                 <p class="card-text text-{{ $class }}">{{ $file->message }}</p>
             @endif
-
             @if($file->status & \App\Models\File::STATUS_ADDED || $file->status & \App\Models\File::STATUS_ANALYSIS || $file->status & \App\Models\File::STATUS_READY || $file->status & \App\Models\File::STATUS_RUNNING)
-                <div class="progress">
-                    <div id="file-progress-{{ $file->id }}" class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
+                <div>
+                    <div class="progress progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenow="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
                         {{ $action }}
                     </div>
                 </div>
+                <time datetime="{{ $file->eta() }} UTC" class="eta countdown" style="opacity: 0;"></time>
             @else
             @endif
             @if($file->form)
@@ -104,21 +104,13 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
             @endif
             @if($file->status & (\App\Models\File::STATUS_WHOLE | \App\Models\File::STATUS_RUNNING))
                 <div class="row mt-3">
-                    @include('partials.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'label' => __('Rows')])
-                    @include('partials.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'label' => __('Records')])
-                    @include('partials.stat', ['icon' => 'close', 'class' => 'warning', 'value' => $file->stat('rows_invalid'), 'label' => __('Invalid')])
-                    @if($file->mode & \App\Models\File::MODE_HASH)
-                        @include('partials.stat', ['icon' => 'hashtag', 'class' => 'success', 'value' => $file->stat('rows_hashed'), 'label' => __('Hashed')])
-                    @endif
-                    @if($file->mode & \App\Models\File::MODE_SCRUB)
-                        @include('partials.stat', ['icon' => 'filter', 'class' => 'success', 'value' => $file->stat('rows_scrubbed'), 'label' => __('Scrubbed')])
-                    @endif
-                    @if($file->mode & (\App\Models\File::MODE_LIST_CREATE | \App\Models\File::MODE_LIST_APPEND | \App\Models\File::MODE_LIST_REPLACE))
-                        @include('partials.stat', ['icon' => 'check', 'class' => 'success', 'value' => $file->stat('rows_imported'), 'label' => __('Imported')])
-                    @endif
-                    @if($file->mode & (\App\Models\File::MODE_HASH | \App\Models\File::MODE_SCRUB))
-                        @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => number_format($file->downloads->count()), 'label' => __('Downloads')])
-                    @endif
+                    @include('partials.stat', ['icon' => 'align-justify', 'class' => '', 'value' => $file->stat('rows_total'), 'id' => 'rows_total', 'label' => __('Rows')])
+                    @include('partials.stat', ['icon' => 'align-left', 'class' => '', 'value' => $file->stat('rows_filled'), 'id' => 'rows_filled', 'label' => __('Records')])
+                    @include('partials.stat', ['icon' => 'close', 'class' => 'text-warning', 'value' => $file->stat('rows_invalid'), 'id' => 'rows_invalid', 'label' => __('Invalid')])
+                    @include('partials.stat', ['icon' => 'hashtag', 'class' => 'text-success', 'value' => $file->stat('rows_hashed'), 'id' => 'rows_hashed', 'label' => __('Hashed')])
+                    @include('partials.stat', ['icon' => 'filter', 'class' => 'text-success', 'value' => $file->stat('rows_scrubbed'), 'id' => 'rows_scrubbed', 'label' => __('Scrubbed')])
+                    @include('partials.stat', ['icon' => 'check', 'class' => 'text-success', 'value' => $file->stat('rows_imported'), 'id' => 'rows_imported', 'label' => __('Imported')])
+                    @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => number_format($file->downloads->count()), 'id' => '', 'label' => __('Downloads')])
                 </div>
                 <div class="row">
                     <div class="col-md-12 mt-3 mb-1">
@@ -142,9 +134,9 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                                             <div class="input-group-prepend"
                                                  data-toggle='tooltip' data-placement="bottom"
                                                  data-original-title='{{ __('File is available till') }} {{ $file->available_till }} UTC'>
-                                        <span class="input-group-text" id="file-dl-{{ $file->id }}">
-                                            <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
-                                        </span>
+                                                <span class="input-group-text" id="file-dl-{{ $file->id }}">
+                                                    <time datetime="{{ $file->available_till }} UTC" class="countdown" style="opacity: 0;">xh xxm xxs</time>
+                                                </span>
                                             </div>
                                         @endif
                                         <a class="form-control btn btn-{{ $class }}" aria-describedby="file-dl-{{ $file->id }}"
