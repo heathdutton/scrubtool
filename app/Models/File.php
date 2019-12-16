@@ -469,7 +469,7 @@ class File extends Model implements Auditable
     }
 
     /**
-     * @return bool|BinaryFileResponse
+     * @return BinaryFileResponse|void
      * @throws Exception
      */
     public function download()
@@ -506,7 +506,7 @@ class File extends Model implements Auditable
             }
         }
 
-        return response()->isNotFound();
+        return abort(404);
     }
 
     /**

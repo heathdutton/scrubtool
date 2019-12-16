@@ -76,7 +76,7 @@ class FileAnalyze implements ShouldQueue
                     $reader->setTotalRows($sheets);
                 }
 
-                // Now get the first chunk of the file for analysis via  so that we don't have to load,
+                // Now get the first chunk of the file for analysis so that we don't have to load,
                 // the entire file into ram.
                 if ($handle = fopen($input, 'r')) {
                     $data = fread($handle, File::LARGE_FILE_CHUNK);
