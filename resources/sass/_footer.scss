@@ -1,0 +1,17 @@
+html, body {
+    height: 100%;
+}
+
+#app {
+    min-height: 100%;
+    overflow: auto;
+    padding-bottom: $navbar-brand-height * 2;
+}
+
+footer {
+    position: relative;
+    margin-top: $navbar-brand-height * -4;
+    height: $navbar-brand-height * 4;
+    clear: both;
+    padding-top: $navbar-brand-height;
+}

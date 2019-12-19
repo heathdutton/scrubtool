@@ -2,10 +2,10 @@
 
 namespace App\Forms;
 
-use App\Models\File;
 use App\Helpers\ActionDefaults;
-use App\Helpers\FileAnalysisHelper;
+use App\Helpers\FileSuppressionListHelper;
 use App\Helpers\HashHelper;
+use App\Models\File;
 use App\Models\SuppressionList;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
@@ -66,25 +66,7 @@ class FileForm extends Form
                 'url'    => route('file.store', ['id' => $file->id]),
             ];
 
-            // $this->add('static_action', Field::STATIC, [
-            //     'tag'        => 'h5',
-            //     'label_show' => false,
-            //     'value'      => __('Settings'),
-            // ]);
-
-            $modeChoices = [];
-            if ($ownedListOptions || $globalListOptions) {
-                $modeChoices[File::MODE_SCRUB] = __('Scrub this file');
-            }
-            if ($file->user) {
-                $modeChoices[File::MODE_LIST_CREATE] = __('Create a new list');
-                if ($ownedListOptions) {
-                    $modeChoices[File::MODE_LIST_APPEND]  = __('Append a list');
-                    $modeChoices[File::MODE_LIST_REPLACE] = __('Replace a list');
-                }
-            }
-            $modeChoices[File::MODE_HASH] = __('Hash this file');
-            $this->add('mode', Field::CHOICE, [
+            $modeOptions = [
                 'rules'      => 'required',
                 'label'      => __('I want to'),
                 'label_attr' => [
@@ -94,27 +76,38 @@ class FileForm extends Form
                     'class' => $classChoiceField.' col-md-2',
                 ],
                 'label_show' => true,
-                'choices'    => $modeChoices,
+                'choices'    => [],
                 'selected'   => ActionDefaults::getDefault('mode') ?? $file->mode,
                 'wrapper'    => [
                     'class' => $classChoiceWrapper,
                 ],
-            ]);
-
-            if (!$file->user) {
-                $this->add('static_login', Field::STATIC, [
-                    'tag'        => 'a',
-                    'label_show' => false,
-                    'value'      => __('Login for more options'),
-                    'attr'       => [
-                        'href'  => route('login'),
-                        'class' => 'btn btn-secondary btn-sm ml-4 mt-3',
-                    ],
-                    'wrapper'    => [
-                        'class' => '',
-                    ],
-                ]);
+            ];
+            if ($ownedListOptions || $globalListOptions) {
+                $modeOptions['choices'][File::MODE_SCRUB] = __('Scrub this file');
             }
+            if ($file->user) {
+                $modeOptions['choices'][File::MODE_LIST_CREATE] = __('Create a new list');
+                if ($ownedListOptions) {
+                    $modeOptions['choices'][File::MODE_LIST_APPEND]  = __('Append a list');
+                    $modeOptions['choices'][File::MODE_LIST_REPLACE] = __('Replace a list');
+                }
+            }
+            $modeOptions['choices'][File::MODE_HASH] = __('Hash this file');
+            if (!$file->user) {
+                $modeOptions['attr']['data-toggle']         = 'tooltip';
+                $modeOptions['attr']['data-trigger']        = 'focus';
+                $modeOptions['attr']['data-placement']      = 'right';
+                $modeOptions['attr']['data-original-title'] = __(
+                    'You can scrub or hash your file anonymously. '.
+                    'To manage your own suppression lists<br/>'.
+                    'please <a href=":login">Login</a> or <a href=":register">Register</a>.',
+                    [
+                        'login'    => route('login'),
+                        'register' => route('register'),
+                    ]
+                );
+            }
+            $this->add('mode', Field::CHOICE, $modeOptions);
 
             if ($ownedListOptions) {
                 $this->add('suppression_list_append', Field::CHOICE, [
@@ -206,10 +199,15 @@ class FileForm extends Form
                         'class' => 'mt-3',
                     ],
                 ]);
-                $hashHelper     = new HashHelper();
-                $hashOptionsIn  = [null => __('Is plain text')];
-                $hashOptionsOut = [null => __('Leave as-is')];
-                $hiddenColumns  = 0;
+                $hashHelper        = new HashHelper();
+                $hashOptionsIn     = [null => __('Is plain text')];
+                $hashOptionsOut    = [null => __('Leave as-is')];
+                $hiddenColumns     = 0;
+                $columnTypes       = [];
+                $columnTypes[null] = __('Other data');
+                foreach (FileSuppressionListHelper::COLUMN_TYPES as $type) {
+                    $columnTypes[$type] = __('column_types.plural.'.$type);
+                }
                 foreach ($hashHelper->listChoices() as $key => $value) {
                     $hashOptionsIn[$key]  = __('Is a :hash hash', ['hash' => $value]);
                     $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
@@ -219,6 +217,9 @@ class FileForm extends Form
                     $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
                     $column['filled']  = $column['filled'] ?? false;
                     $class             = $classChoiceWrapper;
+                    $columnName        = !empty($column['type']) && !empty($columnTypes[$column['type']]) ? $columnTypes[$column['type']] : __('data');
+                    $columnIcon        = !empty($column['type']) ? '<i class="fa fa-'.__('column_types.icons.'.$column['type']).'"></i>&nbsp;' : '';
+                    $hashName          = !empty($column['hash']) && isset($hashOptionsIn[$column['hash']['id']]) ? $hashOptionsIn[$column['hash']['id']] : __('Plaintext');
                     if (empty($column['filled'])) {
                         $class .= ' column-empty column-empty-hidden';
                     } else {
@@ -227,19 +228,19 @@ class FileForm extends Form
                     array_walk($column['samples'], 'strip_tags');
                     if (!$column['filled']) {
                         $hiddenColumns++;
-                        $tooltip = __('Column appears to be empty');
+                        $tooltip = __('Column appears to be empty.');
                     } else {
-                        $tooltip = '<strong>'.__('Samples').':</strong><br/>'.
-                            implode('<br/>', $column['samples']);
+                        $tooltip = __(':hash :name detected.', [
+                                'hash' => $hashName,
+                                'name' => $columnIcon.' '.$columnName,
+                            ]).'</br>'.
+                            __('Samples').':<br/>&nbsp;&nbsp;'.
+                            implode('<br/>&nbsp;&nbsp;', $column['samples']);
                     }
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
-                        'choices'       => [
-                            FileAnalysisHelper::TYPE_EMAIL => __('Email addresses'),
-                            FileAnalysisHelper::TYPE_PHONE => __('Phone numbers'),
-                            null                           => __('Other data'),
-                        ],
+                        'choices'       => $columnTypes,
                         'selected'      => $column['type'] ?? null,
                         'default_value' => null,
                         'attr'          => [
@@ -270,7 +271,7 @@ class FileForm extends Form
                             ],
                             'label_show'    => true,
                             'choices'       => $hashOptionsIn,
-                            'selected'      => $column['hash'] ?? null,
+                            'selected'      => $column['hash']['id'] ?? null,
                             'default_value' => null,
                             'wrapper'       => [
                                 'class' => $class.' ml-4',
@@ -287,7 +288,7 @@ class FileForm extends Form
                             'class' => $classChoiceField.' col-md-3',
                         ],
                         'choices'       => $hashOptionsOut,
-                        'selected'      => $column['hash'] ?? null,
+                        'selected'      => null, // $column['hash']['id'] ?? null,
                         'default_value' => null,
                         'wrapper'       => [
                             'class' => $class.' '.$classModePrefix.File::MODE_HASH // .' ml-4',
@@ -299,7 +300,7 @@ class FileForm extends Form
                         'label'   => $hiddenColumns > 1 ? __('Show :count extra columns',
                             ['count' => $hiddenColumns]) : __('Show 1 extra column'),
                         'wrapper' => [
-                            'class' => $classCheckWrapper.' pull-left mt-5',
+                            'class' => $classCheckWrapper.' col-md-3 pull-left mt-5',
                         ],
                     ]);
                 }
@@ -366,5 +367,7 @@ class FileForm extends Form
         // return ['list_id' => ['Some other error about the Name field.']];
 
         // @todo - Ensure that we don't mix hash types with email/phone fields.
+
+        // @todo - Ensure the list to scrub against has coverage for the file provided.
     }
 }

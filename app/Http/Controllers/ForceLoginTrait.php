@@ -11,7 +11,7 @@ trait ForceLoginTrait
     /**
      * @param  Request  $request
      *
-     * @return JsonResponse|RedirectResponse
+     * @return JsonResponse|RedirectResponse|void
      */
     private function forceLogin(Request $request)
     {

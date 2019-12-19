@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Notifications;
+
+class ScrubFileReadyNotification extends NotificationAbstract
+{
+
+    /** @var string */
+    public $markdown = 'mail.default';
+
+    /**
+     * Tightly control the data for this notification with toArray.
+     *
+     * @param  mixed  $notifiable
+     *
+     * @return array
+     */
+    public function toArray($notifiable)
+    {
+        return [
+            'title'    => __('Your Scrubbed File is Ready to Download'),
+            'message'  => __('The file :file has finished being scrubbed. For the safety of your data the resulting file will be available to download for a limited time.',
+                ['file' => $this->object->name]),
+            'icon'     => 'filter',
+            'url'      => route('file.download.with.token',
+                [
+                    'id'    => $this->object->id,
+                    'token' => $this->object->downloadLinks()->create()->token,
+                ]),
+            'action'   => __('Download File'),
+            'userId'   => $this->object->user->id ?? '',
+            'userName' => $this->object->user->name ?? '',
+            'close'    => __('Thanks'),
+        ];
+    }
+
+}

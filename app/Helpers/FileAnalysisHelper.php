@@ -229,7 +229,12 @@ class FileAnalysisHelper
      */
     public static function getEmail($value)
     {
-        return filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+        $value = filter_var($value, FILTER_SANITIZE_EMAIL, FILTER_NULL_ON_FAILURE);
+        if ($value) {
+            $value = filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+        }
+
+        return $value;
     }
 
     /**
@@ -385,6 +390,9 @@ class FileAnalysisHelper
         if (self::isEmail($value)) {
             return SuppressionListSupport::TYPE_EMAIL;
         }
+        if (self::isIp($value)) {
+            return SuppressionListSupport::TYPE_IP;
+        }
         if ($this->isHash($value)) {
             return SuppressionListSupport::TYPE_HASH;
         }
@@ -393,6 +401,27 @@ class FileAnalysisHelper
         }
 
         return null;
+    }
+
+    /**
+     * @param $value
+     *
+     * @return bool
+     */
+    public static function isIp($value)
+    {
+        return (bool) self::getIp($value);
+    }
+
+    /**
+     * @param $value
+     *
+     * @return mixed
+     */
+    public static function getIp($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE | FILTER_NULL_ON_FAILURE);
     }
 
     private function isHash($value)

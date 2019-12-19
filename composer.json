@@ -16,6 +16,7 @@
     "require": {
         "php": "^7.2",
         "ext-json": "^1.6",
+        "aws/aws-sdk-php": "^3.123",
         "fideloper/proxy": "^4.0",
         "giggsey/libphonenumber-for-php": "^8.10",
         "kris/laravel-form-builder": "^1.22",
@@ -29,6 +30,7 @@
         "nova-cards/system-information-card": "^1.0",
         "owen-it/laravel-auditing": "^9.3",
         "php-junior/nova-logs": "^1.0",
+        "pusher/pusher-php-server": "^4.1",
         "radermacher/nova-current-environment-card": "^2.0",
         "spatie/laravel-referer": "^1.5",
         "themsaid/nova-cashier-manager": "^0.2.1",

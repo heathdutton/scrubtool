@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# ./dev         clear everything (except the database), run migrations and start a server, ready for realtime changes.
+# ./dev fresh   same as above but also with a fresh database (will purge all data)
+# ./dev tinker  just open a fresh tinker with all env variables loaded.
+#
+
+clear
+echo '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+echo '%       %%     %%%%%%%%        %%%%         %%%        *%%%%  %%%%%%  %%%         %%%          %%%        %%%%%%%        %%%%%  %%%%%%%'
+echo '%         %%   %%%%%%%  %%%%%%%%%%  %%%%%%%%%%%  %%%%%  %%%%  %%%%%%  %%%  %%%%%%  %%%%%%  %%%%%%  %%%%%%   %%%   %%%%%%  %%%%  %%%%%%%'
+echo '%%%         %% %%%%%%%    %%%%%%%#  %%%%%%%%%%%  %%%%%  %%%%  %%%%%%  %%%         %%%%%%%  %%%%%%  %%%%%%%  %%%  %%%%%%%%  %%%  %%%%%%%'
+echo '% %%%        %%%%%%%%%%%%%    %%%#  %%%%%%%%%%%       %%%%%%  %%%%%%  %%%  %%%%%%  %%%%%%  %%%%%%  %%%%%%%  %%%  %%%%%%%%  %%%  %%%%%%%'
+echo '%   %%%        %%%%%%%%%%%%%%  %%%  %%%%%%%%%%%  %%%%  %%%%%  %%%%%%  %%%  %%%%%%  %%%%%%  %%%%%%  %%%%%%%  %%%%  %%%%%%  %%%%  %%%%%%%'
+echo '%     %%       %%%%%%%        %%%%%        %%%%  %%%%%  %%%%%       *%%%%         %%%%%%%  %%%%%%%        %%%%%%%        %%%%%        %'
+echo '%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+
+if [ -z "$(which php73)" ]
+then
+  php=$(which php)
+else
+  php=$(which php73)
+fi
+
+$php --version
+
+dir=$(pwd)
+queue="artisan queue:listen --queue=analyze,run,notify,build,delete --timeout=0 -vv"
+npm="npm run development -- --watch --display errors-only"
+serve="artisan serve --port=1234 -vv"
+PrevCI=$CI
+
+function killqueue() {
+    ps ax | grep "artisan queue:listen" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+}
+
+function killnpm() {
+    ps ax | grep "$npm" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+}
+
+function killserve() {
+    ps ax | grep "$serve" | awk -F ' ' '{print $1}' | xargs kill -2 >/dev/null 2>&1
+}
+
+function ctrl_c() {
+    echo ; echo "Terminating (expect an exception)."
+    killqueue
+    killnpm
+    export CI=$PrevCI
+    exit 0
+}
+
+if [ "$1" == "tinker" ]; then
+    echo "Prepping Tinker"
+    $php artisan config:clear -v
+    $php artisan cache:clear -v
+    $php artisan tinker
+    exit;
+fi
+
+# Start trapping Ctrl-C to terminate everything we start here.
+trap ctrl_c INT
+
+echo ; echo "Starting asset compilation."
+export CI=true
+killnpm
+npm run watch &
+
+echo ; echo "Cleaninng private folder to preserve space."
+rm -rf ./storage/app/private
+
+if [ -z "$(which composer)" ]
+then
+    echo "Could not find composer"
+    exit 1;
+else
+    echo ; echo "Running composer install."
+    $php -n "$(which composer)" install
+fi
+
+echo ; echo "Clearing/optimizing cache."
+$php artisan optimize -v
+$php artisan cache:clear -v
+$php artisan route:cache -v
+$php artisan view:cache -v
+$php artisan config:cache -v
+
+if [ "$1" == "fresh" ]; then
+    echo ; echo "Building fresh database."
+    $php artisan migrate:fresh --seed -v
+else
+    echo ; echo "Running any new migrations."
+    $php artisan migrate -v
+fi
+
+echo ; echo "Starting queue processor."
+killqueue
+$php $queue &
+
+while true
+do
+    echo ; echo "Starting server."
+    $php $dir/$serve
+    echo "Terminated: $?"
+    if [[ "$?" == "130" ]]
+    then
+        ctrl_c
+    else
+        if [[ "$?" == "1" ]]
+        then
+            sleep 5
+        fi
+    fi
+done

@@ -2,7 +2,9 @@ st.form = function ($context) {
     $('a.btn, input:submit.btn, input:button.btn', $context)
         .off('click.submit-animate')
         .on('click.submit-animate', function () {
-            var $t = $(this);
+            var $t = $(this),
+                h = $t.outerHeight(),
+                w = $t.outerWidth();
             if (!$t.hasClass('submit-animate')) {
                 var $overlay = $('<div>').css({
                     'display': 'block',
@@ -16,8 +18,8 @@ st.form = function ($context) {
                 });
                 var $wrap = $('<div class="text-center">')
                     .css({
-                        'width': $t.outerWidth(),
-                        'height': $t.outerHeight(),
+                        'width': w,
+                        'height': h,
                         'left': $t.position().left,
                         'right': $t.position().right,
                         'margin': '0 auto'
@@ -29,7 +31,12 @@ st.form = function ($context) {
                     // if ($icon.length) {
                     //     var $newIcon = $icon.first().clone().appendTo($wrap);
                     // }
-                    $t.addClass('submit-animate').addClass('submit-animating');
+                    $t.addClass('submit-animate')
+                        .animate({
+                            'height': h,
+                            'width': h
+                        }, 100)
+                        .addClass('submit-animating');
                 }, 10);
                 $overlay.animate({
                     'opacity': .3
@@ -40,9 +47,14 @@ st.form = function ($context) {
                     }, 300, function () {
                         $overlay.remove();
                         $t.unwrap($wrap);
-                        $t.removeClass('submit-animate').removeClass('submit-animating');
+                        $t.removeClass('submit-animate')
+                            .animate({
+                                'height': h,
+                                'width': w
+                            }, 100)
+                            .removeClass('submit-animating');
                     });
-                }, 1500);
+                }, 2000);
             }
         });
 };

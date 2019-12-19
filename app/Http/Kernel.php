@@ -5,8 +5,9 @@ namespace App\Http;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CheckForMaintenanceMode;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\HttpsForce;
 use App\Http\Middleware\RedirectIfAuthenticated;
-use App\Http\Middleware\TokenCapture;
+use App\Http\Middleware\CaptureToken;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -38,6 +39,7 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         TrustProxies::class,
+        HttpsForce::class,
         CheckForMaintenanceMode::class,
         ValidatePostSize::class,
         TrimStrings::class,
@@ -59,7 +61,7 @@ class Kernel extends HttpKernel
             VerifyCsrfToken::class,
             SubstituteBindings::class,
             CaptureReferer::class,
-            TokenCapture::class,
+            CaptureToken::class,
         ],
 
         'api' => [

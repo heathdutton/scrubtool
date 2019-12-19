@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\FileForm;
+use App\Http\Middleware\CaptureToken;
 use App\Models\File;
+use App\Models\FileDownloadLink;
 use Exception;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
@@ -10,7 +13,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Redirector;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Kris\LaravelFormBuilder\FormBuilderTrait;
@@ -39,12 +41,14 @@ class FileController extends Controller
 
     /**
      * @param  int  $id
+     * @param  int  $status
      * @param  Request  $request
      * @param  FormBuilder  $formBuilder
      *
-     * @return bool|Factory|JsonResponse|RedirectResponse|View
+     * @return Factory|JsonResponse|RedirectResponse|View|void
+     * @throws Exception
      */
-    public function file($id, Request $request, FormBuilder $formBuilder)
+    public function file($id, $status = 0, Request $request, FormBuilder $formBuilder)
     {
         if (!$id) {
             return redirect()->back();
@@ -58,11 +62,26 @@ class FileController extends Controller
         }
 
         if ($request->ajax()) {
-            return response()->json([
-                'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
-                'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
-                'success'    => true,
-            ]);
+            if (
+                (!empty($file->form) && $file->form instanceof FileForm)
+                || intval($status) !== $file->status
+            ) {
+                // Either input is needed, or the file mode has changed, produce a new template.
+                return response()->json([
+                    'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
+                    'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
+                    'success'    => true,
+                ]);
+            } else {
+                // Only stats may have changed since the last time the file was rendered.
+                return response()->json([
+                    'updated_at' => $file->updated_at->format(File::DATE_FORMAT),
+                    'stats'      => $file->stats(),
+                    'progress'   => $file->progress(),
+                    'eta'        => $file->eta(),
+                    'success'    => true,
+                ]);
+            }
         } else {
             return view('files')->with([
                 'files'  => [$file],
@@ -91,14 +110,35 @@ class FileController extends Controller
             return $this->forceLogin($request);
         }
 
-        if (Carbon::now() > new Carbon($file->available_til ?? '', 'UTC')) {
-            // The file should have been deleted by now, likely the job failed.
-            $file->delete();
+        return $file->download();
+    }
 
-            return abort(404);
+    /**
+     * @param $id
+     * @param $token
+     * @param  Request  $request
+     *
+     * @return JsonResponse|RedirectResponse|void
+     */
+    public function downloadWithToken($id, $token, Request $request)
+    {
+        if (!$id || !$token) {
+            return redirect()->back();
         }
 
-        return $file->download();
+        CaptureToken::setIfEmpty($token);
+
+        /** @var FileDownloadLink $downloadLink */
+        $downloadLink = FileDownloadLink::query()
+            ->where('file_id', (int) $id)
+            ->where('token', (string) $token)
+            ->first();
+
+        if (!$downloadLink) {
+            return $this->forceLogin($request);
+        }
+
+        return $downloadLink->file->download();
     }
 
     /**
@@ -132,7 +172,37 @@ class FileController extends Controller
 
         $file->saveInputSettings($file->form->getFieldValues());
 
-        return redirect('files/'.$file->id);
+        return redirect(route('file', ['id' => $file->id]));
+    }
+
+    /**
+     * @param $id
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return bool|RedirectResponse|Redirector
+     * @throws Exception
+     */
+    public function email($id, Request $request, FormBuilder $formBuilder)
+    {
+        if (!$id) {
+            return redirect()->back();
+        }
+
+        /** @var File $file */
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $id)->first();
+
+        if (!$file) {
+            return $this->forceLogin($request);
+        }
+
+        if (!$file->form->isValid()) {
+            return redirect()->back()->withErrors($file->form->getErrors())->withInput();
+        }
+
+        $file->setEmail($file->form->getFieldValues()['email'] ?? '', true);
+
+        return redirect(route('file', ['id' => $file->id]));
     }
 
     /**

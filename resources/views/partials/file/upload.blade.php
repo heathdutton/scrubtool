@@ -15,7 +15,7 @@
     @csrf
 </form>
 <div id="dropzone-preview-template" class="d-none">
-    <div class="card border-secondary mb-4">
+    <div class="card border-secondary">
         <span class="card-header text-secondary" role="tab">
             <div class="file-icon" class="bg-info">
                 <div>
@@ -30,9 +30,7 @@
         <div id="file1" class="collapse show" role="tabpanel" aria-labelledby="heading1">
             <div class="card-body">
                 <div class="progress">
-                    <div id="file-progress-1" class="progress-bar bg-dark bg-secondary" data-dz-uploadprogress role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-                        {{ __('Uploading') }}
-                    </div>
+                    <div id="file-progress-1" class="progress-bar bg-dark bg-secondary" data-dz-uploadprogress role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
                 </div>
                 {{-- <div class="dz-success-mark fa fa-check text-success"><span></span></div> --}}
                 {{-- <div class="dz-error-mark fa fa-stop text-danger"><span></span></div> --}}

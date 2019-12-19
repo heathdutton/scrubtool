@@ -13,12 +13,15 @@ class UserTableSeeder extends Seeder
      */
     public function run()
     {
-        $roleAdmin       = Role::where('name', 'admin')->first();
-        $admin           = new User();
-        $admin->name     = 'Admin';
-        $admin->email    = 'admin@scrubtool.com';
-        $admin->password = bcrypt('secret');
-        $admin->save();
+        /** @var User $admin */
+        $admin     = User::query()->firstOrCreate([
+            'id' => 1,
+        ], [
+            'name'     => 'Admin',
+            'email'    => 'admin@scrubtool.com',
+            'password' => bcrypt('secret'),
+        ]);
+        $roleAdmin = Role::query()->where('name', 'admin')->first();
         $admin->roles()->attach($roleAdmin);
     }
 }

@@ -36,8 +36,6 @@ class CreateFileDownloadsTable extends Migration
      */
     public function down()
     {
-        Schema::table('file_downloads', function (Blueprint $table) {
-            Schema::drop('file_downloads');
-        });
+        Schema::dropIfExists('file_downloads');
     }
 }

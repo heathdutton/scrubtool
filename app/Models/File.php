@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Forms\FileForm;
+use App\Forms\FileEmailForm;
 use App\Jobs\FileAnalyze;
 use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
@@ -20,10 +21,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
-use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
@@ -48,7 +49,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  */
 class File extends Model implements Auditable
 {
-    use SoftDeletes, AuditableTrait;
+    use SoftDeletes, AuditableTrait, Notifiable;
 
     const DATE_FORMAT         = 'Y-m-d H:i:s.u';
 
@@ -158,10 +159,25 @@ class File extends Model implements Auditable
         }
         /** @var Collection $files */
         $files = $q->take((int) $limit)->get();
+
+        // Append forms if relevant and able for input or validation.
         if ($formBuilder) {
             foreach (collect($files) as $file) {
-                /** File $file */
-                $file->form = $file->buildForm($formBuilder);
+                if ($file->status & File::STATUS_INPUT_NEEDED) {
+                    // Standard setting input form.
+                    /** File $file */
+                    $file->form = $formBuilder->create(FileForm::class, [], [
+                        'file' => $file,
+                    ]);
+                } elseif (
+                ($file->status & File::STATUS_RUNNING)
+                ) {
+                    // Only a change to the notification email is permitted now.
+                    /** File $file */
+                    $file->form = $formBuilder->create(FileEmailForm::class, [], [
+                        'file' => $file,
+                    ]);
+                }
             }
         }
 
@@ -209,6 +225,8 @@ class File extends Model implements Auditable
         /** @var File $file */
         $file = self::create(self::STATS_DEFAULT + [
                 'name'            => $uploadedFile->getClientOriginalName() ?? 'na',
+                'run_started'     => null,
+                'run_completed'   => null,
                 'available_till'  => null,
                 'input_location'  => $uploadedFile->getRealPath(),
                 'output_location' => null,
@@ -298,14 +316,6 @@ class File extends Model implements Auditable
     }
 
     /**
-     * @return HasMany
-     */
-    public function downloads()
-    {
-        return $this->hasMany(FileDownload::class);
-    }
-
-    /**
      * Get the maximum file size the system currently supports for upload.
      *
      * @return float
@@ -368,6 +378,8 @@ class File extends Model implements Auditable
     {
         $dates   = parent::getDates();
         $dates[] = 'available_till';
+        $dates[] = 'run_started';
+        $dates[] = 'run_completed';
 
         return $dates;
     }
@@ -456,23 +468,15 @@ class File extends Model implements Auditable
     }
 
     /**
-     * @param  FormBuilder  $formBuilder
-     *
-     * @return Form
-     */
-    public function buildForm(FormBuilder $formBuilder)
-    {
-        return $formBuilder->create(FileForm::class, [], [
-            'file' => $this,
-        ]);
-    }
-
-    /**
-     * @return bool|BinaryFileResponse
+     * @return BinaryFileResponse|void
+     * @throws Exception
      */
     public function download()
     {
-        if ($this->status & self::STATUS_WHOLE) {
+        if (
+            $this->status & self::STATUS_WHOLE
+            && Carbon::now() < new Carbon($this->available_til ?? '', 'UTC')
+        ) {
             // Use the original file name with a minor addition for clarity.
             $name = pathinfo($this->name, PATHINFO_FILENAME);
 
@@ -496,11 +500,28 @@ class File extends Model implements Auditable
 
             if ($this->getStorage()->exists($this->getRelativeLocation($location))) {
                 $this->downloads()->create();
+
                 return response()->download($location, $name);
             }
         }
 
-        return response()->isNotFound();
+        return abort(404);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function downloads()
+    {
+        return $this->hasMany(FileDownload::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function downloadLinks()
+    {
+        return $this->hasMany(FileDownloadLink::class);
     }
 
     /**
@@ -515,6 +536,7 @@ class File extends Model implements Auditable
             $this->input_settings = (array) $values;
             $this->message        = '';
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
+            $this->setEmail($values['email'] ?? '');
 
             if ($this->mode & File::MODE_SCRUB) {
                 if (empty($this->user->id)) {
@@ -619,6 +641,28 @@ class File extends Model implements Auditable
     }
 
     /**
+     * @param $email
+     * @param  bool  $save
+     */
+    public function setEmail($email, $save = false)
+    {
+        if (!empty($email)) {
+            $email = filter_var($email, FILTER_SANITIZE_EMAIL, FILTER_NULL_ON_FAILURE);
+            if ($email) {
+                $email = filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+                if ($email) {
+                    $this->email = $email;
+                    session()->put('email', $email);
+                    if ($save) {
+                        unset($this->form);
+                        $this->save();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * @param $prefix
      *
      * @return array
@@ -716,6 +760,65 @@ class File extends Model implements Auditable
     }
 
     /**
+     * @return array
+     * @throws Exception
+     */
+    public function stats()
+    {
+        $stats = self::STATS_DEFAULT;
+        foreach (self::STATS_DEFAULT as $stat => $v) {
+            if (!empty($this->{$stat})) {
+                $stats[$stat] = $this->{$stat};
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Approximate the time the action will be complete.
+     *
+     * @return mixed|string
+     * @throws Exception
+     */
+    public function eta()
+    {
+        $eta = '';
+        if ($this->run_started
+            && !$this->run_completed
+        ) {
+            $now     = now();
+            $startMs = $this->run_started->getPreciseTimestamp(3);
+            $nowMs   = $now->getPreciseTimestamp(3);
+            $durMs   = ($nowMs - $startMs) / max(.1, $this->progress()) * (100 - $this->progress());
+            $eta     = $now->addMillis(max(0, $durMs));
+            $eta     = $eta->format(DATE_ATOM);
+        }
+
+        return $eta;
+    }
+
+    /**
+     * @return int|mixed
+     */
+    public function progress()
+    {
+        static $percentage = 0;
+
+        if (!$percentage) {
+            if (!$this->rows_total) {
+                return 100;
+            }
+            if (!$this->rows_processed) {
+                return 100;
+            }
+            $percentage = min(100, max(0, 100 / $this->rows_total * $this->rows_processed));
+        }
+
+        return $percentage;
+    }
+
+    /**
      * To be used to discern if an alternative treatment is necessary
      *
      * @return bool
@@ -724,25 +827,6 @@ class File extends Model implements Auditable
     {
         return $this->size > File::LARGE_FILE_BYTES
             && in_array($this->type, [Excel::CSV, Excel::TSV, Excel::HTML]);
-    }
-
-    /**
-     * @param  bool  $animated
-     *
-     * @return int|mixed
-     */
-    public function progress($animated = false)
-    {
-        $total = $this->rows_total ?? 0;
-        if (!$total) {
-            return 100;
-        }
-        $percentage = min(100, max(0, floor(100 / $total * $this->rows_processed)));
-        if (!$percentage && $animated) {
-            return 100;
-        }
-
-        return $percentage;
     }
 
     /**
