@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\FileForm;
 use App\Http\Middleware\CaptureToken;
 use App\Models\File;
 use App\Models\FileDownloadLink;
@@ -61,7 +62,10 @@ class FileController extends Controller
         }
 
         if ($request->ajax()) {
-            if (!empty($file->form) || (int) $status !== $file->status) {
+            if (
+                (!empty($file->form) && $file->form instanceof FileForm)
+                || intval($status) !== $file->status
+            ) {
                 // Either input is needed, or the file mode has changed, produce a new template.
                 return response()->json([
                     'html'       => view('partials.file.item')->with(['file' => $file, 'upload' => false])->toHtml(),
@@ -168,7 +172,37 @@ class FileController extends Controller
 
         $file->saveInputSettings($file->form->getFieldValues());
 
-        return redirect('files/'.$file->id);
+        return redirect(route('file', ['id' => $file->id]));
+    }
+
+    /**
+     * @param $id
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return bool|RedirectResponse|Redirector
+     * @throws Exception
+     */
+    public function email($id, Request $request, FormBuilder $formBuilder)
+    {
+        if (!$id) {
+            return redirect()->back();
+        }
+
+        /** @var File $file */
+        $file = File::findByCurrentUser($request, $formBuilder, (int) $id)->first();
+
+        if (!$file) {
+            return $this->forceLogin($request);
+        }
+
+        if (!$file->form->isValid()) {
+            return redirect()->back()->withErrors($file->form->getErrors())->withInput();
+        }
+
+        $file->setEmail($file->form->getFieldValues()['email'] ?? '', true);
+
+        return redirect(route('file', ['id' => $file->id]));
     }
 
     /**

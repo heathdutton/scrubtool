@@ -109,25 +109,6 @@ class FileForm extends Form
             }
             $this->add('mode', Field::CHOICE, $modeOptions);
 
-            // if (!$file->user) {
-            //     $this->add('static_login', Field::STATIC, [
-            //         'tag'        => 'a',
-            //         'label'      => ' ',
-            //         'label_show' => true,
-            //         'label_attr' => [
-            //             'class' => $classChoiceLabel,
-            //         ],
-            //         'value'      => __('Login for more options'),
-            //         'attr'       => [
-            //             'href'  => route('login'),
-            //             'class' => 'btn-sm col-md-3 text-left',
-            //         ],
-            //         'wrapper'    => [
-            //             'class' => 'custom-control mb-3 row',
-            //         ],
-            //     ]);
-            // }
-
             if ($ownedListOptions) {
                 $this->add('suppression_list_append', Field::CHOICE, [
                     'label'      => __('Append list'),
@@ -209,24 +190,6 @@ class FileForm extends Form
                 // }
             }
 
-            $this->add('email', $file->user ? Field::HIDDEN : Field::EMAIL, [
-                'label'         => __('Email'),
-                'label_show'    => true,
-                'label_attr'    => [
-                    'class' => $classChoiceLabel,
-                ],
-                'attr'          => [
-                    'class'               => 'form-control custom-control-inline col-md-3 pl-3',
-                    'data-toggle'         => 'tooltip',
-                    'data-placement'      => 'right',
-                    'data-original-title' => __('Optional: Address to be notified when this is done with a temporary download link.'),
-                ],
-                'wrapper'       => [
-                    'class' => $classChoiceWrapper,
-                ],
-                'default_value' => $file->user ? $file->user->email : session()->get('email', ''),
-            ]);
-
             if ($file->columns) {
                 $this->add('static_columns', Field::STATIC, [
                     'tag'        => 'h5',
@@ -236,15 +199,15 @@ class FileForm extends Form
                         'class' => 'mt-3',
                     ],
                 ]);
-                $hashHelper     = new HashHelper();
-                $hashOptionsIn  = [null => __('Is plain text')];
-                $hashOptionsOut = [null => __('Leave as-is')];
-                $hiddenColumns  = 0;
-                $columnTypes    = [];
+                $hashHelper        = new HashHelper();
+                $hashOptionsIn     = [null => __('Is plain text')];
+                $hashOptionsOut    = [null => __('Leave as-is')];
+                $hiddenColumns     = 0;
+                $columnTypes       = [];
+                $columnTypes[null] = __('Other data');
                 foreach (FileSuppressionListHelper::COLUMN_TYPES as $type) {
                     $columnTypes[$type] = __('column_types.plural.'.$type);
                 }
-                $columnTypes[null] = __('Other data');
                 foreach ($hashHelper->listChoices() as $key => $value) {
                     $hashOptionsIn[$key]  = __('Is a :hash hash', ['hash' => $value]);
                     $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
@@ -404,5 +367,7 @@ class FileForm extends Form
         // return ['list_id' => ['Some other error about the Name field.']];
 
         // @todo - Ensure that we don't mix hash types with email/phone fields.
+
+        // @todo - Ensure the list to scrub against has coverage for the file provided.
     }
 }

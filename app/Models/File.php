@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Forms\FileForm;
+use App\Forms\FileEmailForm;
 use App\Jobs\FileAnalyze;
 use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
@@ -24,7 +25,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
-use Kris\LaravelFormBuilder\Form;
 use Kris\LaravelFormBuilder\FormBuilder;
 use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Exceptions\NoTypeDetectedException;
@@ -164,8 +164,19 @@ class File extends Model implements Auditable
         if ($formBuilder) {
             foreach (collect($files) as $file) {
                 if ($file->status & File::STATUS_INPUT_NEEDED) {
+                    // Standard setting input form.
                     /** File $file */
-                    $file->form = $file->buildForm($formBuilder);
+                    $file->form = $formBuilder->create(FileForm::class, [], [
+                        'file' => $file,
+                    ]);
+                } elseif (
+                ($file->status & File::STATUS_RUNNING)
+                ) {
+                    // Only a change to the notification email is permitted now.
+                    /** File $file */
+                    $file->form = $formBuilder->create(FileEmailForm::class, [], [
+                        'file' => $file,
+                    ]);
                 }
             }
         }
@@ -457,18 +468,6 @@ class File extends Model implements Auditable
     }
 
     /**
-     * @param  FormBuilder  $formBuilder
-     *
-     * @return Form
-     */
-    public function buildForm(FormBuilder $formBuilder)
-    {
-        return $formBuilder->create(FileForm::class, [], [
-            'file' => $this,
-        ]);
-    }
-
-    /**
      * @return BinaryFileResponse|void
      * @throws Exception
      */
@@ -537,11 +536,7 @@ class File extends Model implements Auditable
             $this->input_settings = (array) $values;
             $this->message        = '';
             $this->mode           = !empty($values['mode']) ? intval($values['mode']) : $this->mode;
-            $this->email          = !empty($values['email']) ? filter_var($values['email'],
-                FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE) : ($this->user->email ?? null);
-            if ($this->email) {
-                session()->put('email', $this->email);
-            }
+            $this->setEmail($values['email'] ?? '');
 
             if ($this->mode & File::MODE_SCRUB) {
                 if (empty($this->user->id)) {
@@ -642,6 +637,28 @@ class File extends Model implements Auditable
             $this->save();
 
             FileRun::dispatch($this->id);
+        }
+    }
+
+    /**
+     * @param $email
+     * @param  bool  $save
+     */
+    public function setEmail($email, $save = false)
+    {
+        if (!empty($email)) {
+            $email = filter_var($email, FILTER_SANITIZE_EMAIL, FILTER_NULL_ON_FAILURE);
+            if ($email) {
+                $email = filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+                if ($email) {
+                    $this->email = $email;
+                    session()->put('email', $email);
+                    if ($save) {
+                        unset($this->form);
+                        $this->save();
+                    }
+                }
+            }
         }
     }
 
@@ -766,20 +783,19 @@ class File extends Model implements Auditable
      */
     public function eta()
     {
+        $eta = '';
         if ($this->run_started
             && !$this->run_completed
-            && $this->progress() >= .5
         ) {
-            /** @var Carbon $start */
+            $now     = now();
             $startMs = $this->run_started->getPreciseTimestamp(3);
-            $nowMs   = (new Carbon())->getPreciseTimestamp(3);
-            $etaMs   = (($nowMs - $startMs) * 100 / max(.5, $this->progress())) + $nowMs;
-            $eta     = (new Carbon())->setTimestamp($etaMs / 1000);
-
-            return $eta->format(File::DATE_FORMAT);
+            $nowMs   = $now->getPreciseTimestamp(3);
+            $durMs   = ($nowMs - $startMs) / max(.1, $this->progress()) * (100 - $this->progress());
+            $eta     = $now->addMillis(max(0, $durMs));
+            $eta     = $eta->format(DATE_ATOM);
         }
 
-        return '';
+        return $eta;
     }
 
     /**
@@ -790,13 +806,13 @@ class File extends Model implements Auditable
         static $percentage = 0;
 
         if (!$percentage) {
-            $total = $this->rows_total ?? 0;
-            if (!$total) {
+            if (!$this->rows_total) {
                 return 100;
             }
-            if ($total * $this->rows_processed) {
-                $percentage = min(100, max(0, 100 / $total * $this->rows_processed));
+            if (!$this->rows_processed) {
+                return 100;
             }
+            $percentage = min(100, max(0, 100 / $this->rows_total * $this->rows_processed));
         }
 
         return $percentage;
