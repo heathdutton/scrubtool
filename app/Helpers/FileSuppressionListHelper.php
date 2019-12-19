@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class FileSuppressionListHelper
 {
-    /** @var array */
+    /** @var array Only these types are used for suppression lists at this time. */
     const COLUMN_TYPES = [
         FileAnalysisHelper::TYPE_EMAIL,
         FileAnalysisHelper::TYPE_PHONE,
