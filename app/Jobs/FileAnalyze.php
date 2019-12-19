@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Models\File;
 use App\Imports\CustomReader;
 use App\Imports\FileImportSheetAnalysis;
+use App\Models\File;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -45,7 +45,7 @@ class FileAnalyze implements ShouldQueue
              * @var Excel $excel
              * @var CustomReader $reader
              */
-            list($excel, $reader) = resolve('excelCustom');
+            [$excel, $reader] = resolve('excelCustom');
 
             // Take shortcuts with ultra-large plaintext files.
             $sheets = [];
@@ -98,7 +98,7 @@ class FileAnalyze implements ShouldQueue
                 $sheets = $reader->getTotalRows();
             }
             $file->columns      = $import->getAnalysis()['columns'];
-            $file->column_count = count($file->columns);
+            $file->column_count = min(1, count($file->columns));
             $file->status       = File::STATUS_INPUT_NEEDED;
             $file->message      = '';
             $file->rows_total   = max($file->rows_total, array_sum($sheets));

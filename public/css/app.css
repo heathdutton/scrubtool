@@ -14595,6 +14595,14 @@ form#dropzone .dz-message {
   }
 }
 
+.progress .progress-bar {
+  overflow: visible !important;
+}
+
+.progress .progress-bar .eta {
+  mix-blend-mode: difference;
+}
+
 .progress .progress-bar.jquery {
   -webkit-transition: none !important;
   transition: none !important;

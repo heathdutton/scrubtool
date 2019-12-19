@@ -12445,7 +12445,7 @@ module.exports = Array.isArray || function (arr) {
             }
             // Reload it.
             var self = this;
-            window.setTimeout(function () { self.doCountDown(); }, self.setTimeoutDelay);
+            this.timeout = window.setTimeout(function () { self.doCountDown(); }, self.setTimeoutDelay);
             return this.timeElement.trigger('time.tick', ms);
         },
 
@@ -12524,6 +12524,11 @@ module.exports = Array.isArray || function (arr) {
                 // Allow instances to be destroyed via the 'destroy' method.
                 if (options === 'destroy') {
                     $.data(this, 'plugin_' + pluginName, null);
+                    if (this.timeout) {
+                        clearTimeout(this.timeout);
+                        console.log('clearn');
+                    }
+
                 }
 
             });
@@ -51119,8 +51124,19 @@ st.loadContent = function (url, $destination, prepend, done) {
         }
       } else {
         if ($destination.data('updated-at') !== data.updated_at && $destination.get(0).outerHTML !== data.html) {
-          var $result = $(data.html);
+          var $result = $(data.html),
+              $children = $result.find('.card, form');
+          $children.css({
+            'opacity': 0,
+            'max-height': '0px'
+          });
           $destination.replaceWith($result);
+          $children.animate({
+            'opacity': 1,
+            'max-height': '100px'
+          }, st.animationSpeed, 'swing', function () {
+            $(this).css('max-height', 'auto');
+          });
 
           if (typeof done == 'function') {
             return done($result, data);
@@ -51195,7 +51211,7 @@ st.numberFormat = __webpack_require__(/*! locutus/php/strings/number_format */ "
 st.classModePrefix = 'file-mode';
 st.classColumnEmpty = 'column-empty';
 st.classHiddenSuffix = '-hidden';
-st.refreshDelay = 1000;
+st.refreshDelay = 2000;
 
 st.filesLoaded = function ($context) {
   // Hide fields irrelevant to the current file mode.
@@ -51227,31 +51243,31 @@ st.filesLoaded = function ($context) {
 
 st.fileCountDown = function ($element, datetime) {
   if (typeof datetime !== 'undefined') {
-    $element.attr('datetime', datetime);
-  }
+    $element.data('plugin_countDown').endDate = new Date(datetime);
+  } else {
+    $element.countDown({
+      'always_show_hours': false,
+      'with_hh_leading_zero': false,
+      'with_mm_leading_zero': false,
+      'with_ss_leading_zero': false,
+      'separator': ' ',
+      'with_separators': true,
+      'label_dd': 'd',
+      'label_hh': 'h',
+      'label_mm': 'm',
+      'label_ss': 's'
+    });
+    var $hrs = $(this).parent().find('.item.item-hh');
 
-  $element.countDown({
-    'always_show_hours': false,
-    'with_hh_leading_zero': false,
-    'with_mm_leading_zero': false,
-    'with_ss_leading_zero': false,
-    'separator': ' ',
-    'with_separators': true,
-    'label_dd': 'd',
-    'label_hh': 'h',
-    'label_mm': 'm',
-    'label_ss': 's'
-  });
-  var $hrs = $(this).parent().find('.item.item-hh');
+    if ($hrs.length && $hrs.text() === '0h') {
+      $hrs.hide();
+    }
 
-  if ($hrs.length && $hrs.text() === '0h') {
-    $hrs.hide();
-  }
+    var $min = $(this).parent().find('.item.item-mm');
 
-  var $min = $(this).parent().find('.item.item-mm');
-
-  if ($min.length && $min.text() === '0m') {
-    $min.hide();
+    if ($min.length && $min.text() === '0m') {
+      $min.hide();
+    }
   }
 
   $element.css('opacity', 1);
@@ -51279,19 +51295,18 @@ st.fileLoad = function ($route, $destination) {
               }
 
               if (vala !== valb) {
-                if (!$stat.attr('')) {
-                  $stat.attr('val', vala);
-                }
-
                 $stat.stop().animate({
                   'val': valb
                 }, {
-                  duration: st.refreshDelay * 1.4,
+                  duration: st.refreshDelay * 1.3,
+                  easing: 'linear',
+                  queue: false,
                   step: function step(now, fx) {
+                    if (!fx.start) {
+                      fx.start = vala;
+                    }
+
                     fx.elem.innerHTML = st.numberFormat(now);
-                  },
-                  done: function done(p, j) {
-                    $(this).attr('val', valb);
                   }
                 });
               }
@@ -51301,9 +51316,13 @@ st.fileLoad = function ($route, $destination) {
       }
 
       if (typeof data.progress !== 'undefined') {
-        $destination.find('.progress-bar:first').addClass('jquery').stop().animate({
-          'width': Math.floor(data.progress) + '%'
-        }, st.refreshDelay * 1.4);
+        $destination.find('.progress-bar:first').addClass('jquery').animate({
+          'width': data.progress + '%'
+        }, {
+          queue: false,
+          easing: 'linear',
+          duration: st.refreshDelay * 1.3
+        });
       }
 
       if (typeof data.eta !== 'undefined') {
@@ -51324,8 +51343,8 @@ st.fileRefresh = function ($file, delay) {
 };
 
 st.filesRefresh = function ($context) {
-  var selector = '.file-refresh';
-  var $files = $(selector, $context);
+  var selector = '.file-refresh',
+      $files = $(selector, $context);
 
   if (!$files.length && $context.is(selector)) {
     $files = $context;
@@ -51333,9 +51352,27 @@ st.filesRefresh = function ($context) {
 
   if ($files.length) {
     $files.each(function () {
-      st.fileRefresh($(this), st.refreshDelay);
+      if ($(this).isVisible()) {
+        st.fileRefresh($(this), st.refreshDelay);
+      } else {
+        setTimeout(function () {
+          st.filesRefresh($context);
+        }, st.refreshDelay / 2);
+      }
     });
   }
+};
+
+$.fn.isVisible = function () {
+  if (!$(this).is(':visible')) {
+    return false;
+  }
+
+  var elementTop = $(this).offset().top,
+      elementBottom = elementTop + $(this).outerHeight(),
+      viewportTop = $(window).scrollTop(),
+      viewportBottom = viewportTop + $(window).height();
+  return elementBottom > viewportTop && elementTop < viewportBottom;
 };
 
 $(function () {

@@ -46,6 +46,8 @@ class SuppressionListSupport extends Model
 
     const TYPE_INTEGER    = 64;
 
+    const TYPE_IP         = 65536;
+
     const TYPE_L_ADDRESS1 = 128;
 
     const TYPE_L_ADDRESS2 = 256;

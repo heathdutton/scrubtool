@@ -92,15 +92,10 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
             @endif
             @if($file->status & \App\Models\File::STATUS_ADDED || $file->status & \App\Models\File::STATUS_ANALYSIS || $file->status & \App\Models\File::STATUS_READY || $file->status & \App\Models\File::STATUS_RUNNING)
                 <div class="progress">
-                    <div class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" aria-valuenofw="{{ $file->progress() }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $file->progress() }}%">
-                        {{ $action }}
+                    <div class="progress-bar bg-dark bg-{{ $class }} progress-bar-animated progress-bar-striped" role="progressbar" style="width: {{ $file->progress() }}%">
+                        <time datetime="{{ $file->eta() }}" class="eta countdown text-center ml-3 mr-3" style="opacity: 0;"></time>
                     </div>
                 </div>
-                <time datetime="{{ $file->eta() }} UTC" class="eta countdown text-center" style="opacity: 0;"></time>
-            @else
-            @endif
-            @if($file->form)
-                {!! form($file->form) !!}
             @endif
             @if($file->status & (\App\Models\File::STATUS_WHOLE | \App\Models\File::STATUS_RUNNING))
                 <div class="row mt-3">
@@ -169,6 +164,11 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                             </div>
                         </div>
                     </div>
+                </div>
+            @endif
+            @if($file->form)
+                <div class="col-12">
+                    {!! form($file->form) !!}
                 </div>
             @endif
         </div>
