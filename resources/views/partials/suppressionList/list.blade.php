@@ -10,7 +10,7 @@
             {{ __('You currently have no suppression lists.') }}
         </p>
     @endif
-    <a href="{{ route('files') }}" class="btn btn-success btn-large pull-right">
+    <a href="{{ route('files') }}" class="btn btn-success btn-large float-right">
         <i class="fa fa-plus"></i> {{ __('Create a Suppression List') }}
     </a>
 </section>

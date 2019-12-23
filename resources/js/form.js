@@ -1,5 +1,5 @@
 st.form = function ($context) {
-    $('a.btn, input:submit.btn, input:button.btn', $context)
+    $('a.btn, :reset.btn', $context)
         .off('click.submit-animate')
         .on('click.submit-animate', function () {
             var $t = $(this),
@@ -16,14 +16,25 @@ st.form = function ($context) {
                     'opacity': 0,
                     'background': '#fff',
                 });
-                var $wrap = $('<div class="text-center">')
-                    .css({
-                        'width': w,
-                        'height': h,
-                        'left': $t.position().left,
-                        'right': $t.position().right,
-                        'margin': '0 auto'
-                    });
+                if ($t.hasClass('float-right')) {
+                    var $wrap = $('<div class="text-right">')
+                        .css({
+                            'width': w,
+                            'height': h,
+                            'left': $t.position().left,
+                            'right': $t.position().right,
+                            'margin': '0'
+                        });
+                } else {
+                    var $wrap = $('<div class="text-center">')
+                        .css({
+                            'width': w,
+                            'height': h,
+                            'left': $t.position().left,
+                            'right': $t.position().right,
+                            'margin': '0 auto'
+                        });
+                }
                 $('body').append($overlay);
                 $t.wrap($wrap);
                 setTimeout(function () {
@@ -55,6 +66,7 @@ st.form = function ($context) {
                             .removeClass('submit-animating');
                     });
                 }, 2000);
+                return false;
             }
         });
 };

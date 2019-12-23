@@ -25,6 +25,12 @@ class SuppressionList extends Model implements Auditable
         'id',
     ];
 
+    public $casts = [
+        'private'  => 'boolean',
+        'required' => 'boolean',
+        'global'   => 'boolean',
+    ];
+
     /** @var File */
     private $file;
 
@@ -176,7 +182,7 @@ class SuppressionList extends Model implements Auditable
     public function findByIdToken($string)
     {
         $string = strtolower(trim($string));
-        list($idString, $tokenString) = explode('z', $string);
+        [$idString, $tokenString] = explode('z', $string);
         if (!$idString || !$tokenString) {
             return null;
         }

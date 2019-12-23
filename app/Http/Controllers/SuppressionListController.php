@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SuppressionListForm;
+use App\Models\SuppressionList;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\View\View;
+use Kris\LaravelFormBuilder\FormBuilder;
 
 class SuppressionListController extends Controller
 {
@@ -41,7 +45,11 @@ class SuppressionListController extends Controller
             return redirect()->back();
         }
 
-        $suppressionList = $request->user()->suppressionLists->where('id', (int) $id)->first();
+        /** @var SuppressionList $suppressionList */
+        $suppressionList = SuppressionList::query()
+            ->where('id', (int) $id)
+            ->where('user_id', (int) $request->user()->id)
+            ->first();
         if (!$suppressionList) {
             return abort(404);
         }
@@ -60,5 +68,85 @@ class SuppressionListController extends Controller
             ]);
         }
 
+    }
+
+    /**
+     * @param $id
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return Factory|JsonResponse|RedirectResponse|View|void
+     */
+    public function edit($id, Request $request, FormBuilder $formBuilder)
+    {
+        if (!$id) {
+            return redirect()->back();
+        }
+
+        /** @var SuppressionList $suppressionList */
+        $suppressionList = SuppressionList::query()
+            ->where('id', (int) $id)
+            ->where('user_id', (int) $request->user()->id)
+            ->first();
+        if (!$suppressionList) {
+            return abort(404);
+        }
+
+        $suppressionList->form = $formBuilder->create(SuppressionListForm::class, [], [
+            'suppressionList' => $suppressionList,
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'html'       => view('partials.suppressionLists.item')
+                    ->with(['suppressionList' => $suppressionList])
+                    ->toHtml(),
+                'updated_at' => $suppressionList->updated_at,
+                'success'    => true,
+            ]);
+        } else {
+            return view('suppressionLists')->with([
+                'suppressionLists' => [$suppressionList],
+            ]);
+        }
+    }
+
+    /**
+     * @param $id
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return RedirectResponse|Redirector|void
+     */
+    public function store($id, Request $request, FormBuilder $formBuilder)
+    {
+        if (!$id) {
+            return redirect()->back();
+        }
+
+        /** @var SuppressionList $suppressionList */
+        $suppressionList = SuppressionList::query()
+            ->where('id', (int) $id)
+            ->where('user_id', (int) $request->user()->id)
+            ->first();
+        if (!$suppressionList) {
+            return abort(404);
+        }
+
+        $suppressionList->form = $formBuilder->create(SuppressionListForm::class, [], [
+            'suppressionList' => $suppressionList,
+        ]);
+
+        if (!$suppressionList->form->isValid()) {
+            return redirect()->back()->withErrors($suppressionList->form->getErrors())->withInput();
+        }
+
+        foreach ($suppressionList->form->getFieldValues() as $key => $value) {
+            $suppressionList->setAttribute($key, $value);
+        }
+        unset($suppressionList->form);
+        $suppressionList->save();
+
+        return redirect(route('suppressionList', ['id' => $id]));
     }
 }

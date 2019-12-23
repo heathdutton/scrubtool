@@ -309,31 +309,31 @@ class FileForm extends Form
             $this->add('submit_'.File::MODE_HASH, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-hashtag"></i> '.__('Hash File'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_HASH,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_HASH,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_APPEND, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-plus"></i> '.__('Append Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_APPEND,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_APPEND,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_CREATE, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-check"></i> '.__('Create Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_CREATE,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_CREATE,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_REPLACE, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-plus-square"></i> '.__('Replace Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-warning pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_REPLACE,
+                    'class' => 'btn btn-warning float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_REPLACE,
                 ],
             ]);
             $this->add('submit_'.File::MODE_SCRUB, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-filter"></i> '.__('Scrub File'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
                 ],
             ]);
         }
