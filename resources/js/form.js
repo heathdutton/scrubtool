@@ -23,7 +23,6 @@ st.form = function ($context) {
                         classListNew.push(classList[i]);
                     }
                 }
-                console.log(classListNew);
                 var $wrap = $('<div class="text-center">')
                     .css({
                         'width': w,

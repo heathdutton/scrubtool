@@ -51524,7 +51524,6 @@ st.form = function ($context) {
         }
       }
 
-      console.log(classListNew);
       var $wrap = $('<div class="text-center">').css({
         'width': w,
         'height': h,
