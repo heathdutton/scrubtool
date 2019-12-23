@@ -37,6 +37,7 @@ class FileEmailForm extends Form
         $this->add('email', Field::EMAIL, [
             'label'         => __('Email'),
             'label_show'    => true,
+            'rules'         => 'bail|required|email:rfc,dns',
             'label_attr'    => [
                 'class' => 'col-md-2'.$class,
             ],

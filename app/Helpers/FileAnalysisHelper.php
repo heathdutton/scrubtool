@@ -4,6 +4,8 @@ namespace App\Helpers;
 
 use App\Models\File;
 use App\Models\SuppressionListSupport;
+use Egulias\EmailValidator\EmailValidator;
+use Egulias\EmailValidator\Validation\NoRFCWarningsValidation;
 use libphonenumber\Leniency;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
@@ -116,6 +118,12 @@ class FileAnalysisHelper
     /** @var File */
     private $file;
 
+    /** @var EmailValidator */
+    private $emailValidator;
+
+    /** @var PhoneNumberUtil */
+    private $phoneValidator;
+
     /**
      * FileAnalysisHelper constructor.
      *
@@ -188,7 +196,7 @@ class FileAnalysisHelper
             && count(array_filter($this->rowData))
         ) {
             foreach ($this->rowData as $value) {
-                if (self::isEmail($value)) {
+                if ($this->isEmail($value)) {
                     $this->rowIsHeader = false;
                     break;
                 } elseif ($this->isPhone($value)) {
@@ -217,9 +225,9 @@ class FileAnalysisHelper
      *
      * @return bool
      */
-    public static function isEmail($value)
+    public function isEmail($value)
     {
-        return (bool) self::getEmail($value);
+        return (bool) $this->getEmail($value);
     }
 
     /**
@@ -227,14 +235,24 @@ class FileAnalysisHelper
      *
      * @return mixed
      */
-    public static function getEmail($value)
+    public function getEmail($value)
     {
-        $value = filter_var($value, FILTER_SANITIZE_EMAIL, FILTER_NULL_ON_FAILURE);
         if ($value) {
-            $value = filter_var($value, FILTER_VALIDATE_EMAIL, FILTER_NULL_ON_FAILURE);
+            if ($this->getEmailValidator()->isValid($value, new NoRFCWarningsValidation())) {
+                return $value;
+            }
         }
 
-        return $value;
+        return null;
+    }
+
+    private function getEmailValidator()
+    {
+        if (!$this->emailValidator) {
+            $this->emailValidator = new EmailValidator();
+        }
+
+        return $this->emailValidator;
     }
 
     /**
@@ -244,9 +262,9 @@ class FileAnalysisHelper
      *
      * @return bool
      */
-    public static function isPhone($value, $countryCode = 'US', $lenient = false)
+    public function isPhone($value, $countryCode = 'US', $lenient = false)
     {
-        return (bool) self::getPhone($value, $countryCode, $lenient);
+        return (bool) $this->getPhone($value, $countryCode, $lenient);
     }
 
     /**
@@ -258,7 +276,7 @@ class FileAnalysisHelper
      *
      * @return string|null
      */
-    public static function getPhone($value, $countryCode = 'US', $lenient = false)
+    public function getPhone($value, $countryCode = 'US', $lenient = false)
     {
         $value = (string) $value;
         if (!$lenient && ctype_alpha($value)) {
@@ -273,7 +291,7 @@ class FileAnalysisHelper
         $numeric = preg_replace("/[^0-9]/", '', $value);
         $length  = strlen($numeric);
         if ($length >= ($lenient ? 7 : 10) && $length <= 15) {
-            $util     = PhoneNumberUtil::getInstance();
+            $util     = $this->getPhoneValidator();
             $leniency = $lenient ? Leniency::POSSIBLE() : Leniency::VALID();
             $matches  = $util->findNumbers($value, $countryCode, $leniency, 10000);
             $matches->rewind();
@@ -288,6 +306,15 @@ class FileAnalysisHelper
         }
 
         return null;
+    }
+
+    private function getPhoneValidator()
+    {
+        if (!$this->phoneValidator) {
+            $this->phoneValidator = PhoneNumberUtil::getInstance();
+        }
+
+        return $this->phoneValidator;
     }
 
     /**
@@ -387,16 +414,16 @@ class FileAnalysisHelper
      */
     private function getType($value, $columnIndex)
     {
-        if (self::isEmail($value)) {
-            return SuppressionListSupport::TYPE_EMAIL;
-        }
         if (self::isIp($value)) {
             return SuppressionListSupport::TYPE_IP;
+        }
+        if ($this->isEmail($value)) {
+            return SuppressionListSupport::TYPE_EMAIL;
         }
         if ($this->isHash($value)) {
             return SuppressionListSupport::TYPE_HASH;
         }
-        if (self::isPhone($value, $this->file->country ?? 'US')) {
+        if ($this->isPhone($value, $this->file->country ?? 'US')) {
             return SuppressionListSupport::TYPE_PHONE;
         }
 
