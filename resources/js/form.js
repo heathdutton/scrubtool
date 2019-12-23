@@ -6,35 +6,33 @@ st.form = function ($context) {
                 h = $t.outerHeight(),
                 w = $t.outerWidth();
             if (!$t.hasClass('submit-animate')) {
-                var $overlay = $('<div>').css({
-                    'display': 'block',
-                    'position': 'fixed',
-                    'top': 0,
-                    'left': 0,
-                    'width': '100%',
-                    'height': '100%',
-                    'opacity': 0,
-                    'background': '#fff',
-                });
-                if ($t.hasClass('float-right')) {
-                    var $wrap = $('<div class="text-right">')
-                        .css({
-                            'width': w,
-                            'height': h,
-                            'left': $t.position().left,
-                            'right': $t.position().right,
-                            'margin': '0'
-                        });
-                } else {
-                    var $wrap = $('<div class="text-center">')
-                        .css({
-                            'width': w,
-                            'height': h,
-                            'left': $t.position().left,
-                            'right': $t.position().right,
-                            'margin': '0 auto'
-                        });
+                var classList = $t[0].classList.value.split(/\s+/),
+                    classListNew = [],
+                    $overlay = $('<div>').css({
+                        'display': 'block',
+                        'position': 'fixed',
+                        'top': 0,
+                        'left': 0,
+                        'width': '100%',
+                        'height': '100%',
+                        'opacity': 0,
+                        'background': '#fff',
+                    });
+                for (var i = 0; i < classList.length; i++) {
+                    if (classList[i].indexOf('btn') === -1) {
+                        classListNew.push(classList[i]);
+                    }
                 }
+                console.log(classListNew);
+                var $wrap = $('<div class="text-center">')
+                    .css({
+                        'width': w,
+                        'height': h,
+                        'left': $t.position().left,
+                        'right': $t.position().right,
+                        'margin': '0 auto'
+                    })
+                    .addClass(classListNew.join(' '));
                 $('body').append($overlay);
                 $t.wrap($wrap);
                 setTimeout(function () {
@@ -66,7 +64,6 @@ st.form = function ($context) {
                             .removeClass('submit-animating');
                     });
                 }, 2000);
-                return false;
             }
         });
 };

@@ -51505,7 +51505,9 @@ st.form = function ($context) {
         w = $t.outerWidth();
 
     if (!$t.hasClass('submit-animate')) {
-      var $overlay = $('<div>').css({
+      var classList = $t[0].classList.value.split(/\s+/),
+          classListNew = [],
+          $overlay = $('<div>').css({
         'display': 'block',
         'position': 'fixed',
         'top': 0,
@@ -51516,24 +51518,20 @@ st.form = function ($context) {
         'background': '#fff'
       });
 
-      if ($t.hasClass('float-right')) {
-        var $wrap = $('<div class="text-right">').css({
-          'width': w,
-          'height': h,
-          'left': $t.position().left,
-          'right': $t.position().right,
-          'margin': '0'
-        });
-      } else {
-        var $wrap = $('<div class="text-center">').css({
-          'width': w,
-          'height': h,
-          'left': $t.position().left,
-          'right': $t.position().right,
-          'margin': '0 auto'
-        });
+      for (var i = 0; i < classList.length; i++) {
+        if (classList[i].indexOf('btn') === -1) {
+          classListNew.push(classList[i]);
+        }
       }
 
+      console.log(classListNew);
+      var $wrap = $('<div class="text-center">').css({
+        'width': w,
+        'height': h,
+        'left': $t.position().left,
+        'right': $t.position().right,
+        'margin': '0 auto'
+      }).addClass(classListNew.join(' '));
       $('body').append($overlay);
       $t.wrap($wrap);
       setTimeout(function () {
@@ -51561,7 +51559,6 @@ st.form = function ($context) {
           }, 100).removeClass('submit-animating');
         });
       }, 2000);
-      return false;
     }
   });
 };
