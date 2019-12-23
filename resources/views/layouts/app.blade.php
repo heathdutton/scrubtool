@@ -122,5 +122,6 @@
     </div>
 </footer>
 @include('partials.gtm')
+@yield('tail')
 </body>
 </html>

@@ -34,6 +34,7 @@ Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists'
 Route::get('/lists/{id}', 'SuppressionListController@suppressionList')->name('suppressionList');
 Route::get('/lists/{id}/edit', 'SuppressionListController@edit')->name('suppressionList.edit');
 Route::post('/lists/{id}/store', 'SuppressionListController@store')->name('suppressionList.store');
+Route::get('/lists/{id}/restore', 'SuppressionListController@restore')->name('suppressionList.restore');
 
 Route::any('/defaults', 'ActionDefaultsController')->name('defaults');
 

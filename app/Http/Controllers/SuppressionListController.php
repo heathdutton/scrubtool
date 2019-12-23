@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Forms\SuppressionListForm;
 use App\Models\SuppressionList;
+use App\Notifications\SuppressionListDeletedNotification;
+use App\Notifications\SuppressionListRestoredNotification;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -117,6 +119,7 @@ class SuppressionListController extends Controller
      * @param  FormBuilder  $formBuilder
      *
      * @return RedirectResponse|Redirector|void
+     * @throws \Exception
      */
     public function store($id, Request $request, FormBuilder $formBuilder)
     {
@@ -144,8 +147,46 @@ class SuppressionListController extends Controller
         foreach ($suppressionList->form->getFieldValues() as $key => $value) {
             $suppressionList->setAttribute($key, $value);
         }
-        unset($suppressionList->form);
-        $suppressionList->save();
+
+        if ('true' === $suppressionList->form->getRequest()->get('delete')) {
+            $suppressionList->user->notify(new SuppressionListDeletedNotification($suppressionList));
+            unset($suppressionList->form);
+            $suppressionList->delete();
+
+            return redirect(route('suppressionLists'));
+        } else {
+            unset($suppressionList->form);
+            $suppressionList->save();
+
+            return redirect(route('suppressionList', ['id' => $id]));
+        }
+    }
+
+    /**
+     * @param $id
+     * @param  Request  $request
+     * @param  FormBuilder  $formBuilder
+     *
+     * @return RedirectResponse|Redirector|void
+     * @throws \Exception
+     */
+    public function restore($id, Request $request, FormBuilder $formBuilder)
+    {
+        if (!$id) {
+            return redirect()->back();
+        }
+
+        /** @var SuppressionList $suppressionList */
+        $suppressionList = SuppressionList::onlyTrashed()
+            ->where('id', (int) $id)
+            ->where('user_id', (int) $request->user()->id)
+            ->first();
+        if (!$suppressionList) {
+            return redirect(route('suppressionLists'));
+        }
+
+        $suppressionList->user->notify(new SuppressionListRestoredNotification($suppressionList));
+        $suppressionList->restore();
 
         return redirect(route('suppressionList', ['id' => $id]));
     }

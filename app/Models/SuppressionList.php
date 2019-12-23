@@ -20,15 +20,15 @@ class SuppressionList extends Model implements Auditable
 {
     use SoftDeletes, AuditableTrait;
 
-    /** @var array */
-    protected $guarded = [
-        'id',
-    ];
-
     public $casts = [
         'private'  => 'boolean',
         'required' => 'boolean',
         'global'   => 'boolean',
+    ];
+
+    /** @var array */
+    protected $guarded = [
+        'id',
     ];
 
     /** @var File */
@@ -158,13 +158,21 @@ class SuppressionList extends Model implements Auditable
      */
     public function actions()
     {
-        return $this->hasMany(Action::class);
+        return $this->hasMany(ActionAbstract::class);
+    }
+
+    /**
+     * @return string
+     */
+    public function getShareRoute()
+    {
+        return route('suppressionList.share', ['token' => $this->getIdToken()]);
     }
 
     /**
      * @return string|null
      */
-    public function getIdToken()
+    private function getIdToken()
     {
         if (empty($this->id) || empty($this->token)) {
             return null;

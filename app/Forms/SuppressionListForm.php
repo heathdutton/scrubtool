@@ -79,6 +79,16 @@ class SuppressionListForm extends Form
             ],
         ]);
 
+        $this->add('delete', Field::BUTTON_SUBMIT, [
+            'label' => '<i class="fa fa-trash"></i> '.__('Delete'),
+            'attr'  => [
+                'class'   => 'btn btn-danger float-left',
+                'name'    => 'delete',
+                'value'   => 'true',
+                'onclick' => 'return confirm('.__('\'Are you sure you want to delete this suppression List?\'').');',
+            ],
+        ]);
+
         $this->add('cancel', Field::BUTTON_RESET, [
             'label' => '<i class="fa fa-times"></i> '.__('Cancel'),
             'attr'  => [
@@ -86,6 +96,7 @@ class SuppressionListForm extends Form
                 'onclick' => 'window.history.back()',
             ],
         ]);
+
     }
 
     /**

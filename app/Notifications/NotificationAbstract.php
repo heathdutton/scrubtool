@@ -19,6 +19,9 @@ abstract class NotificationAbstract extends Notification
     /** @var string */
     public $markdown;
 
+    /** @var array */
+    public $quiet = false;
+
     /** @var object */
     protected $object;
 
@@ -47,7 +50,7 @@ abstract class NotificationAbstract extends Notification
     public function via($notifiable)
     {
         $methods = [];
-        if (!empty($notifiable->email)) {
+        if (!empty($notifiable->email) && !$this->quiet) {
             $methods[] = 'mail';
         }
         if ($notifiable instanceof User) {
