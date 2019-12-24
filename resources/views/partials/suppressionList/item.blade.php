@@ -24,7 +24,7 @@ $class = 'secondary';
                 @endforeach
                 @include('partials.stat', ['icon' => 'filter', 'value' => $suppressionList->statParent('rows_scrubbed') ?? 0, 'label' => __('Scrubbed Records')])
             </div>
-            @if($suppressionList->description)
+            @if($suppressionList->description && !($suppressionList->form && $owner))
                 <div class="row mt-3">
                     <div class="col-md-12 mt-3 mb-1 well">
                         {{ $suppressionList->description }}
@@ -32,7 +32,7 @@ $class = 'secondary';
                 </div>
             @endif
             <div class="row">
-                @if($suppressionList->form)
+                @if($suppressionList->form && $owner)
                     <div class="col-12">
                         {!! form($suppressionList->form) !!}
                     </div>
@@ -40,42 +40,58 @@ $class = 'secondary';
                     <div class="col-md-12 mt-3 mb-1">
                         <div class="">
                             <div class="btn-group float-right">
-                                <a href="{{ route('suppressionList.edit', [
-                                'id' => $suppressionList->id]) }}" class="btn btn-secondary">
-                                    <i class="fa fa-pencil"></i>
-                                    {{ __('Edit') }}
-                                </a>
-                                <a href="{{ route('defaults', [
-                                'action_defaults' => [
-                                    'mode' => App\Models\File::MODE_LIST_REPLACE,
-                                    'suppression_list_append' => $suppressionList->id,
-                                ],
-                                'target_action' => route('files')]) }}" class="btn btn-secondary">
-                                    <i class="fa fa-plus-square"></i>
-                                    {{ __('Replace') }}
-                                </a>
-                                <a href="{{ route('defaults', [
-                                'action_defaults' => [
-                                    'mode' => App\Models\File::MODE_LIST_APPEND,
-                                    'suppression_list_append' => $suppressionList->id,
-                                ],
-                                'target_action' => route('files')]) }}" class="btn btn-secondary">
-                                    <i class="fa fa-plus"></i>
-                                    {{ __('Append') }}
-                                </a>
-{{--                                <a href="{{ $suppressionList->getShareRoute() }}" class="btn btn-secondary suppression-list-share">--}}
-{{--                                    <i class="fa fa-share"></i>--}}
-{{--                                    {{ __('Share') }}--}}
-{{--                                </a>--}}
-                                <a href="{{ route('defaults', [
-                                'action_defaults' => [
-                                    'mode' => App\Models\File::MODE_SCRUB,
-                                    'suppression_list_use_'.$suppressionList->id => $suppressionList->id,
-                                ],
-                                'target_action' => route('files')]) }}" class="btn btn-success">
-                                    <i class="fa fa-filter"></i>
-                                    {{ __('Scrub With This') }}
-                                </a>
+                                @if(isset($owner) && $owner)
+                                    <a href="{{ route('suppressionList.edit', [
+                                        'id' => $suppressionList->id]) }}" class="btn btn-secondary">
+                                        <i class="fa fa-pencil"></i>
+                                        {{ __('Edit') }}
+                                    </a>
+                                    <a href="{{ route('defaults', [
+                                        'action_defaults' => [
+                                            'mode' => App\Models\File::MODE_LIST_REPLACE,
+                                            'suppression_list_append' => $suppressionList->id,
+                                        ],
+                                        'target_action' => route('files')]) }}" class="btn btn-secondary">
+                                        <i class="fa fa-plus-square"></i>
+                                        {{ __('Replace') }}
+                                    </a>
+                                    <a href="{{ route('defaults', [
+                                        'action_defaults' => [
+                                            'mode' => App\Models\File::MODE_LIST_APPEND,
+                                            'suppression_list_append' => $suppressionList->id,
+                                        ],
+                                        'target_action' => route('files')]) }}" class="btn btn-secondary">
+                                        <i class="fa fa-plus"></i>
+                                        {{ __('Append') }}
+                                    </a>
+                                    <clipboard-copy value="{{ $suppressionList->getShareRoute() }}"
+                                                    aria-label="Copy to clipboard" class="btn btn-secondary"
+                                                    tabindex="0" role="button"
+                                                    data-toggle='tooltip' data-trigger='manual' data-placement='bottom'
+                                                    data-original-title='{{ __(':link was copied to your clipboard. Paste this link to others and they can use this suppression list to scrub their files.', ['link' => $suppressionList->getShareRoute()]) }}'>
+                                        <i class="fa fa-share"></i>
+                                        {{ __('Share') }}
+                                    </clipboard-copy>
+                                    <a href="{{ route('defaults', [
+                                        'action_defaults' => [
+                                            'mode' => App\Models\File::MODE_SCRUB,
+                                            'suppression_list_use_'.$suppressionList->id => $suppressionList->id,
+                                        ],
+                                        'target_action' => route('files')]) }}" class="btn btn-success">
+                                        <i class="fa fa-filter"></i>
+                                        {{ __('Scrub Using This') }}
+                                    </a>
+                                @else
+                                    <a href="{{ route('defaults', [
+                                        'action_defaults' => [
+                                            'mode' => App\Models\File::MODE_SCRUB,
+                                            'suppression_list_use_'.$suppressionList->id => $suppressionList->getIdToken(),
+                                        ],
+                                        'target_action' => route('files')]) }}" class="btn btn-success">
+                                        <i class="fa fa-filter"></i>
+                                        {{ __('Scrub Using This') }}
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>

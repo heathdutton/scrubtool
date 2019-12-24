@@ -92,6 +92,35 @@ class FileController extends Controller
 
     /**
      * @param $id
+     * @param  null  $token
+     * @param  Request  $request
+     *
+     * @return bool|JsonResponse|RedirectResponse|BinaryFileResponse|void
+     * @throws Exception
+     */
+    public function downloadWithToken($id, $token = null, Request $request)
+    {
+        if (!$id || !$token) {
+            return redirect()->back();
+        }
+
+        CaptureToken::setIfEmpty($token);
+
+        /** @var FileDownloadLink $downloadLink */
+        $downloadLink = FileDownloadLink::query()
+            ->where('file_id', (int) $id)
+            ->where('token', (string) $token)
+            ->first();
+
+        if (!$downloadLink) {
+            return $this->forceLogin($request);
+        }
+
+        return $downloadLink->file->download();
+    }
+
+    /**
+     * @param $id
      * @param  Request  $request
      *
      * @return bool|RedirectResponse|BinaryFileResponse
@@ -111,34 +140,6 @@ class FileController extends Controller
         }
 
         return $file->download();
-    }
-
-    /**
-     * @param $id
-     * @param $token
-     * @param  Request  $request
-     *
-     * @return JsonResponse|RedirectResponse|void
-     */
-    public function downloadWithToken($id, $token, Request $request)
-    {
-        if (!$id || !$token) {
-            return redirect()->back();
-        }
-
-        CaptureToken::setIfEmpty($token);
-
-        /** @var FileDownloadLink $downloadLink */
-        $downloadLink = FileDownloadLink::query()
-            ->where('file_id', (int) $id)
-            ->where('token', (string) $token)
-            ->first();
-
-        if (!$downloadLink) {
-            return $this->forceLogin($request);
-        }
-
-        return $downloadLink->file->download();
     }
 
     /**

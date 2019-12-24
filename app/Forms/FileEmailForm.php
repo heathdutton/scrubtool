@@ -74,7 +74,7 @@ class FileEmailForm extends Form
         $this->add('submit_email', Field::BUTTON_SUBMIT, [
             'label' => '<i class="fa fa-mail-reply"></i> '.__('Notify Me when Done'),
             'attr'  => [
-                'class' => 'btn btn-info mb-3 mt-4 col-md-3'.$class,
+                'class' => 'btn btn-info mb-1 mt-4 col-md-3'.$class,
             ],
         ]);
     }

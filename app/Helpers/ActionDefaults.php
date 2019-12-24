@@ -8,16 +8,44 @@ class ActionDefaults
 
     const TARGET_ACTION_PARAM = 'target_action';
 
+    /**
+     * @param $name
+     *
+     * @return string|null
+     */
     public static function getDefault($name)
     {
         $session = session();
 
-        if ($session->has(self::DEFAULTS_PARAM)) {
-            if (array_key_exists($name, $session->get(self::DEFAULTS_PARAM))) {
-                return $session->get(self::DEFAULTS_PARAM)[$name];
+        $defaults = $session->get(self::DEFAULTS_PARAM);
+        if ($defaults) {
+            if (array_key_exists($name, $defaults)) {
+                return $defaults[$name];
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param $string
+     *
+     * @return array
+     */
+    public static function getDefaultsByPrefix($string)
+    {
+        $session = session();
+        $results = [];
+
+        $defaults = $session->get(self::DEFAULTS_PARAM);
+        if ($defaults) {
+            foreach ($defaults as $key => $value) {
+                if (0 === strrpos($key, $string)) {
+                    $results[$key] = $value;
+                }
+            }
+        }
+
+        return $results;
     }
 }

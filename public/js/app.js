@@ -86,6 +86,161 @@
 /************************************************************************/
 /******/ ({
 
+/***/ "./node_modules/@github/clipboard-copy-element/dist/index.esm.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/@github/clipboard-copy-element/dist/index.esm.js ***!
+  \***********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+function createNode(text) {
+  const node = document.createElement('pre');
+  node.style.width = '1px';
+  node.style.height = '1px';
+  node.style.position = 'fixed';
+  node.style.top = '5px';
+  node.textContent = text;
+  return node;
+}
+
+function copyNode(node) {
+  if ('clipboard' in navigator) {
+    // eslint-disable-next-line flowtype/no-flow-fix-me-comments
+    // $FlowFixMe Clipboard is not defined in Flow yet.
+    return navigator.clipboard.writeText(node.textContent);
+  }
+
+  const selection = getSelection();
+
+  if (selection == null) {
+    return Promise.reject(new Error());
+  }
+
+  selection.removeAllRanges();
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  selection.addRange(range);
+  document.execCommand('copy');
+  selection.removeAllRanges();
+  return Promise.resolve();
+}
+function copyText(text) {
+  if ('clipboard' in navigator) {
+    // eslint-disable-next-line flowtype/no-flow-fix-me-comments
+    // $FlowFixMe Clipboard is not defined in Flow yet.
+    return navigator.clipboard.writeText(text);
+  }
+
+  const body = document.body;
+
+  if (!body) {
+    return Promise.reject(new Error());
+  }
+
+  const node = createNode(text);
+  body.appendChild(node);
+  copyNode(node);
+  body.removeChild(node);
+  return Promise.resolve();
+}
+
+function copy(button) {
+  const id = button.getAttribute('for');
+  const text = button.getAttribute('value');
+
+  function trigger() {
+    button.dispatchEvent(new CustomEvent('clipboard-copy', {
+      bubbles: true
+    }));
+  }
+
+  if (text) {
+    copyText(text).then(trigger);
+  } else if (id) {
+    const root = 'getRootNode' in Element.prototype ? button.getRootNode() : button.ownerDocument;
+    if (!(root instanceof Document || 'ShadowRoot' in window && root instanceof ShadowRoot)) return;
+    const node = root.getElementById(id);
+    if (node) copyTarget(node).then(trigger);
+  }
+}
+
+function copyTarget(content) {
+  if (content instanceof HTMLInputElement || content instanceof HTMLTextAreaElement) {
+    return copyText(content.value);
+  } else if (content instanceof HTMLAnchorElement && content.hasAttribute('href')) {
+    return copyText(content.href);
+  } else {
+    return copyNode(content);
+  }
+}
+
+function clicked(event) {
+  const button = event.currentTarget;
+
+  if (button instanceof HTMLElement) {
+    copy(button);
+  }
+}
+
+function keydown(event) {
+  if (event.key === ' ' || event.key === 'Enter') {
+    const button = event.currentTarget;
+
+    if (button instanceof HTMLElement) {
+      event.preventDefault();
+      copy(button);
+    }
+  }
+}
+
+function focused(event) {
+  event.currentTarget.addEventListener('keydown', keydown);
+}
+
+function blurred(event) {
+  event.currentTarget.removeEventListener('keydown', keydown);
+}
+
+class ClipboardCopyElement extends HTMLElement {
+  constructor() {
+    super();
+    this.addEventListener('click', clicked);
+    this.addEventListener('focus', focused);
+    this.addEventListener('blur', blurred);
+  }
+
+  connectedCallback() {
+    if (!this.hasAttribute('tabindex')) {
+      this.setAttribute('tabindex', '0');
+    }
+
+    if (!this.hasAttribute('role')) {
+      this.setAttribute('role', 'button');
+    }
+  }
+
+  get value() {
+    return this.getAttribute('value') || '';
+  }
+
+  set value(text) {
+    this.setAttribute('value', text);
+  }
+
+}
+
+if (!window.customElements.get('clipboard-copy')) {
+  window.ClipboardCopyElement = ClipboardCopyElement;
+  window.customElements.define('clipboard-copy', ClipboardCopyElement);
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (ClipboardCopyElement);
+
+
+/***/ }),
+
 /***/ "./node_modules/axios/index.js":
 /*!*************************************!*\
   !*** ./node_modules/axios/index.js ***!
@@ -51067,6 +51222,8 @@ __webpack_require__(/*! ./form */ "./resources/js/form.js");
 
 __webpack_require__(/*! ./content */ "./resources/js/content.js");
 
+__webpack_require__(/*! ./suppressionList */ "./resources/js/suppressionList.js");
+
 __webpack_require__(/*! ./echo */ "./resources/js/echo.js");
 
 __webpack_require__(/*! ./notification */ "./resources/js/notification.js");
@@ -51499,15 +51656,38 @@ $(function () {
 /***/ (function(module, exports) {
 
 st.form = function ($context) {
-  $('a.btn, :reset.btn', $context).off('click.submit-animate').on('click.submit-animate', function () {
+  $('a.btn, :reset.btn, :submit.btn', $context).off('click.submit-animate').on('click.submit-animate', function () {
     var $t = $(this),
         h = $t.outerHeight(),
         w = $t.outerWidth();
 
     if (!$t.hasClass('submit-animate')) {
-      var classList = $t[0].classList.value.split(/\s+/),
-          classListNew = [],
-          $overlay = $('<div>').css({
+      // var classList = $t[0].classList.value.split(/\s+/),
+      //     classListNew = [],
+      // for (var i = 0; i < classList.length; i++) {
+      //     if (classList[i].indexOf('btn') === -1) {
+      //         classListNew.push(classList[i]);
+      //     }
+      // }
+      // var $wrap = $('<div class="text-center">')
+      //     .css({
+      //         'width': w,
+      //         'height': h,
+      //         'left': $t.position().left,
+      //         'right': $t.position().right,
+      //         'margin': '0 auto'
+      //     })
+      //     .addClass(classListNew.join(' '));
+      // $('body').append($overlay);
+      // $t.wrap($wrap);
+      // setTimeout(function () {
+      //     // $icon = $t.find('i:first');
+      //     // if ($icon.length) {
+      //     //     var $newIcon =
+      // $icon.first().clone().appendTo($wrap); // }
+      // $t.addClass('submit-animate') .animate({ 'height': h,
+      // 'width': h }, 100) .addClass('submit-animating'); }, 10);
+      var $overlay = $('<div>').css({
         'display': 'block',
         'position': 'fixed',
         'top': 0,
@@ -51517,32 +51697,6 @@ st.form = function ($context) {
         'opacity': 0,
         'background': '#fff'
       });
-
-      for (var i = 0; i < classList.length; i++) {
-        if (classList[i].indexOf('btn') === -1) {
-          classListNew.push(classList[i]);
-        }
-      }
-
-      var $wrap = $('<div class="text-center">').css({
-        'width': w,
-        'height': h,
-        'left': $t.position().left,
-        'right': $t.position().right,
-        'margin': '0 auto'
-      }).addClass(classListNew.join(' '));
-      $('body').append($overlay);
-      $t.wrap($wrap);
-      setTimeout(function () {
-        // $icon = $t.find('i:first');
-        // if ($icon.length) {
-        //     var $newIcon = $icon.first().clone().appendTo($wrap);
-        // }
-        $t.addClass('submit-animate').animate({
-          'height': h,
-          'width': h
-        }, 100).addClass('submit-animating');
-      }, 10);
       $overlay.animate({
         'opacity': .3
       }, 300);
@@ -51550,12 +51704,13 @@ st.form = function ($context) {
         $overlay.animate({
           'opacity': 0
         }, 300, function () {
-          $overlay.remove();
-          $t.unwrap($wrap);
-          $t.removeClass('submit-animate').animate({
-            'height': h,
-            'width': w
-          }, 100).removeClass('submit-animating');
+          $overlay.remove(); // $t.unwrap($wrap);
+          // $t.removeClass('submit-animate')
+          //     .animate({
+          //         'height': h,
+          //         'width': w
+          //     }, 100)
+          //     .removeClass('submit-animating');
         });
       }, 2000);
     }
@@ -51616,6 +51771,34 @@ st.notifications = function ($context) {
 
 $(function () {
   st.notifications($('body'));
+});
+
+/***/ }),
+
+/***/ "./resources/js/suppressionList.js":
+/*!*****************************************!*\
+  !*** ./resources/js/suppressionList.js ***!
+  \*****************************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _github_clipboard_copy_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @github/clipboard-copy-element */ "./node_modules/@github/clipboard-copy-element/dist/index.esm.js");
+
+
+st.suppressionList = function ($context) {
+  document.addEventListener('clipboard-copy', function (event) {
+    var $t = $(event.target).first();
+    $t.tooltip('toggle');
+    setTimeout(function () {
+      $t.tooltip('hide');
+    }, 10000);
+  });
+};
+
+$(function () {
+  st.suppressionList($('body'));
 });
 
 /***/ }),

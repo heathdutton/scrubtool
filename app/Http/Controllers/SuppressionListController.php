@@ -56,19 +56,20 @@ class SuppressionListController extends Controller
             return abort(404);
         }
 
+        $view = view('suppressionLists')->with([
+            'suppressionLists' => [$suppressionList],
+            'owner'            => true,
+        ]);
         if ($request->ajax()) {
             return response()->json([
-                'html'       => view('partials.suppressionLists.item')
-                    ->with(['suppressionList' => $suppressionList])
-                    ->toHtml(),
+                'html'       => $view->toHtml(),
                 'updated_at' => $suppressionList->updated_at,
                 'success'    => true,
-            ]);
-        } else {
-            return view('suppressionLists')->with([
-                'suppressionLists' => [$suppressionList],
+                'owner'      => true,
             ]);
         }
+
+        return $view;
 
     }
 
@@ -105,10 +106,12 @@ class SuppressionListController extends Controller
                     ->toHtml(),
                 'updated_at' => $suppressionList->updated_at,
                 'success'    => true,
+                'owner'      => true,
             ]);
         } else {
             return view('suppressionLists')->with([
                 'suppressionLists' => [$suppressionList],
+                'owner'            => true,
             ]);
         }
     }
@@ -190,4 +193,5 @@ class SuppressionListController extends Controller
 
         return redirect(route('suppressionList', ['id' => $id]));
     }
+
 }

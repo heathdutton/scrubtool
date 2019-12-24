@@ -167,8 +167,10 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                 </div>
             @endif
             @if($file->form)
-                <div class="col-12">
-                    {!! form($file->form) !!}
+                <div class="row">
+                    <div class="col-md-12">
+                        {!! form($file->form) !!}
+                    </div>
                 </div>
             @endif
         </div>

@@ -12,6 +12,9 @@ class FileHashHelper
     /** @var HashHelper */
     private $hashHelper;
 
+    /** @var FileAnalysisHelper */
+    private $fileAnalysisHelper;
+
     /**
      * FileHashHelper constructor.
      *
@@ -59,11 +62,11 @@ class FileHashHelper
                 // We are starting with plain text.
                 if ($type & FileAnalysisHelper::TYPE_PHONE) {
                     $countryCode = $this->file->input_settings['country'] ?? $this->file->country ?? 'US';
-                    $value       = FileAnalysisHelper::getPhone($value, $countryCode, true);
+                    $value       = $this->getFileAnalysisHelper()->getPhone($value, $countryCode, true);
                     $value       = preg_replace("/[^0-9]/", '', $value);
                 } elseif ($type & FileAnalysisHelper::TYPE_EMAIL) {
                     $value = strtolower(trim($value));
-                    $value = FileAnalysisHelper::getEmail($value);
+                    $value = $this->getFileAnalysisHelper()->getEmail($value);
                 }
             }
             if ($value) {
@@ -84,6 +87,18 @@ class FileHashHelper
         }
 
         return (bool) $value;
+    }
+
+    /**
+     * @return FileAnalysisHelper
+     */
+    private function getFileAnalysisHelper()
+    {
+        if (!$this->fileAnalysisHelper) {
+            $this->fileAnalysisHelper = new FileAnalysisHelper($this->file);
+        }
+
+        return $this->fileAnalysisHelper;
     }
 
     /**
