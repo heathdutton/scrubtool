@@ -117,13 +117,13 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                                         <a class="btn btn-secondary"
                                            href="{{ route('files') }}"
                                            onclick="
-                                        var $dropzone = $('#dropzone:first');
-                                        if ($dropzone.length) {
-                                            $dropzone.click();
-                                            return false;
-                                        }" style="white-space: nowrap;">
+                                                var $dropzone = $('#dropzone:first');
+                                                if ($dropzone.length) {
+                                                    $dropzone.click();
+                                                    return false;
+                                                }" style="white-space: nowrap;">
                                             <i class="fa fa-plus"></i>
-                                            {{ __('Another like this') }}
+                                            {{ __('Another File') }}
                                         </a>
                                         @if($file->available_till)
                                             <div class="input-group-prepend"

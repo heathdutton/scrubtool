@@ -250,6 +250,7 @@ class FileImportSheet implements ToModel
             // Notifications will be fired based on the persisted suppression list data.
             $this->stats['rows_persisted'] = $this->fileSuppressionListHelper->finish();
         }
+
         $this->stats['rows_processed'] = max($this->stats['rows_processed'], $this->stats['rows_total']);
         if ($this->file->mode & File::MODE_HASH) {
             // Notify the user of a file ready to download.
@@ -262,6 +263,7 @@ class FileImportSheet implements ToModel
                 $this->file->notify($notification);
             }
         }
+
         if ($this->file->mode & File::MODE_SCRUB) {
             // Notify the user of a file ready to download.
             $notification = new ScrubFileReadyNotification($this->file);

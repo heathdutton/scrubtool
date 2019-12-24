@@ -116,33 +116,33 @@ class SuppressionList extends Model implements Auditable
                 ->where(function ($q) use ($idTokens, $ids, $user) {
                     $method = 'where';
                     foreach ($idTokens as $id => $token) {
-                        $q->{$method}(function ($q) use ($id, $token) {
+                        $q->{$method}(function ($q) use ($id, $token, $user) {
                             // Shared suppression lists
                             $q->where('id', $id)
-                                ->where('token', $token);
+                                ->where('token', $token)
+                                ->where(function ($q) use ($user) {
+                                    $q->where('private', 0)
+                                        ->orWhere('global', 1);
+                                    if ($user) {
+                                        $q->orWhere('user_id', $user->id);
+                                    }
+                                });
                         });
                         $method = 'orWhere';
                     }
                     if ($ids) {
                         $q->{$method}(function ($q) use ($ids, $user) {
-                            $q->where(function ($q) use ($ids) {
-                                // Global suppression lists.
-                                $q->whereIn('id', $ids)
-                                    ->where('global', 1);
-                            });
-                            if ($user) {
-                                $q->orWhere(function ($q) use ($ids, $user) {
+                            // Global suppression lists.
+                            $q->whereIn('id', $ids)
+                                ->where(function ($q) use ($ids, $user) {
                                     // Owned suppression lists.
-                                    $q->whereIn('id', $ids)
-                                        ->where('user_id', $user->id);
+                                    $q->where('global', 1);
+                                    if ($user) {
+                                        $q->orwhere('user_id', $user->id);
+                                    }
                                 });
-                            }
                         });
                     }
-                })
-                ->where(function ($q) {
-                    $q->where('private', 0)
-                        ->orWhere('global', 1);
                 })
                 ->limit(count($idTokens) + count($ids))
                 ->get();
