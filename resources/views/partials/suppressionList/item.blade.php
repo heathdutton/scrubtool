@@ -13,16 +13,7 @@ $class = 'secondary';
         </span>
         <div class="card-body">
             <div class="row mt-3">
-                @include('partials.stat', ['icon' => 'align-left', 'value' => $suppressionList->statParent('rows_imported') ?? 0, 'label' => __('Total Records')])
-                {{--                ->where('status', \App\Models\SuppressionListSupport::STATUS_READY)--}}
-                @foreach($suppressionList->suppressionListSupports->sortBy('id')->unique('column_type') as $support)
-                    @include('partials.stat', [
-                        'icon' => __("column_types.icons.{$support->column_type}"),
-                        'value' => number_format((new \App\Models\SuppressionListContent([], $support))->count()),
-                        'label' => __('Unique :type', ['type' => __('column_types.plural.'.$support->column_type)]),
-                    ])
-                @endforeach
-                @include('partials.stat', ['icon' => 'filter', 'value' => $suppressionList->statParent('rows_scrubbed') ?? 0, 'label' => __('Scrubbed Records')])
+                @include('partials.suppressionList.stats')
             </div>
             @if($suppressionList->description && !($suppressionList->form && $owner))
                 <div class="row mt-3">
@@ -77,7 +68,7 @@ $class = 'secondary';
                                             'mode' => App\Models\File::MODE_SCRUB,
                                             'suppression_list_use_'.$suppressionList->id => $suppressionList->id,
                                         ],
-                                        'target_action' => route('files')]) }}" class="btn btn-success">
+                                        'target_action' => route('files')]) }}" class="btn btn-primary">
                                         <i class="fa fa-filter"></i>
                                         {{ __('Scrub Using This') }}
                                     </a>
@@ -87,7 +78,7 @@ $class = 'secondary';
                                             'mode' => App\Models\File::MODE_SCRUB,
                                             'suppression_list_use_'.$suppressionList->id => $suppressionList->getIdToken(),
                                         ],
-                                        'target_action' => route('files')]) }}" class="btn btn-success">
+                                        'target_action' => route('files')]) }}" class="btn btn-primary">
                                         <i class="fa fa-filter"></i>
                                         {{ __('Scrub Using This') }}
                                     </a>

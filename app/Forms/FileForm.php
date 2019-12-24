@@ -7,6 +7,7 @@ use App\Helpers\FileSuppressionListHelper;
 use App\Helpers\HashHelper;
 use App\Models\File;
 use App\Models\SuppressionList;
+use App\Models\SuppressionListSupport;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -30,6 +31,7 @@ class FileForm extends Form
         }
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
+            $suppressionLists   = [];
             $ownedListOptions   = [];
             $sharedListOptions  = [];
             $globalListOptions  = [];
@@ -42,11 +44,13 @@ class FileForm extends Form
 
             // Get user's own suppression lists as options to scrub against.
             if ($file->user && $file->user->suppressionLists) {
-                foreach ($file->user->suppressionLists as $list) {
-                    $ownedListOptions[$list->id] = $list->name ?? $list->id;
-                    if ($list->required) {
-                        $requiredLists[$list->id] = true;
+                $suppressionLists = $file->user->suppressionLists;
+                foreach ($file->user->suppressionLists as $suppressionList) {
+                    $ownedListOptions[$suppressionList->id] = $suppressionList->name ?? $suppressionList->id;
+                    if ($suppressionList->required) {
+                        $requiredLists[$suppressionList->id] = true;
                     }
+                    $suppressionLists[$suppressionList->id] = $suppressionList;
                 }
             }
             asort($ownedListOptions);
@@ -56,18 +60,20 @@ class FileForm extends Form
             if ($tokens) {
                 foreach (SuppressionList::findByIdTokens($tokens) as $suppressionList) {
                     $sharedListOptions[$suppressionList->getIdToken()] = $suppressionList->name;
+                    $suppressionLists[$suppressionList->id]            = $suppressionList;
                 }
             }
             asort($sharedListOptions);
 
             // Add global suppression list options for scrubbing.
-            foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
-                $label = $list->name ?? $list->id;
-                if ($list->required) {
-                    $label                    .= ' ('.__('Required').')';
-                    $requiredLists[$list->id] = true;
+            foreach (SuppressionList::query()->where('global', true)->get() as $suppressionList) {
+                $label = $suppressionList->name ?? $suppressionList->id;
+                if ($suppressionList->required) {
+                    $label                               .= ' ('.__('Required').')';
+                    $requiredLists[$suppressionList->id] = true;
                 }
-                $globalListOptions[$list->id] = $label;
+                $globalListOptions[$suppressionList->id] = $label;
+                $suppressionLists[$suppressionList->id]  = $suppressionList;
             }
             asort($globalListOptions);
 
@@ -182,6 +188,7 @@ class FileForm extends Form
                         $options['attr']['disabled'] = 'disabled';
                         $fieldName                   = 'suppression_list_use_disabled_'.$listId;
                     }
+                    self::addSuppressionListOptions($options, $listId, $suppressionLists, $file);
                     $this->add($fieldName, Field::CHECKBOX, $options);
                 };
                 // @todo - Auto select all link/button. Possibly handle a selection list better if there are MANY.
@@ -349,6 +356,43 @@ class FileForm extends Form
         }
     }
 
+    /**
+     * @param  array  $options
+     * @param $id
+     * @param $suppressionLists
+     * @param  File  $file
+     */
+    private static function addSuppressionListOptions(&$options = [], $id, $suppressionLists, File $file)
+    {
+        if (isset($suppressionLists[$id])) {
+            if ($suppressionLists[$id]->suppressionListSupports->count()) {
+                /** @var SuppressionListSupport $suppressionList */
+                $suppressionList = $suppressionLists[$id];
+                $data            = [];
+                /** @var SuppressionListSupport $suppressionListSupport */
+                foreach ($suppressionList->suppressionListSupports as $suppressionListSupport) {
+                    $key = $suppressionListSupport->column_type;
+                    if (!isset($data[$key])) {
+                        $data[$key] = [];
+                    }
+                    $data[$key][] = $suppressionListSupport->hash_type;
+                }
+
+                if (!isset($options['label_attr'])) {
+                    $options['label_attr'] = [];
+                }
+                $options['label_attr']['data-toggle']         = 'tooltip';
+                $options['label_attr']['data-placement']      = 'right';
+                $options['label_attr']['data-supports']       = json_encode($data);
+                $options['label_attr']['data-original-title'] = view(
+                    'partials.suppressionList.stats', [
+                    'suppressionList' => $suppressionList,
+                    'owner'           => ($file && $file->user) ? $suppressionList->user = $file->user : false,
+                ])->toHtml();
+            }
+        }
+    }
+
     private function columnName($columnName = null, $columnIndex = 0)
     {
         if (!empty(trim($columnName))) {
@@ -361,7 +405,6 @@ class FileForm extends Form
 
         return __('Column '.$r);
     }
-
 
     /**
      * Optionally change the validation result, and/or add error messages.
