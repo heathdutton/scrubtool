@@ -32,7 +32,10 @@ class SuppressionListController extends Controller
      */
     public function index(Request $request)
     {
-        return view('suppressionLists')->with(['suppressionLists' => $request->user()->suppressionLists]);
+        return view('suppressionLists')->with([
+            'suppressionLists' => $request->user()->suppressionLists,
+            'owner'            => true,
+        ]);
     }
 
     /**
