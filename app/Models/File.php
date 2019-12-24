@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Forms\FileForm;
 use App\Forms\FileEmailForm;
+use App\Forms\FileForm;
 use App\Jobs\FileAnalyze;
 use App\Jobs\FileGetChecksums;
 use App\Jobs\FileRun;
@@ -502,10 +502,12 @@ class File extends Model implements Auditable
                 $this->downloads()->create();
 
                 return response()->download($location, $name);
+            } else {
+                return abort(404, __('Sorry, this file is no longer available for download.'));
             }
         }
 
-        return abort(404);
+        return abort(404, __('Sorry, this file does not exist.'));
     }
 
     /**
@@ -539,27 +541,11 @@ class File extends Model implements Auditable
             $this->setEmail($values['email'] ?? '');
 
             if ($this->mode & File::MODE_SCRUB) {
-                if (empty($this->user->id)) {
-                    throw new Exception(__('You must be logged in to scrub.'));
-                }
-                $listIds = $this->getInputLists('suppression_list_use_');
-                if ($listIds) {
-                    $user = $this->user;
-                    $q    = SuppressionList::query()
-                        ->whereIn('id', $listIds)
-                        ->where(function ($q) use ($user) {
-                            // Disallow private list usage, unless the file of origin also belongs to the same user.
-                            $q->where('private', 0);
-                            if ($user) {
-                                $q->orWhere('user_id', $user->id);
-                                $q->orWhere('global', 1);
-                            }
-                        });
 
-                    // @todo - Add validation for tokens to query here if applicable.
-
-                    $lists = $q->get();
-                    if (!$lists->count()) {
+                $array = $this->getInputLists('suppression_list_use_');
+                if ($array) {
+                    $suppressionLists = SuppressionList::findByIdTokensOrUserOrGlobal($array, $this->user);
+                    if (!$suppressionLists->count()) {
                         throw new Exception(__('No appropriate lists were found for scrubbing with.'));
                     }
 
@@ -568,9 +554,9 @@ class File extends Model implements Auditable
                 } else {
                     throw new Exception(__('You must select a list to scrub with.'));
                 }
-                /** @var FileSuppressionList $list */
-                foreach ($lists as $list) {
-                    $this->suppressionLists()->attach($list->id, [
+                /** @var FileSuppressionList $suppressionList */
+                foreach ($suppressionLists as $suppressionList) {
+                    $this->suppressionLists()->attach($suppressionList->id, [
                         'created_at'   => Carbon::now('UTC'),
                         'updated_at'   => Carbon::now('UTC'),
                         'relationship' => FileSuppressionList::REL_LIST_USED_TO_SCRUB,
@@ -673,7 +659,11 @@ class File extends Model implements Auditable
         if ($this->input_settings) {
             foreach ($this->input_settings as $key => $value) {
                 if ($value && 0 === strpos($key, $prefix)) {
-                    $listIds[] = (int) $value;
+                    if (is_integer($value)) {
+                        $listIds[] = (int) $value;
+                    } else {
+                        $listIds[] = $value;
+                    }
                 }
             }
         }

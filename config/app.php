@@ -265,4 +265,14 @@ return [
     |
     */
     'file_minutes_available' => env('FILE_MINUTES_AVAILABLE', 1440),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scrubtool Short URL
+    |--------------------------------------------------------------------------
+    |
+    | Optional short url path for use when creating URLs intended for sharing.
+    |
+    */
+    'short_url'              => env('APP_SHORT_URL', env('APP_URL', 'http://localhost')),
 ];

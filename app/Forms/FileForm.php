@@ -31,6 +31,7 @@ class FileForm extends Form
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
             $ownedListOptions   = [];
+            $sharedListOptions  = [];
             $globalListOptions  = [];
             $requiredLists      = [];
             $classModePrefix    = 'file-mode file-mode-hidden file-mode-';
@@ -49,6 +50,15 @@ class FileForm extends Form
                 }
             }
             asort($ownedListOptions);
+
+            // Add shared suppression list options for scrubbing.
+            $tokens = ActionDefaults::getDefaultsByPrefix('suppression_list_use_');
+            if ($tokens) {
+                foreach (SuppressionList::findByIdTokens($tokens) as $suppressionList) {
+                    $sharedListOptions[$suppressionList->getIdToken()] = $suppressionList->name;
+                }
+            }
+            asort($sharedListOptions);
 
             // Add global suppression list options for scrubbing.
             foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
@@ -82,7 +92,7 @@ class FileForm extends Form
                     'class' => $classChoiceWrapper,
                 ],
             ];
-            if ($ownedListOptions || $globalListOptions) {
+            if ($ownedListOptions || $sharedListOptions || $globalListOptions) {
                 $modeOptions['choices'][File::MODE_SCRUB] = __('Scrub this file');
             }
             if ($file->user) {
@@ -142,16 +152,16 @@ class FileForm extends Form
                 ]);
             }
 
-            if ($ownedListOptions || $globalListOptions) {
+            if ($ownedListOptions || $sharedListOptions || $globalListOptions) {
                 $this->add('static_suppression_list_use', Field::STATIC, [
                     'tag'        => 'label',
                     'label_show' => false,
-                    'value'      => __('Scrub this file using:'),
+                    'value'      => __('Use:'),
                     'wrapper'    => [
                         'class' => 'ml-4 '.$classModePrefix.File::MODE_SCRUB,
                     ],
                 ]);
-                $allListOptions = $ownedListOptions + $globalListOptions;
+                $allListOptions = $ownedListOptions + $sharedListOptions + $globalListOptions;
                 foreach ($allListOptions as $listId => $label) {
                     $options            = [];
                     $options['label']   = $label;
@@ -309,31 +319,31 @@ class FileForm extends Form
             $this->add('submit_'.File::MODE_HASH, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-hashtag"></i> '.__('Hash File'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_HASH,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_HASH,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_APPEND, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-plus"></i> '.__('Append Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_APPEND,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_APPEND,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_CREATE, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-check"></i> '.__('Create Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_CREATE,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_CREATE,
                 ],
             ]);
             $this->add('submit_'.File::MODE_LIST_REPLACE, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-plus-square"></i> '.__('Replace Suppression List'),
                 'attr'  => [
-                    'class' => 'btn btn-warning pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_REPLACE,
+                    'class' => 'btn btn-warning float-right mb-3 mt-4 '.$classModePrefix.File::MODE_LIST_REPLACE,
                 ],
             ]);
             $this->add('submit_'.File::MODE_SCRUB, Field::BUTTON_SUBMIT, [
                 'label' => '<i class="fa fa-filter"></i> '.__('Scrub File'),
                 'attr'  => [
-                    'class' => 'btn btn-info pull-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
+                    'class' => 'btn btn-info float-right mb-3 mt-4 '.$classModePrefix.File::MODE_SCRUB,
                 ],
             ]);
         }

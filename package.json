@@ -23,6 +23,7 @@
         "vue-template-compiler": "^2.6.11"
     },
     "dependencies": {
+        "@github/clipboard-copy-element": "^1.1.1",
         "bootswatch": "^4.4.1",
         "dropzone": "^5.5.1",
         "font-awesome-scss": "^1.0.0",

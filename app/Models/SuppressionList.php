@@ -20,6 +20,14 @@ class SuppressionList extends Model implements Auditable
 {
     use SoftDeletes, AuditableTrait;
 
+    const TOKEN_SEP = 'z';
+
+    public $casts = [
+        'private'  => 'boolean',
+        'required' => 'boolean',
+        'global'   => 'boolean',
+    ];
+
     /** @var array */
     protected $guarded = [
         'id',
@@ -33,6 +41,142 @@ class SuppressionList extends Model implements Auditable
 
     /** @var array */
     private $statsParent = [];
+
+    /**
+     * @param $idTokens
+     *
+     * @return array
+     */
+    public static function findByIdTokens($idTokens)
+    {
+        $results  = [];
+        $idTokens = self::parseIdTokens($idTokens);
+        if ($idTokens) {
+            $q = self::query();
+            foreach ($idTokens as $id => $token) {
+                $method = 'where';
+                $q->{$method}(function ($query) use ($id, $token) {
+                    $query->where('id', $id)
+                        ->where('token', $token);
+                });
+                $method = 'orWhere';
+            }
+            $results = $q->limit(count($idTokens))->get();
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param $idTokens
+     *
+     * @return array
+     */
+    private static function parseIdTokens($idTokens)
+    {
+        $result = [];
+        foreach ($idTokens as $idToken) {
+            $idToken = strtolower(trim($idToken));
+            if (false === strpos($idToken, self::TOKEN_SEP)) {
+                continue;
+            }
+            [$idString, $tokenString] = explode(self::TOKEN_SEP, $idToken);
+            if (!strlen($idString) || !strlen($tokenString)) {
+                continue;
+            }
+
+            $id = (int) base_convert($idString, 35, 10);
+            if (!$id) {
+                continue;
+            }
+            $result[$id] = $tokenString;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $array
+     * @param  User|null  $user
+     *
+     * @return array|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection
+     */
+    public static function findByIdTokensOrUserOrGlobal($array, User $user = null)
+    {
+        $results  = [];
+        $ids      = [];
+        $idTokens = self::parseIdTokens($array);
+        foreach (array_diff_key($idTokens, $array) as $id => $value) {
+            if (is_integer($value)) {
+                $ids[] = (int) $value;
+            }
+        }
+        if ($idTokens || $ids) {
+            $results = self::query()
+                ->where(function ($q) use ($idTokens, $ids, $user) {
+                    $method = 'where';
+                    foreach ($idTokens as $id => $token) {
+                        $q->{$method}(function ($q) use ($id, $token, $user) {
+                            // Shared suppression lists
+                            $q->where('id', $id)
+                                ->where('token', $token)
+                                ->where(function ($q) use ($user) {
+                                    $q->where('private', 0)
+                                        ->orWhere('global', 1);
+                                    if ($user) {
+                                        $q->orWhere('user_id', $user->id);
+                                    }
+                                });
+                        });
+                        $method = 'orWhere';
+                    }
+                    if ($ids) {
+                        $q->{$method}(function ($q) use ($ids, $user) {
+                            // Global suppression lists.
+                            $q->whereIn('id', $ids)
+                                ->where(function ($q) use ($ids, $user) {
+                                    // Owned suppression lists.
+                                    $q->where('global', 1);
+                                    if ($user) {
+                                        $q->orwhere('user_id', $user->id);
+                                    }
+                                });
+                        });
+                    }
+                })
+                ->limit(count($idTokens) + count($ids))
+                ->get();
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param $idToken
+     *
+     * @return \Illuminate\Database\Eloquent\Builder|Model|Builder|object|static|null
+     */
+    public static function findByIdToken($idToken)
+    {
+        $idToken = strtolower(trim($idToken));
+        if (false === strpos($idToken, self::TOKEN_SEP)) {
+            return null;
+        }
+        [$idString, $tokenString] = explode(self::TOKEN_SEP, $idToken);
+        if (!strlen($idString) || !strlen($tokenString)) {
+            return null;
+        }
+
+        $id = (int) base_convert($idString, 35, 10);
+        if (!$id) {
+            return null;
+        }
+
+        return self::query()
+            ->where('id', $id)
+            ->where('token', $tokenString)
+            ->first();
+    }
 
     /**
      * @param  array  $options
@@ -55,7 +199,6 @@ class SuppressionList extends Model implements Auditable
 
         return parent::save($options);
     }
-
 
     /**
      * @return string
@@ -152,7 +295,28 @@ class SuppressionList extends Model implements Auditable
      */
     public function actions()
     {
-        return $this->hasMany(Action::class);
+        return $this->hasMany(ActionAbstract::class);
+    }
+
+    /**
+     * @return string
+     */
+    public function getShareRoute()
+    {
+        static $route;
+
+        if (!$route) {
+            $route = route('suppressionList.share', ['idToken' => $this->getIdToken()]);
+            if (
+                ($appUrl = config('app.url'))
+                && ($appShortUrl = config('app.short_url'))
+                && $appUrl !== $appShortUrl
+            ) {
+                $route = str_ireplace($appUrl, $appShortUrl, $route);
+            }
+        }
+
+        return $route;
     }
 
     /**
@@ -165,31 +329,7 @@ class SuppressionList extends Model implements Auditable
         }
         $idString = base_convert($this->id, 10, 35);
 
-        return $idString.'z'.$this->token;
-    }
-
-    /**
-     * @param $string
-     *
-     * @return \Illuminate\Database\Eloquent\Builder|Model|Builder|object|static|null
-     */
-    public function findByIdToken($string)
-    {
-        $string = strtolower(trim($string));
-        list($idString, $tokenString) = explode('z', $string);
-        if (!$idString || !$tokenString) {
-            return null;
-        }
-
-        $id = (int) base_convert($idString, 35, 10);
-        if (!$id) {
-            return null;
-        }
-
-        return self::withoutTrashed()
-            ->where('id', $id)
-            ->where('token', $tokenString)
-            ->first();
+        return $idString.self::TOKEN_SEP.$this->token;
     }
 
     /**

@@ -1,10 +1,10 @@
 <?php
 return [
     'defaults'          => [
-        'wrapper_class'       => 'form-group',
+        'wrapper_class'       => 'form-inline mb-3 row',
         'wrapper_error_class' => '',
-        'label_class'         => '',
-        'field_class'         => 'form-control',
+        'label_class'         => 'col-md-2',
+        'field_class'         => 'form-control col-md-9',
         'field_error_class'   => 'is-invalid',
         'help_block_class'    => 'form-text text-muted m-3',
         'error_class'         => 'invalid-feedback',

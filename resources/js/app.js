@@ -7,5 +7,6 @@ require('./tooltips');
 require('./file');
 require('./form');
 require('./content');
+require('./suppressionList');
 require('./echo');
 require('./notification');

@@ -97,7 +97,7 @@
         @yield('content')
     </main>
 </div>
-<footer class="navbar navbar-light navbar-expand-md">
+<footer class="navbar navbar-light navbar-expand-md mt-1">
     <div class="container text-muted">
         <a class="navbar-brand text-muted" href="{{ url('/') }}">
             @include('partials.logo', ['fill' => '#919aa1'])
@@ -122,5 +122,6 @@
     </div>
 </footer>
 @include('partials.gtm')
+@yield('tail')
 </body>
 </html>
