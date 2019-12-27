@@ -378,17 +378,18 @@ class FileForm extends Form
                     $data[$key][] = $suppressionListSupport->hash_type;
                 }
 
-                if (!isset($options['label_attr'])) {
-                    $options['label_attr'] = [];
+                if (!isset($options['wrapper'])) {
+                    $options['wrapper'] = [];
                 }
-                $options['label_attr']['data-toggle']         = 'tooltip';
-                $options['label_attr']['data-placement']      = 'right';
-                $options['label_attr']['data-supports']       = json_encode($data);
-                $options['label_attr']['data-original-title'] = view(
+                $options['wrapper']['data-toggle']         = 'tooltip';
+                $options['wrapper']['data-placement']      = 'left';
+                $options['wrapper']['data-supports']       = htmlentities(json_encode($data));
+                $options['wrapper']['data-original-title'] = htmlentities(view(
                     'partials.suppressionList.stats', [
                     'suppressionList' => $suppressionList,
                     'owner'           => ($file && $file->user) ? $suppressionList->user = $file->user : false,
-                ])->toHtml();
+                ])->toHtml());
+
             }
         }
     }
