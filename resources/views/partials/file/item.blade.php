@@ -31,7 +31,7 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
     $class  = 'danger';
     $action = __('Cancelled');
 } elseif ($file->status & \App\Models\File::STATUS_WHOLE) {
-    $class = 'success';
+    $class = 'primary';
     if ($file->mode & \App\Models\File::MODE_HASH) {
         $action = __('File Hashed');
     } elseif ($file->mode & \App\Models\File::MODE_SCRUB) {

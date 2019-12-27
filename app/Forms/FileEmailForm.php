@@ -60,7 +60,7 @@ class FileEmailForm extends Form
                 'label_attr' => [
                     'class' => 'col-md-2',
                 ],
-                'value'      => __(':email will be notified when this is complete.',
+                'value'      => __(':email will be notified when done.',
                     ['email' => $email ?? 'nobody']),
                 'attr'       => [
                     'class' => 'btn-sm col-md-3 text-left',
