@@ -548,9 +548,6 @@ class File extends Model implements Auditable
                     if (!$suppressionLists->count()) {
                         throw new Exception(__('No appropriate lists were found for scrubbing with.'));
                     }
-
-                    // @todo - If the count of the lists we can scrub with doesn't match the input we should let the user know.
-
                 } else {
                     throw new Exception(__('You must select a list to scrub with.'));
                 }
@@ -709,21 +706,27 @@ class File extends Model implements Auditable
     }
 
     /**
+     * @param  int  $colType
+     * @param  array  $formValues
+     *
      * @return array
      */
-    public function getColumnsWithInputHashes($mode)
+    public function getColumnsWithInputHashes($colType, $formValues = [])
     {
-        $colTypePre = 'column_type_';
-        $colHashPre = 'column_hash_input_';
-        $columns    = [];
+        $columns       = [];
+        $colTypePrefix = 'column_type_';
+        $colHashPrefix = 'column_hash_input_';
+        if ($formValues) {
+            $inputSettings = $formValues;
+        } else {
+            $inputSettings = $this->input_settings;
+        }
         foreach ($this->columns as $key => $column) {
             if (
-                // Column has been configured by the user.
-                isset($this->input_settings[$colTypePre.$key])
-                // The user has confirmed the type as requested.
-                && ($mode & $this->input_settings[$colTypePre.$key])
+                isset($inputSettings[$colTypePrefix.$key])
+                && ($colType & intval($inputSettings[$colTypePrefix.$key]))
             ) {
-                $columns[] = $this->input_settings[$colHashPre.$key] ?? null;
+                $columns[] = $inputSettings[$colHashPrefix.$key] ?? null;
             }
         }
 

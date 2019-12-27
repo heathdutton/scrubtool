@@ -7,7 +7,7 @@ return [
         'field_class'         => 'form-control col-md-9',
         'field_error_class'   => 'is-invalid',
         'help_block_class'    => 'form-text text-muted m-3',
-        'error_class'         => 'invalid-feedback',
+        'error_class'         => 'invalid-feedback d-block text-danger ml-4 mt-2 mb-4',
         'required_class'      => 'required',
         'static'              => [
             'field_class' => 'form-control-plaintext',

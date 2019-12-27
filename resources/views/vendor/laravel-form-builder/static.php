@@ -15,6 +15,8 @@
 
 <?php endif; ?>
 
+<?php $showError = true; ?>
+<?php include 'errors.php' ?>
 
 <?php if ($showLabel && $showField): ?>
     <?php if ($options['wrapper'] !== false): ?>

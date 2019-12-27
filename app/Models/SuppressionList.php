@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -72,7 +73,7 @@ class SuppressionList extends Model implements Auditable
      *
      * @return array
      */
-    private static function parseIdTokens($idTokens)
+    public static function parseIdTokens($idTokens)
     {
         $result = [];
         foreach ($idTokens as $idToken) {
@@ -96,18 +97,36 @@ class SuppressionList extends Model implements Auditable
     }
 
     /**
+     * @param $string
+     *
+     * @return int
+     */
+    public static function getIdFromString($string)
+    {
+        $idToken = strtolower(trim($string));
+        if (false !== strpos($idToken, self::TOKEN_SEP)) {
+            [$idString, $tokenString] = explode(self::TOKEN_SEP, $idToken);
+            if (strlen($idString)) {
+                return (int) $idString;
+            }
+        }
+
+        return (int) $string;
+    }
+
+    /**
      * @param $array
      * @param  User|null  $user
      *
-     * @return array|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection
+     * @return \Illuminate\Database\Eloquent\Builder[]|Collection
      */
     public static function findByIdTokensOrUserOrGlobal($array, User $user = null)
     {
-        $results  = [];
+        $results  = (new Collection());
         $ids      = [];
         $idTokens = self::parseIdTokens($array);
-        foreach (array_diff_key($idTokens, $array) as $id => $value) {
-            if (is_integer($value)) {
+        foreach (array_diff_key($array, $idTokens) as $id => $value) {
+            if (is_numeric($value)) {
                 $ids[] = (int) $value;
             }
         }

@@ -51270,6 +51270,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 /***/ (function(module, exports) {
 
 st.loadContent = function (url, $destination, prepend, done) {
+  console.log(url);
   $.getJSON(url, function (data) {
     if (typeof data.success !== 'undefined' && data.success && typeof data.html !== 'undefined' && data.html.length) {
       if (prepend) {
@@ -51306,7 +51307,9 @@ st.loadContent = function (url, $destination, prepend, done) {
       }
     } else {
       if (typeof done == 'function') {
-        return done(null, data);
+        setTimeout(function () {
+          return done(null, data);
+        }, 500);
       }
     }
   });

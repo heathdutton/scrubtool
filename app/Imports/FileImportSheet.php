@@ -201,6 +201,10 @@ class FileImportSheet implements ToModel
     {
         if (!$this->fileSuppressionListHelper) {
             $this->fileSuppressionListHelper = new FileSuppressionListHelper($this->file);
+            $errors                          = $this->fileSuppressionListHelper->getErrors();
+            if ($errors) {
+                throw new Exception(implode(' ', $errors));
+            }
         }
 
         return $this->fileSuppressionListHelper;
