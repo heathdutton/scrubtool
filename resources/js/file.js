@@ -175,74 +175,73 @@ st.fileScrubCoverageCheck = function ($context) {
             return;
         }
 
-        if (parseInt($mode.val()) & st.modeScrub) {
-
-            // Discern if a column type [and hash] is supported.
-            var columnSupported = function (columnType) {
-                    for (var listId in supports) {
-                        if (supports.hasOwnProperty(listId)) {
-                            if (typeof supports[listId][columnType] !== 'undefined') {
+        var columnSupported = function (columnType) {
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            columnHashSupported = function (columnType, hashType) {
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            if (
+                                null === hashType
+                                || supports[listId][columnType].indexOf(hashType)
+                            ) {
                                 return true;
                             }
+                            return false;
                         }
                     }
-                    return false;
-                },
-                columnHashSupported = function (columnType, hashType) {
-                    for (var listId in supports) {
-                        if (supports.hasOwnProperty(listId)) {
-                            if (typeof supports[listId][columnType] !== 'undefined') {
-                                if (
-                                    null === hashType
-                                    || supports[listId][columnType].indexOf(hashType)
-                                ) {
-                                    return true;
-                                }
-                                return false;
-                            }
-                        }
-                    }
-                    return false;
-                },
-                columnHashesSupported = function (columnType) {
-                    var algos = {};
-                    for (var listId in supports) {
-                        if (supports.hasOwnProperty(listId)) {
-                            if (typeof supports[listId][columnType] !== 'undefined') {
-                                for (var algo in supports[listId][columnType]) {
-                                    if (supports[listId][columnType].hasOwnProperty(algo) && null !== supports[listId][columnType][algo]) {
-                                        algos[supports[listId][columnType][algo]] = true;
-                                    }
+                }
+                return false;
+            },
+            columnHashesSupported = function (columnType) {
+                var algos = {};
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            for (var algo in supports[listId][columnType]) {
+                                if (supports[listId][columnType].hasOwnProperty(algo) && null !== supports[listId][columnType][algo]) {
+                                    algos[supports[listId][columnType][algo]] = true;
                                 }
                             }
                         }
                     }
-                    return Object.keys(algos).join(', ').toUpperCase();
-                },
-                errorAdd = function (message, $target, $form, replace = false) {
-                    $form.bind('submit.halt', function (e) {
-                        e.preventDefault();
-                        return false;
-                    });
-                    var search = message.replace(/(<([^>]+)>)/ig, ''),
-                        $error = $target.find('.invalid-feedback.dynamic:contains(\'' + search + '\')').first();
-                    if ($error.length && replace) {
-                        $error.html(message);
+                }
+                return Object.keys(algos).join(', ').toUpperCase();
+            },
+            errorAdd = function (message, $target, $form, replace = false) {
+                $form.bind('submit.halt', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                var search = message.replace(/(<([^>]+)>)/ig, ''),
+                    $error = $target.find('.invalid-feedback.dynamic:contains(\'' + search + '\')').first();
+                if ($error.length && replace) {
+                    $error.html(message);
+                }
+                else {
+                    if (!$error.length) {
+                        $error = $('<div class="invalid-feedback dynamic text-danger ml-4 mt-2 mb-4">' + message + '</div>');
+                        $target.append($error);
                     }
-                    else {
-                        if (!$error.length) {
-                            $error = $('<div class="invalid-feedback dynamic text-danger ml-4 mt-2 mb-4">' + message + '</div>');
-                            $target.append($error);
-                        }
-                    }
-                    $error.addClass('d-block');
-                    $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', 'disabled');
-                },
-                errorClearAll = function ($form) {
-                    $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', null);
-                    $form.unbind('submit.halt');
-                    $form.find('.invalid-feedback.dynamic').removeClass('d-block');
-                };
+                }
+                $error.addClass('d-block');
+                $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', 'disabled');
+            },
+            errorClearAll = function ($form) {
+                $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', null);
+                $form.unbind('submit.halt');
+                $form.find('.invalid-feedback.dynamic').removeClass('d-block');
+            };
+
+        if (parseInt($mode.val()) & st.modeScrub) {
 
             // Discern supports available given selected suppression lists.
             var supports = [];
