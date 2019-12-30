@@ -14761,6 +14761,11 @@ input[type=button] {
   height: auto;
 }
 
+.custom-select.is-invalid {
+  border-width: 0 0 1px 0;
+  border-color: #d9534f;
+}
+
 html,
 body {
   height: 100%;

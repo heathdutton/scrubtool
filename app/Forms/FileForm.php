@@ -210,25 +210,30 @@ class FileForm extends Form
             }
 
             if ($file->columns) {
-                $this->add('static_columns', Field::STATIC, [
+                $hashHelper     = new HashHelper();
+                $hashOptionsOut = [null => __('Leave as-is')];
+                $hiddenColumns  = 0;
+                $columnTypes    = $this->columnTypes(true);
+                foreach ($hashHelper->listChoices() as $key => $value) {
+                    $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
+                }
+                $options = [
                     'tag'        => 'h5',
                     'label_show' => false,
                     'value'      => __('Columns'),
                     'wrapper'    => [
-                        'class' => 'mt-3',
+                        'class'              => 'mt-3 static-columns',
+                        'data-error-general' => __('Please identify :critical column to use the suppression list selection.',
+                            ['critical' => $this->criticalColumnTypes()]),
                     ],
-                ]);
-                $hashHelper        = new HashHelper();
-                $hashOptionsOut    = [null => __('Leave as-is')];
-                $hiddenColumns     = 0;
-                $columnTypes       = [];
-                $columnTypes[null] = __('Other data');
-                foreach (FileSuppressionListHelper::COLUMN_TYPES as $type) {
-                    $columnTypes[$type] = __('column_types.plural.'.$type);
+                ];
+                foreach ($this->columnTypes() as $id => $columnType) {
+                    $options['wrapper']['data-error-column-type-'.$id] = __('Please identify :column column to use the suppression list selection.',
+                        ['column' => $columnType]);
                 }
-                foreach ($hashHelper->listChoices() as $key => $value) {
-                    $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
-                }
+                $options['wrapper']['data-error-column-input-hash'] = __('This hash type is not compatible with this suppression list selection.</br>Please ensure you provide plaintext or one of the supported hash types:</br>:algos');
+                $this->add('static_columns', Field::STATIC, $options);
+
                 foreach ($file->columns as $columnIndex => $column) {
                     $hashOptionsIn     = [null => __('Is plain text')];
                     $label             = $this->columnName($column['name'], $columnIndex);
@@ -255,8 +260,10 @@ class FileForm extends Form
                                 'hash' => $hashName,
                                 'name' => $columnIcon.' '.$columnName,
                             ]).'</br>'.
-                            __('Samples').':<br/>&nbsp;&nbsp;'.
-                            implode('<br/>&nbsp;&nbsp;', $column['samples']);
+                            __('Samples').':<br/>'.
+                            '<small>'.
+                            implode('<br/>', $column['samples']).
+                            '</small>';
                     }
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
@@ -273,7 +280,7 @@ class FileForm extends Form
                             'class' => $classChoiceLabel,
                         ],
                         'wrapper'       => [
-                            'class' => $class,
+                            'class' => $class.' column-type',
                         ],
                     ]);
 
@@ -293,7 +300,7 @@ class FileForm extends Form
                             'choices'       => $hashOptionsIn,
                             'default_value' => $column['hash']['id'] ?? null,
                             'wrapper'       => [
-                                'class' => $class.' ml-4',
+                                'class' => $class.' column-hash-input ml-4',
                             ],
                         ]);
                     }
@@ -396,6 +403,49 @@ class FileForm extends Form
         }
     }
 
+    /**
+     * @param  bool  $includeNull
+     *
+     * @return array
+     */
+    private function columnTypes($includeNull = false)
+    {
+        static $columnTypes = [];
+        if (!$columnTypes) {
+            foreach (FileSuppressionListHelper::COLUMN_TYPES as $columnType) {
+                $columnTypes[$columnType] = __('column_types.'.$columnType);
+            }
+            asort($columnTypes);
+        }
+        if ($includeNull) {
+            return [null => __('Other data')] + $columnTypes;
+        }
+
+        return $columnTypes;
+    }
+
+    /**
+     * @return string
+     */
+    private function criticalColumnTypes()
+    {
+        static $criticalColumnTypes = '';
+        if (!$criticalColumnTypes) {
+            $columnTypes = array_values($this->columnTypes());
+            foreach ($columnTypes as $i => $columnType) {
+                if (0 === $i) {
+                    $criticalColumnTypes = $columnType;
+                } elseif ($i === count($columnTypes) - 1) {
+                    $criticalColumnTypes .= ' '.__('or').' '.$columnType;
+                } else {
+                    $criticalColumnTypes .= ', '.$columnType;
+                }
+            }
+        }
+
+        return $criticalColumnTypes;
+    }
+
     private function columnName($columnName = null, $columnIndex = 0)
     {
         if (!empty(trim($columnName))) {
@@ -454,7 +504,8 @@ class FileForm extends Form
             if ($values['mode'] & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
                 if (!self::validateListModeColumns($values)) {
                     $isValid                  = false;
-                    $result['static_columns'] = __('You need a column marked as a type that can be used for suppression. For example: Emails or Numbers.');
+                    $result['static_columns'] = __('You need a :critical column to be used for suppression.',
+                        ['critical' => $this->criticalColumnTypes()]);
                 }
             }
 
@@ -481,7 +532,8 @@ class FileForm extends Form
             if ($values['mode'] & File::MODE_SCRUB) {
                 if (!self::validateScrubModeColumns($values)) {
                     $isValid                  = false;
-                    $result['static_columns'] = __('You need a column marked as a type that can be used for scrubbing. For example: Emails or Numbers.');
+                    $result['static_columns'] = __('You need a :critical column to be used for scrubbing.',
+                        ['critical' => $this->criticalColumnTypes()]);
                 } else {
                     $this->validateScrubModeSupports($isValid, $values, $file, $result);
                 }
