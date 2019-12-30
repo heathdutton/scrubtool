@@ -219,7 +219,6 @@ class FileForm extends Form
                     ],
                 ]);
                 $hashHelper        = new HashHelper();
-                $hashOptionsIn     = [null => __('Is plain text')];
                 $hashOptionsOut    = [null => __('Leave as-is')];
                 $hiddenColumns     = 0;
                 $columnTypes       = [];
@@ -228,10 +227,10 @@ class FileForm extends Form
                     $columnTypes[$type] = __('column_types.plural.'.$type);
                 }
                 foreach ($hashHelper->listChoices() as $key => $value) {
-                    $hashOptionsIn[$key]  = __('Is a :hash hash', ['hash' => $value]);
                     $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
                 }
                 foreach ($file->columns as $columnIndex => $column) {
+                    $hashOptionsIn     = [null => __('Is plain text')];
                     $label             = $this->columnName($column['name'], $columnIndex);
                     $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
                     $column['filled']  = $column['filled'] ?? false;
@@ -239,6 +238,9 @@ class FileForm extends Form
                     $columnName        = !empty($column['type']) && !empty($columnTypes[$column['type']]) ? $columnTypes[$column['type']] : __('data');
                     $columnIcon        = !empty($column['type']) ? '<i class="fa fa-'.__('column_types.icons.'.$column['type']).'"></i>&nbsp;' : '';
                     $hashName          = !empty($column['hash']) && isset($hashOptionsIn[$column['hash']['id']]) ? $hashOptionsIn[$column['hash']['id']] : __('Plaintext');
+                    foreach ($hashHelper->listChoicesOfSameLength($column['hash']['id'] ?? null) as $key => $value) {
+                        $hashOptionsIn[$key] = __('Is a :hash hash', ['hash' => $value]);
+                    }
                     if (empty($column['filled'])) {
                         $class .= ' column-empty column-empty-hidden';
                     } else {
