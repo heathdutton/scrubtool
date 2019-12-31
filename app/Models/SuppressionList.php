@@ -122,14 +122,9 @@ class SuppressionList extends Model implements Auditable
      */
     public static function findByIdTokensOrUserOrGlobal($array, User $user = null)
     {
-        $results  = (new Collection());
-        $ids      = [];
+        $results  = new Collection();
         $idTokens = self::parseIdTokens($array);
-        foreach (array_diff_key($array, $idTokens) as $id => $value) {
-            if (is_numeric($value)) {
-                $ids[] = (int) $value;
-            }
-        }
+        $ids      = array_diff_key($array, $idTokens);
         if ($idTokens || $ids) {
             $results = self::query()
                 ->where(function ($q) use ($idTokens, $ids, $user) {
