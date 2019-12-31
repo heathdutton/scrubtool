@@ -739,7 +739,7 @@ class File extends Model implements Auditable
      */
     public function stat($stat, $formatted = true)
     {
-        if (in_array($stat, array_keys(self::STATS_DEFAULT)) && isset($this->{$stat})) {
+        if (isset($this->{$stat})) {
             if ($formatted) {
                 return number_format($this->{$stat});
             } else {
