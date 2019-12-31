@@ -49,10 +49,11 @@ class FileHashHelper
      * @param $columnIndex
      * @param  string  $mode
      * @param  bool  $binary
+     * @param  null  $algoOutput
      *
      * @return string|string[]|null
      */
-    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $binary = false)
+    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $binary = false, $algoOutput = null)
     {
         if (!empty($value)) {
             $type      = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
@@ -76,9 +77,13 @@ class FileHashHelper
                     }
                 } elseif ('output' == $mode) {
                     if (!$algoInput) {
-                        if ($this->file->mode & File::MODE_HASH) {
-                            // Generate hash for output from the filtered plaintext.
-                            $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
+                        if (!$algoOutput) {
+                            if ($this->file->mode & File::MODE_HASH) {
+                                // Generate hash for output from the filtered plaintext.
+                                $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
+                            }
+                        }
+                        if ($algoOutput) {
                             $this->getHashHelper()->hash($value, $algoOutput, $binary);
                         }
                     }
@@ -111,5 +116,13 @@ class FileHashHelper
         }
 
         return $this->hashHelper;
+    }
+
+    /**
+     * @return array
+     */
+    public function supportedHashTypes()
+    {
+        return array_keys($this->getHashHelper()->listChoices());
     }
 }

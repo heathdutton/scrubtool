@@ -714,8 +714,6 @@ class File extends Model implements Auditable
     public function getColumnsWithInputHashes($colType, $formValues = [])
     {
         $columns       = [];
-        $colTypePrefix = 'column_type_';
-        $colHashPrefix = 'column_hash_input_';
         if ($formValues) {
             $inputSettings = $formValues;
         } else {
@@ -723,10 +721,10 @@ class File extends Model implements Auditable
         }
         foreach ($this->columns as $key => $column) {
             if (
-                isset($inputSettings[$colTypePrefix.$key])
-                && ($colType & intval($inputSettings[$colTypePrefix.$key]))
+                isset($inputSettings['column_type_'.$key])
+                && ($colType & intval($inputSettings['column_type_'.$key]))
             ) {
-                $columns[] = $inputSettings[$colHashPrefix.$key] ?? null;
+                $columns[$key] = $inputSettings['column_hash_input_'.$key] ?? null;
             }
         }
 
