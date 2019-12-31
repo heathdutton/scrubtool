@@ -50,6 +50,8 @@ function ctrl_c() {
     exit 0
 }
 
+mkdir -p ./storage/framework/cache/data
+
 if [ "$1" == "tinker" ]; then
     echo "Prepping Tinker"
     $php artisan config:clear -v

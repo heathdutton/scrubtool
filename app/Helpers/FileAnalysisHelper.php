@@ -368,7 +368,7 @@ class FileAnalysisHelper
                     // Search for contents match (email = Email_address)
                     foreach ($this->typeIdentifiers as $typeIdentifier => $type) {
                         if (false !== strpos($simple, $typeIdentifier)) {
-                            $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
+                            $this->columnTypes[$i] = $type;
                             break;
                         }
                     }
