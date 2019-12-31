@@ -170,14 +170,24 @@ class FileSuppressionListHelper
                 $unsupportedListIds += array_flip($suppressionListIds);
                 $supportedListIds   = [];
                 $issues             = [];
+                $supportedHashTypes = $this->getFileHashHelper()->supportedHashTypes();
                 foreach ($this->discernSupportsNeeded($formValues) as $columnType => $columns) {
+                    $q = SuppressionListSupport::query();
+                    $q->whereIn('suppression_list_id', array_keys($unsupportedListIds));
+                    $q->where('column_type', $columnType);
                     $hashType = array_values($columns)[0];
-                    $supports = SuppressionListSupport::query()
-                        ->whereIn('suppression_list_id', $suppressionListIds)
-                        ->where('column_type', $columnType)
-                        ->where('hash_type', $hashType)
-                        ->where('status', SuppressionListSupport::STATUS_READY)
-                        ->get();
+                    if (null === $hashType && count($supportedHashTypes)) {
+                        $q->where(function ($q) use ($supportedHashTypes) {
+                            $q->whereNull('hash_type');
+                            $q->orWhereIn('hash_type', $supportedHashTypes);
+                        });
+                    } else {
+                        $q->where('hash_type', $hashType);
+                    }
+                    $q->where('status', SuppressionListSupport::STATUS_READY);
+                    $q->groupBy(['suppression_list_id']);
+                    $q->orderBy('hash_type', 'ASC');
+                    $supports = $q->get();
 
                     if ($supports->count()) {
                         foreach (array_keys($columns) as $columnIndex) {
@@ -235,6 +245,18 @@ class FileSuppressionListHelper
     }
 
     /**
+     * @return FileHashHelper
+     */
+    private function getFileHashHelper()
+    {
+        if (!$this->fileHashHelper) {
+            $this->fileHashHelper = new FileHashHelper($this->file);
+        }
+
+        return $this->fileHashHelper;
+    }
+
+    /**
      * @return array
      */
     public function getErrors()
@@ -267,11 +289,21 @@ class FileSuppressionListHelper
              * @var SuppressionListSupport $support
              */
             foreach ($this->columnSupports as $columnIndex => $supports) {
-                // Validate/sanitize/hash before attempting a scrub.
-                $value = $row[$columnIndex];
-                if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'output')) {
-                    foreach ($supports as $support) {
-                        if ($support->getContent()->where('content', $value)->exists()) {
+                // Get sanitized values for each hash type needed.
+                $valuesByHashType = [];
+                foreach ($supports as $support) {
+                    $value = $row[$columnIndex];
+                    if (
+                        !isset($valuesByHashType[$support->hash_type])
+                        && $this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'output', true,
+                            $support->hash_type)
+                    ) {
+                        $valuesByHashType[$support->hash_type] = $value;
+                    }
+                }
+                foreach ($supports as $support) {
+                    if (isset($valuesByHashType[$support->hash_type])) {
+                        if ($support->getContent()->where('content', $valuesByHashType[$support->hash_type])->exists()) {
                             $row   = [];
                             $scrub = true;
                             break;
@@ -282,18 +314,6 @@ class FileSuppressionListHelper
         }
 
         return $scrub;
-    }
-
-    /**
-     * @return FileHashHelper
-     */
-    private function getFileHashHelper()
-    {
-        if (!$this->fileHashHelper) {
-            $this->fileHashHelper = new FileHashHelper($this->file);
-        }
-
-        return $this->fileHashHelper;
     }
 
     /**
