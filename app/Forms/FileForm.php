@@ -7,6 +7,8 @@ use App\Helpers\FileSuppressionListHelper;
 use App\Helpers\HashHelper;
 use App\Models\File;
 use App\Models\SuppressionList;
+use App\Models\SuppressionListSupport;
+use Illuminate\Support\Facades\Auth;
 use Kris\LaravelFormBuilder\Field;
 use Kris\LaravelFormBuilder\Form;
 
@@ -30,6 +32,7 @@ class FileForm extends Form
         }
 
         if ($file->status & File::STATUS_INPUT_NEEDED) {
+            $suppressionLists   = [];
             $ownedListOptions   = [];
             $sharedListOptions  = [];
             $globalListOptions  = [];
@@ -42,11 +45,13 @@ class FileForm extends Form
 
             // Get user's own suppression lists as options to scrub against.
             if ($file->user && $file->user->suppressionLists) {
-                foreach ($file->user->suppressionLists as $list) {
-                    $ownedListOptions[$list->id] = $list->name ?? $list->id;
-                    if ($list->required) {
-                        $requiredLists[$list->id] = true;
+                $suppressionLists = $file->user->suppressionLists;
+                foreach ($file->user->suppressionLists as $suppressionList) {
+                    $ownedListOptions[$suppressionList->id] = $suppressionList->name ?? $suppressionList->id;
+                    if ($suppressionList->required) {
+                        $requiredLists[$suppressionList->id] = true;
                     }
+                    $suppressionLists[$suppressionList->id] = $suppressionList;
                 }
             }
             asort($ownedListOptions);
@@ -56,18 +61,20 @@ class FileForm extends Form
             if ($tokens) {
                 foreach (SuppressionList::findByIdTokens($tokens) as $suppressionList) {
                     $sharedListOptions[$suppressionList->getIdToken()] = $suppressionList->name;
+                    $suppressionLists[$suppressionList->id]            = $suppressionList;
                 }
             }
             asort($sharedListOptions);
 
             // Add global suppression list options for scrubbing.
-            foreach (SuppressionList::withoutTrashed()->where('global', true)->get() as $list) {
-                $label = $list->name ?? $list->id;
-                if ($list->required) {
-                    $label                    .= ' ('.__('Required').')';
-                    $requiredLists[$list->id] = true;
+            foreach (SuppressionList::query()->where('global', true)->get() as $suppressionList) {
+                $label = $suppressionList->name ?? $suppressionList->id;
+                if ($suppressionList->required) {
+                    $label                               .= ' ('.__('Required').')';
+                    $requiredLists[$suppressionList->id] = true;
                 }
-                $globalListOptions[$list->id] = $label;
+                $globalListOptions[$suppressionList->id] = $label;
+                $suppressionLists[$suppressionList->id]  = $suppressionList;
             }
             asort($globalListOptions);
 
@@ -176,12 +183,14 @@ class FileForm extends Form
                     $fieldName = 'suppression_list_use_'.$listId;
                     if (isset($requiredLists[$listId]) || count($allListOptions) === 1) {
                         // This will create a hidden input with the static value, and a disabled visible field.
-                        $options['required'] = true;
-                        $options['checked']  = 'checked';
+                        $options['required']        = true;
+                        $options['checked']         = 'checked';
+                        $options['attr']['checked'] = 'checked';
                         $this->add($fieldName, Field::HIDDEN, $options);
                         $options['attr']['disabled'] = 'disabled';
-                        $fieldName                   = 'suppression_list_use_disabled_'.$listId;
+                        $fieldName                   = 'suppression_list_disabled_use_'.$listId;
                     }
+                    self::addSuppressionListOptions($options, $listId, $suppressionLists, $file);
                     $this->add($fieldName, Field::CHECKBOX, $options);
                 };
                 // @todo - Auto select all link/button. Possibly handle a selection list better if there are MANY.
@@ -201,28 +210,32 @@ class FileForm extends Form
             }
 
             if ($file->columns) {
-                $this->add('static_columns', Field::STATIC, [
+                $hashHelper     = new HashHelper();
+                $hashOptionsOut = [null => __('Leave as-is')];
+                $hiddenColumns  = 0;
+                $columnTypes    = $this->columnTypes(true);
+                foreach ($hashHelper->listChoices() as $key => $value) {
+                    $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
+                }
+                $options = [
                     'tag'        => 'h5',
                     'label_show' => false,
                     'value'      => __('Columns'),
                     'wrapper'    => [
-                        'class' => 'mt-3',
+                        'class'              => 'mt-3 static-columns',
+                        'data-error-general' => __('Please identify :critical column to use the suppression list selection.',
+                            ['critical' => $this->criticalColumnTypes()]),
                     ],
-                ]);
-                $hashHelper        = new HashHelper();
-                $hashOptionsIn     = [null => __('Is plain text')];
-                $hashOptionsOut    = [null => __('Leave as-is')];
-                $hiddenColumns     = 0;
-                $columnTypes       = [];
-                $columnTypes[null] = __('Other data');
-                foreach (FileSuppressionListHelper::COLUMN_TYPES as $type) {
-                    $columnTypes[$type] = __('column_types.plural.'.$type);
+                ];
+                foreach ($this->columnTypes() as $id => $columnType) {
+                    $options['wrapper']['data-error-column-type-'.$id] = __('Please identify :column column to use the suppression list selection.',
+                        ['column' => $columnType]);
                 }
-                foreach ($hashHelper->listChoices() as $key => $value) {
-                    $hashOptionsIn[$key]  = __('Is a :hash hash', ['hash' => $value]);
-                    $hashOptionsOut[$key] = __('Convert to :hash hash', ['hash' => $value]);
-                }
+                $options['wrapper']['data-error-column-input-hash'] = __('This hash type is not compatible with this suppression list selection.</br>Please ensure you provide plaintext or one of the supported hash types:</br>:algos');
+                $this->add('static_columns', Field::STATIC, $options);
+
                 foreach ($file->columns as $columnIndex => $column) {
+                    $hashOptionsIn     = [null => __('Is plain text')];
                     $label             = $this->columnName($column['name'], $columnIndex);
                     $column['samples'] = array_filter($column['samples'] ?? [__('None')]);
                     $column['filled']  = $column['filled'] ?? false;
@@ -230,6 +243,9 @@ class FileForm extends Form
                     $columnName        = !empty($column['type']) && !empty($columnTypes[$column['type']]) ? $columnTypes[$column['type']] : __('data');
                     $columnIcon        = !empty($column['type']) ? '<i class="fa fa-'.__('column_types.icons.'.$column['type']).'"></i>&nbsp;' : '';
                     $hashName          = !empty($column['hash']) && isset($hashOptionsIn[$column['hash']['id']]) ? $hashOptionsIn[$column['hash']['id']] : __('Plaintext');
+                    foreach ($hashHelper->listChoicesOfSameLength($column['hash']['id'] ?? null) as $key => $value) {
+                        $hashOptionsIn[$key] = __('Is a :hash hash', ['hash' => $value]);
+                    }
                     if (empty($column['filled'])) {
                         $class .= ' column-empty column-empty-hidden';
                     } else {
@@ -244,15 +260,16 @@ class FileForm extends Form
                                 'hash' => $hashName,
                                 'name' => $columnIcon.' '.$columnName,
                             ]).'</br>'.
-                            __('Samples').':<br/>&nbsp;&nbsp;'.
-                            implode('<br/>&nbsp;&nbsp;', $column['samples']);
+                            __('Samples').':<br/>'.
+                            '<small>'.
+                            implode('<br/>', $column['samples']).
+                            '</small>';
                     }
                     $this->add('column_type_'.$columnIndex, Field::CHOICE, [
                         'label'         => $label,
                         'label_show'    => true,
                         'choices'       => $columnTypes,
-                        'selected'      => $column['type'] ?? null,
-                        'default_value' => null,
+                        'default_value' => $column['type'] ?? null,
                         'attr'          => [
                             'class'               => $classChoiceField.' col-md-3',
                             'data-toggle'         => 'tooltip',
@@ -263,7 +280,7 @@ class FileForm extends Form
                             'class' => $classChoiceLabel,
                         ],
                         'wrapper'       => [
-                            'class' => $class,
+                            'class' => $class.' column-type',
                         ],
                     ]);
 
@@ -281,10 +298,9 @@ class FileForm extends Form
                             ],
                             'label_show'    => true,
                             'choices'       => $hashOptionsIn,
-                            'selected'      => $column['hash']['id'] ?? null,
-                            'default_value' => null,
+                            'default_value' => $column['hash']['id'] ?? null,
                             'wrapper'       => [
-                                'class' => $class.' ml-4',
+                                'class' => $class.' column-hash-input ml-4',
                             ],
                         ]);
                     }
@@ -298,7 +314,6 @@ class FileForm extends Form
                             'class' => $classChoiceField.' col-md-3',
                         ],
                         'choices'       => $hashOptionsOut,
-                        'selected'      => null, // $column['hash']['id'] ?? null,
                         'default_value' => null,
                         'wrapper'       => [
                             'class' => $class.' '.$classModePrefix.File::MODE_HASH // .' ml-4',
@@ -349,6 +364,88 @@ class FileForm extends Form
         }
     }
 
+    /**
+     * @param  array  $options
+     * @param $id
+     * @param $suppressionLists
+     * @param  File  $file
+     */
+    private static function addSuppressionListOptions(&$options = [], $id, $suppressionLists, File $file)
+    {
+        $id = SuppressionList::getIdFromString($id);
+        if (isset($suppressionLists[$id])) {
+            if ($suppressionLists[$id]->suppressionListSupports->count()) {
+                /** @var SuppressionListSupport $suppressionList */
+                $suppressionList = $suppressionLists[$id];
+                $data            = [];
+                /** @var SuppressionListSupport $suppressionListSupport */
+                foreach ($suppressionList->suppressionListSupports as $suppressionListSupport) {
+                    $key = $suppressionListSupport->column_type;
+                    if (!isset($data[$key])) {
+                        $data[$key] = [];
+                    }
+                    $data[$key][] = $suppressionListSupport->hash_type;
+                }
+
+                if (!isset($options['wrapper'])) {
+                    $options['wrapper'] = [];
+                }
+                $options['wrapper']['data-toggle']         = 'tooltip';
+                $options['wrapper']['data-placement']      = 'left';
+                $options['wrapper']['data-supports']       = htmlentities(json_encode($data));
+                $options['wrapper']['data-original-title'] = htmlentities(view(
+                    'partials.suppressionList.stats', [
+                    'suppressionList' => $suppressionList,
+                    'owner'           => ($file && $file->user) ? $suppressionList->user = $file->user : false,
+                ])->toHtml());
+
+            }
+        }
+    }
+
+    /**
+     * @param  bool  $includeNull
+     *
+     * @return array
+     */
+    private function columnTypes($includeNull = false)
+    {
+        static $columnTypes = [];
+        if (!$columnTypes) {
+            foreach (FileSuppressionListHelper::COLUMN_TYPES as $columnType) {
+                $columnTypes[$columnType] = __('column_types.'.$columnType);
+            }
+            asort($columnTypes);
+        }
+        if ($includeNull) {
+            return [null => __('Other data')] + $columnTypes;
+        }
+
+        return $columnTypes;
+    }
+
+    /**
+     * @return string
+     */
+    private function criticalColumnTypes()
+    {
+        static $criticalColumnTypes = '';
+        if (!$criticalColumnTypes) {
+            $columnTypes = array_values($this->columnTypes());
+            foreach ($columnTypes as $i => $columnType) {
+                if (0 === $i) {
+                    $criticalColumnTypes = $columnType;
+                } elseif ($i === count($columnTypes) - 1) {
+                    $criticalColumnTypes .= ' '.__('or').' '.$columnType;
+                } else {
+                    $criticalColumnTypes .= ', '.$columnType;
+                }
+            }
+        }
+
+        return $criticalColumnTypes;
+    }
+
     private function columnName($columnName = null, $columnIndex = 0)
     {
         if (!empty(trim($columnName))) {
@@ -362,22 +459,233 @@ class FileForm extends Form
         return __('Column '.$r);
     }
 
-
     /**
      * Optionally change the validation result, and/or add error messages.
      *
-     * @param  Form  $mainForm
+     * @param  Form  $form
      * @param  bool  $isValid
      *
      * @return void|array
      */
-    public function alterValid(Form $mainForm, &$isValid)
+    public function alterValid(Form $form, &$isValid)
     {
-        // @todo - Validation to ensure the user has rights to push to this list.
-        // return ['list_id' => ['Some other error about the Name field.']];
+        $result = [];
+        if ($isValid) {
+            $file = $form->getData('file');
+            if (!$file) {
+                $isValid = false;
 
-        // @todo - Ensure that we don't mix hash types with email/phone fields.
+                $result['file'] = __('File is missing.');
+            }
 
-        // @todo - Ensure the list to scrub against has coverage for the file provided.
+            $values = $form->getFieldValues(false);
+            if (!$values) {
+                $isValid = false;
+
+                $result['fields'] = __('Nothing was submitted');
+            }
+
+            if ($file->user) {
+                if (($user = Auth::user()) && $user->id !== $file->user->id) {
+                    $isValid        = false;
+                    $result['mode'] = __('Please log in as the owner of this file to perform this action.');
+
+                    return $result;
+                }
+            }
+
+            if ($values['mode'] & File::MODE_HASH) {
+                if (!self::validateHashModeColumns($values)) {
+                    $isValid                  = false;
+                    $result['static_columns'] = __('You did not select a plaintext column to hash.');
+                }
+            }
+
+            if ($values['mode'] & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)) {
+                if (!self::validateListModeColumns($values)) {
+                    $isValid                  = false;
+                    $result['static_columns'] = __('You need a :critical column to be used for suppression.',
+                        ['critical' => $this->criticalColumnTypes()]);
+                }
+            }
+
+            if ($values['mode'] & File::MODE_LIST_APPEND) {
+                if (empty($values['suppression_list_append'])) {
+                    $isValid                           = false;
+                    $result['suppression_list_append'] = __('You must specify a suppression list to append.');
+                } elseif (!$file->user->suppressionLists->where('id',
+                    (int) $values['suppression_list_append'])->count()) {
+                    $result['suppression_list_append'] = __('You do not have permission to append to this suppression list.');
+                }
+            }
+
+            if ($values['mode'] & File::MODE_LIST_REPLACE) {
+                if (empty($values['suppression_list_replace'])) {
+                    $isValid                            = false;
+                    $result['suppression_list_replace'] = __('You must specify a suppression list to replace.');
+                } elseif (!$file->user->suppressionLists->where('id',
+                    (int) $values['suppression_list_replace'])->count()) {
+                    $result['suppression_list_append'] = __('You do not have permission to replace to this suppression list.');
+                }
+            }
+
+            if ($values['mode'] & File::MODE_SCRUB) {
+                if (!self::validateScrubModeColumns($values)) {
+                    $isValid                  = false;
+                    $result['static_columns'] = __('You need a :critical column to be used for scrubbing.',
+                        ['critical' => $this->criticalColumnTypes()]);
+                } else {
+                    $this->validateScrubModeSupports($isValid, $values, $file, $result);
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Ensure at least one column is/was plain text with with a desired hashed result.
+     *
+     * @param $values
+     *
+     * @return bool
+     */
+    private static function validateHashModeColumns($values)
+    {
+        $prefix       = 'column_type_';
+        $prefixLength = strlen($prefix);
+        foreach ($values as $key => $value) {
+            if (0 === strpos($key, $prefix)) {
+                $columnId = substr($key, $prefixLength);
+                if ($columnId) {
+                    if (empty($values['column_hash_input_'.$columnId])) {
+                        if (!empty($values['column_hash_output_'.$columnId])) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Validate that you have at least one appropriate column to append to a list.
+     *
+     * @param $values
+     *
+     * @return bool
+     */
+    private static function validateListModeColumns($values)
+    {
+        foreach ($values as $key => $value) {
+            if (0 === strpos($key, 'column_type_')) {
+                if ($value) {
+                    foreach (FileSuppressionListHelper::COLUMN_TYPES as $columnType) {
+                        if (intval($value) & $columnType) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Ensure at least one column is a type that can be used for scrubbing.
+     *
+     * @param $values
+     *
+     * @return bool
+     */
+    private static function validateScrubModeColumns($values)
+    {
+        foreach ($values as $key => $value) {
+            if (0 === strpos($key, 'column_type_')) {
+                foreach (FileSuppressionListHelper::COLUMN_TYPES as $columnType) {
+                    if (intval($value) & $columnType) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $isValid
+     * @param $values
+     * @param  File  $file
+     * @param  array  $result
+     *
+     * @return bool
+     */
+    private function validateScrubModeSupports(&$isValid, $values, File $file, &$result = [])
+    {
+        // Simple form validation.
+        $array               = [];
+        $listUsePrefix       = 'suppression_list_use_';
+        $listUsePrefixLength = strlen($listUsePrefix);
+        foreach ($values as $key => $value) {
+            if (0 === strpos($key, $listUsePrefix)) {
+                $id = substr($key, $listUsePrefixLength);
+                if ($id) {
+                    $array[$id] = $value;
+                }
+            }
+        }
+        if (!$array) {
+            $result['static_suppression_list_use'] = __('Select a suppression list to scrub with.');
+
+            return $isValid = false;
+        }
+
+        // Check permissions.
+        $suppressionLists = SuppressionList::findByIdTokensOrUserOrGlobal($array, $file->user ?? null);
+        foreach ($array as $id => $value) {
+            if (false !== stripos($id, SuppressionList::TOKEN_SEP)) {
+                $tokens = SuppressionList::parseIdTokens([$id]);
+                if (!$tokens) {
+                    $id    = reset($tokens);
+                    $token = reset(array_keys($tokens));
+                    if (!$suppressionLists->where('id', $id)
+                        ->where('token', $token)
+                        ->count()
+                    ) {
+                        $results[$listUsePrefix.$id] = __('You do not have permission to use this shared suppression list.');
+
+                        return $isValid = false;
+                    }
+                }
+            } else {
+                if (!$suppressionLists->where('id', (int) $id)->count()) {
+                    $results[$listUsePrefix.$id] = __('You do not have permission to use this suppression list.');
+
+                    return $isValid = false;
+                }
+            }
+        }
+
+        // Check support coverage.
+        try {
+            $fileSuppressionListHelper = new FileSuppressionListHelper($file, $values, $suppressionLists);
+            $errors                    = $fileSuppressionListHelper->getErrors();
+            if ($errors) {
+                $result = array_merge($result, $errors);
+
+                return $isValid = false;
+            }
+
+        } catch (\Exception $e) {
+            $result[] = $e->getMessage();
+
+            return $isValid = false;
+        }
+
+        return true;
     }
 }

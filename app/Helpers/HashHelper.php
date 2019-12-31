@@ -409,6 +409,9 @@ class HashHelper
     /** @var array */
     private $choicesAlgos = [];
 
+    /** @var array */
+    private $choicesAlgosOfSameLength = [];
+
     /**
      * Get the minimum binary size required to store a hash by the algorithm.
      *
@@ -481,7 +484,8 @@ class HashHelper
             foreach (self::list() as $length => $algos) {
                 foreach ($algos as $algo) {
                     if ($algo['enabled'] || $includeDisabled) {
-                        $simpleAlgos[strtolower(preg_replace('/[^a-z]/i', '', $algo['id']))] = true;
+                        $key = strtolower(preg_replace('/[^a-z]/i', '', $algo['id']));
+                        $simpleAlgos[$key] = true;
                     }
                 }
             }
@@ -511,7 +515,7 @@ class HashHelper
     public function listChoices($includeDisabled = false)
     {
         if (!$this->choicesAlgos) {
-            foreach ($this->list() as $length => $algos) {
+            foreach (self::list() as $length => $algos) {
                 foreach ($algos as $algo) {
                     if ($algo['enabled'] || $includeDisabled) {
                         $this->choicesAlgos[$algo['id']] = $algo['name'];
@@ -522,6 +526,41 @@ class HashHelper
         }
 
         return $this->choicesAlgos;
+    }
+
+    /**
+     * @param $algo
+     * @param  bool  $includeDisabled
+     *
+     * @return array
+     */
+    public function listChoicesOfSameLength($algo = null, $includeDisabled = false)
+    {
+        if (!$algo) {
+            return $this->listChoices($includeDisabled);
+        }
+        if (!isset($this->choicesAlgosOfSameLength[$algo])) {
+            $targetLength = null;
+            foreach (self::list() as $length => $algos) {
+                if (isset($algos[$algo])) {
+                    $targetLength = $length;
+                    break;
+                }
+            }
+            foreach (self::list() as $length => $algos) {
+                if ($targetLength && $length !== $targetLength) {
+                    continue;
+                }
+                foreach ($algos as $algoc) {
+                    if ($algoc['enabled'] || $includeDisabled) {
+                        $this->choicesAlgosOfSameLength[$algo][$algoc['id']] = $algoc['name'];
+                    }
+                }
+            }
+            asort($this->choicesAlgosOfSameLength[$algo], SORT_NATURAL);
+        }
+
+        return $this->choicesAlgosOfSameLength[$algo];
     }
 
     /**

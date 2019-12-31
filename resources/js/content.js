@@ -42,7 +42,9 @@ st.loadContent = function (url, $destination, prepend, done) {
         }
         else {
             if (typeof done == 'function') {
-                return done(null, data);
+                setTimeout(function () {
+                    return done(null, data);
+                }, 500);
             }
         }
     });

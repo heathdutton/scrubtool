@@ -12,7 +12,7 @@
     @endif
     @if($owner)
         <div class="btn-group float-right">
-            <a href="{{ route('files') }}" class="btn btn-info">
+            <a href="{{ route('files') }}" class="btn btn-secondary">
                 <i class="fa fa-plus"></i> {{ __('Create a Suppression List') }}
             </a>
         </div>

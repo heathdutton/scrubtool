@@ -6,6 +6,20 @@ div.tooltip-inner {
     width: auto;
     min-width: 300px;
 }
+
 div.tooltip-inner a {
     color: $blue;
+}
+
+div.tooltip-inner .card,
+div.tooltip-inner .card .card-body,
+div.tooltip-inner .col-12 {
+    border: none !important;
+    background: none;
+    width: 99%;
+    max-width: 99%;
+}
+
+div.tooltip-inner h4 {
+    color: $white;
 }

@@ -4,6 +4,7 @@ st.numberFormat = require('locutus/php/strings/number_format');
 st.classModePrefix = 'file-mode';
 st.classColumnEmpty = 'column-empty';
 st.classHiddenSuffix = '-hidden';
+st.modeScrub = 16;
 st.refreshDelay = 2000;
 
 st.filesLoaded = function ($context) {
@@ -14,7 +15,14 @@ st.filesLoaded = function ($context) {
         $form.find('.' + st.classModePrefix + ':not(.' + st.classModePrefix + '-' + val + ')').addClass(st.classModePrefix + st.classHiddenSuffix);
         $form.find('.' + st.classModePrefix + '-' + val).removeClass(st.classModePrefix + st.classHiddenSuffix);
         $form.find('button:submit:first');
+        st.fileScrubCoverageCheck($context);
     }).trigger('change');
+
+    $('.column-type > select, .column-hash-input > select', $context).change(function () {
+        $(this).closest('.card').each(function () {
+            st.fileScrubCoverageCheck($(this));
+        });
+    });
 
     // Show all columns switch.
     $(':checkbox[name=show_all]', $context).bind('change', function () {
@@ -155,6 +163,145 @@ st.filesRefresh = function ($context) {
             }
         });
     }
+};
+
+st.fileScrubCoverageCheck = function ($context) {
+    $('form', $context).each(function () {
+        var $form = $(this),
+            $mode = $form.find('select[name=mode]:first'),
+            $columns = $form.find('.static-columns:first');
+
+        if (!$mode.length) {
+            return;
+        }
+
+        var columnSupported = function (columnType) {
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            columnHashSupported = function (columnType, hashType) {
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            if (
+                                null === hashType
+                                || supports[listId][columnType].indexOf(hashType)
+                            ) {
+                                return true;
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return false;
+            },
+            columnHashesSupported = function (columnType) {
+                var algos = {};
+                for (var listId in supports) {
+                    if (supports.hasOwnProperty(listId)) {
+                        if (typeof supports[listId][columnType] !== 'undefined') {
+                            for (var algo in supports[listId][columnType]) {
+                                if (supports[listId][columnType].hasOwnProperty(algo) && null !== supports[listId][columnType][algo]) {
+                                    algos[supports[listId][columnType][algo]] = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return Object.keys(algos).join(', ').toUpperCase();
+            },
+            errorAdd = function (message, $target, $form, replace = false) {
+                $form.bind('submit.halt', function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                var search = message.replace(/(<([^>]+)>)/ig, ''),
+                    $error = $target.find('.invalid-feedback.dynamic:contains(\'' + search + '\')').first();
+                if ($error.length && replace) {
+                    $error.html(message);
+                }
+                else {
+                    if (!$error.length) {
+                        $error = $('<div class="invalid-feedback dynamic text-danger ml-4 mt-2 mb-4">' + message + '</div>');
+                        $target.append($error);
+                    }
+                }
+                $error.addClass('d-block');
+                $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', 'disabled');
+            },
+            errorClearAll = function ($form) {
+                $form.find('button.file-mode.file-mode-' + st.modeScrub + ':submit:first').attr('disabled', null);
+                $form.unbind('submit.halt');
+                $form.find('.invalid-feedback.dynamic').removeClass('d-block');
+            };
+
+        if (parseInt($mode.val()) & st.modeScrub) {
+
+            // Discern supports available given selected suppression lists.
+            var supports = [];
+            $form.find('div.file-mode.file-mode-' + st.modeScrub).each(function () {
+                var listId = $(this).find('input:checked:first').val();
+                if (listId) {
+                    supports[listId] = JSON.parse($(this).attr('data-supports'));
+                }
+            });
+
+            // Validate selected column types [and input hash types]
+            var supportedColumnTypeFound = false,
+                unsupportedHashFound = false;
+
+            $form.find('.column-type > select').each(function () {
+                var $columnType = $(this),
+                    columnTypeName = $columnType.attr('name'),
+                    columnType = $columnType.val(),
+                    hashTypeName = columnTypeName.replace('column_type_', 'column_hash_input_'),
+                    $hashType = $form.find('.column-hash-input > select[name=' + hashTypeName + ']:first'),
+                    hashType = $hashType.val() || null;
+
+                if (columnSupported(columnType)) {
+                    supportedColumnTypeFound = true;
+                    if ($hashType && hashType) {
+                        if (columnHashSupported(columnType, hashType)) {
+                            $hashType.removeClass('is-invalid');
+                        }
+                        else {
+                            $hashType.addClass('is-invalid');
+                            unsupportedHashFound = true;
+                            var message = $columns.attr('data-error-column-input-hash');
+                            if (message.length) {
+                                errorAdd(message.replace(':algos', columnHashesSupported(columnType)), $hashType.parent(), $form, true);
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!supportedColumnTypeFound || unsupportedHashFound) {
+                if (!supportedColumnTypeFound) {
+                    for (var listId in supports) {
+                        if (supports.hasOwnProperty(listId)) {
+                            for (var colId in supports[listId]) {
+                                errorAdd($columns.attr('data-error-column-type-' + colId), $columns, $form);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                errorClearAll($form);
+            }
+        }
+        else {
+            errorClearAll($form);
+        }
+    });
+
 };
 
 $.fn.isVisible = function () {

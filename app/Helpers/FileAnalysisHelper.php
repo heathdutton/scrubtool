@@ -82,7 +82,6 @@ class FileAnalysisHelper
     /** @var array Simplified strings that identify the column type with fair certainty. */
     private $typeIdentifiers = [
         'age'         => SuppressionListSupport::TYPE_AGE,
-        'dob'         => SuppressionListSupport::TYPE_DOB,
         'dateofbirth' => SuppressionListSupport::TYPE_DOB,
         'birth'       => SuppressionListSupport::TYPE_DOB,
         'birthdate'   => SuppressionListSupport::TYPE_DOB,
@@ -98,7 +97,6 @@ class FileAnalysisHelper
         'address1'    => SuppressionListSupport::TYPE_L_ADDRESS1,
         'address2'    => SuppressionListSupport::TYPE_L_ADDRESS2,
         'city'        => SuppressionListSupport::TYPE_L_CITY,
-        'zip'         => SuppressionListSupport::TYPE_L_ZIP,
         'postal'      => SuppressionListSupport::TYPE_L_ZIP,
         'zipcode'     => SuppressionListSupport::TYPE_L_ZIP,
         'country'     => SuppressionListSupport::TYPE_L_COUNTRY,
@@ -107,12 +105,13 @@ class FileAnalysisHelper
         'phone'       => SuppressionListSupport::TYPE_PHONE,
         'home'        => SuppressionListSupport::TYPE_PHONE,
         'homephone'   => SuppressionListSupport::TYPE_PHONE,
-        'ph'          => SuppressionListSupport::TYPE_PHONE,
         'telephone'   => SuppressionListSupport::TYPE_PHONE,
         'number'      => SuppressionListSupport::TYPE_PHONE,
         'cell'        => SuppressionListSupport::TYPE_PHONE,
         'mobile'      => SuppressionListSupport::TYPE_PHONE,
         'hash'        => SuppressionListSupport::TYPE_HASH,
+        'zip'         => SuppressionListSupport::TYPE_L_ZIP,
+        'dob'         => SuppressionListSupport::TYPE_DOB,
     ];
 
     /** @var File */
@@ -362,6 +361,18 @@ class FileAnalysisHelper
             $this->columnTypes[$i] = null;
             $simple                = $this->simplify($value);
             if ($simple) {
+                if (isset($this->typeIdentifiers[$simple])) {
+                    // Found exact match (email = Email)
+                    $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
+                } else {
+                    // Search for contents match (email = Email_address)
+                    foreach ($this->typeIdentifiers as $typeIdentifier => $type) {
+                        if (false !== strpos($simple, $typeIdentifier)) {
+                            $this->columnTypes[$i] = $type;
+                            break;
+                        }
+                    }
+                }
                 if (isset($this->typeIdentifiers[$simple])) {
                     $this->columnTypes[$i] = $this->typeIdentifiers[$simple];
                 }

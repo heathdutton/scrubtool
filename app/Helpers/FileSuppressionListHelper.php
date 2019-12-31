@@ -21,11 +21,8 @@ class FileSuppressionListHelper
     /** @var File */
     private $file;
 
-    /** @var SuppressionList */
-    private $destinationSuppressionList;
-
-    /** @var array */
-    private $scrubSuppressionLists = [];
+    /** @var Collection */
+    private $scrubSuppressionLists;
 
     /** @var FileHashHelper */
     private $fileHashHelper;
@@ -36,38 +33,51 @@ class FileSuppressionListHelper
     /** @var bool */
     private $insertIds;
 
+    /** @var array */
+    private $errors = [];
+
+    /** @var array */
+    private $warnings = [];
+
+
     /**
      * FileSuppressionListHelper constructor.
      *
      * @param  File  $file
+     * @param  array  $formValues
+     * @param  null  $scrubSuppressionLists
      *
      * @throws Exception
      */
-    public function __construct(File $file)
-    {
-        $this->file = $file;
+    public function __construct(
+        File $file,
+        $formValues = [],
+        $scrubSuppressionLists = null
+    ) {
+        $this->file                  = $file;
+        $this->scrubSuppressionLists = $scrubSuppressionLists;
 
         if (
             empty($this->file->user_id)
             && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
         ) {
-            throw new Exception(__('File not associated to a user.'));
+            $this->errors[] = __('File not associated to a user.');
         }
 
         // Do not insert IDs for append mode, because that could prevent insertion or overwrite.
         $this->insertIds = (bool) ($this->file->mode ^ File::MODE_LIST_APPEND);
 
         if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
-            $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST);
+            $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST, $formValues);
         }
 
         if ($this->file->mode & File::MODE_LIST_REPLACE) {
-            $this->destinationSupports(FileSuppressionList::REL_FILE_REPLACE_LIST);
+            $this->destinationSupports(FileSuppressionList::REL_FILE_REPLACE_LIST, $formValues);
         }
 
         // Scrub against an existing Suppression List.
         if ($this->file->mode & File::MODE_SCRUB) {
-            $this->scrubSupports();
+            $this->scrubSupports($formValues);
         }
 
         return $this;
@@ -75,15 +85,16 @@ class FileSuppressionListHelper
 
     /**
      * @param $relationship
+     * @param  array  $formValues
      *
      * @return $this
      * @throws Exception
      */
-    private function destinationSupports($relationship)
+    private function destinationSupports($relationship, $formValues = [])
     {
         /** @var SuppressionList $suppressionList */
         if ($suppressionList = $this->file->suppressionLists->whereIn('pivot.relationship', $relationship)->first()) {
-            foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+            foreach ($this->discernSupportsNeeded($formValues) as $columnType => $columns) {
                 $support = $suppressionList->suppressionListSupports()
                     ->firstOrCreate([
                         'column_type' => $columnType,
@@ -112,7 +123,7 @@ class FileSuppressionListHelper
             }
         }
         if (!$this->columnSupports) {
-            throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
+            $this->errors['static_columns'] = __('There was no Email or Phone column to build your suppression list from.');
         }
 
         return $this;
@@ -121,24 +132,23 @@ class FileSuppressionListHelper
     /**
      * Suppression lists can contain email/phone/both at the moment.
      *
+     * @param  array  $formValues
+     *
      * @return array
-     * @throws Exception
      */
-    private function discernSupportsNeeded()
+    private function discernSupportsNeeded($formValues = [])
     {
         // Suppression lists can contain email/phone/both at the moment.
         $supportsNeeded = [];
         foreach (self::COLUMN_TYPES as $columnType) {
-            $columns = $this->file->getColumnsWithInputHashes($columnType);
+            $columns = $this->file->getColumnsWithInputHashes($columnType, $formValues);
             if ($columns) {
                 if (count(array_unique($columns)) > 1) {
-                    throw new Exception(__('Multiple hash types were used for an email or phone columns. This is not supported. Please only use one hash type, or use plain-text so that all hash types are supported.'));
+                    $this->errors[$columnType] = __('Multiple hash types were used for :type. This is not supported. Please only use one hash type, or use plain-text.',
+                        ['type' => __('column_types.plural.'.$columnType)]);
                 }
                 $supportsNeeded[$columnType] = $columns;
             }
-        }
-        if (!$supportsNeeded) {
-            throw new Exception(__('There was no Email or Phone column to build your suppression list from. Please make sure you indicate the file contents and try again.'));
         }
 
         return $supportsNeeded;
@@ -148,16 +158,19 @@ class FileSuppressionListHelper
      * Evaluate if the suppression list in question supports the column/hash types in use here before beginning the
      * scrubbing process, while also building the column map.
      *
+     * @param  array  $formValues
+     *
      * @return $this
-     * @throws Exception
      */
-    private function scrubSupports()
+    private function scrubSupports($formValues = [])
     {
-        $messages     = [];
-        $supportFound = false;
+        $unsupportedListIds = [];
         if ($this->file) {
-            if ($suppressionListIds = $this->scrubSuppressionLists()->pluck('id')) {
-                foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+            if ($suppressionListIds = $this->scrubSuppressionLists()->pluck('id')->toArray()) {
+                $unsupportedListIds += array_flip($suppressionListIds);
+                $supportedListIds   = [];
+                $issues             = [];
+                foreach ($this->discernSupportsNeeded($formValues) as $columnType => $columns) {
                     $hashType = array_values($columns)[0];
                     $supports = SuppressionListSupport::query()
                         ->whereIn('suppression_list_id', $suppressionListIds)
@@ -166,22 +179,43 @@ class FileSuppressionListHelper
                         ->where('status', SuppressionListSupport::STATUS_READY)
                         ->get();
 
-                    if ($supports) {
-                        $supportFound = true;
+                    if ($supports->count()) {
                         foreach (array_keys($columns) as $columnIndex) {
                             $this->columnSupports[$columnIndex] = $supports;
+                            foreach ($supports as $columnSupport) {
+                                unset($unsupportedListIds[$columnSupport->suppressionList->id]);
+                                $supportedListIds[$columnSupport->suppressionList->id] = null;
+                            }
                         }
                     } else {
-                        $messages[$columnType.'_'.$hashType] = __('Unable to scrub $1 with $2.',
-                            [$columnType, $hashType ?? __('plaintext')]);
+                        $issues[$columnType.'_'.$hashType] = __('Unable to scrub :columnType in :hashType.',
+                            [
+                                'columnType' => __('column_types.plural.'.$columnType),
+                                'hashType'   => $hashType ?? __('plaintext'),
+                            ]);
+                    }
+                }
+                // Remaining suppression lists were not supported.
+                if (count($unsupportedListIds)) {
+                    foreach ($this->scrubSuppressionLists()
+                                 ->whereIn('id', array_keys($unsupportedListIds)) as $suppressionList) {
+                        $key                 = 'suppression_list_use_'.$suppressionList->id;
+                        $type                = $suppressionList->required ? 'warning' : 'error';
+                        $this->{$type}[$key] = __('This suppression list cannot be used with your file.').
+                            implode(' ', $issues);
+                        $issues              = [];
+                    }
+                }
+                // If NO supported lists were found, we should elevate warnings as errors.
+                if (!count($supportedListIds) && !$this->errors) {
+                    if ($this->warnings) {
+                        $this->errors   = array_merge($this->errors, $this->warnings);
+                        $this->warnings = [];
+                    } else {
+                        $this->errors['static_suppression_list_use'] = __('Suppression list selection cannot scrub this file. Make sure the column types overlap with at least one suppression list.');
                     }
                 }
             }
-        }
-        // Partial support is allowed, but if no support is found we'll throw an error.
-        if (!$supportFound) {
-            throw new Exception(__('Selected suppression list/s cannot support your file.').' '.implode(' ',
-                    $messages));
         }
 
         return $this;
@@ -198,6 +232,22 @@ class FileSuppressionListHelper
         }
 
         return $this->scrubSuppressionLists;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors()
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @return array
+     */
+    public function getWarnings()
+    {
+        return $this->warnings;
     }
 
     /**
