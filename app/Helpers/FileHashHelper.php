@@ -36,7 +36,7 @@ class FileHashHelper
     {
         $valid = false;
         foreach ($row as $columnIndex => &$value) {
-            if ($this->sanitizeColumn($value, $columnIndex, 'output')) {
+            if ($this->sanitizeColumn($value, $columnIndex)) {
                 $valid = true;
             }
         }
@@ -47,13 +47,12 @@ class FileHashHelper
     /**
      * @param $value
      * @param $columnIndex
-     * @param  string  $mode
      * @param  bool  $binary
      * @param  null  $algoOutput
      *
      * @return string|string[]|null
      */
-    public function sanitizeColumn(&$value, $columnIndex, $mode = 'input', $binary = false, $algoOutput = null)
+    public function sanitizeColumn(&$value, $columnIndex, $binary = false, $algoOutput = null)
     {
         if (!empty($value)) {
             $type      = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
@@ -71,21 +70,17 @@ class FileHashHelper
                 }
             }
             if ($value) {
-                if ('input' == $mode) {
-                    if ($algoInput) {
-                        $this->getHashHelper()->filter($value, $binary, $algoInput);
+                if ($algoInput) {
+                    $this->getHashHelper()->filter($value, $binary, $algoInput);
+                } else {
+                    if (!$algoOutput) {
+                        if ($this->file->mode & File::MODE_HASH) {
+                            // Generate hash for output from the filtered plaintext.
+                            $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
+                        }
                     }
-                } elseif ('output' == $mode) {
-                    if (!$algoInput) {
-                        if (!$algoOutput) {
-                            if ($this->file->mode & File::MODE_HASH) {
-                                // Generate hash for output from the filtered plaintext.
-                                $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
-                            }
-                        }
-                        if ($algoOutput) {
-                            $this->getHashHelper()->hash($value, $algoOutput, $binary);
-                        }
+                    if ($algoOutput) {
+                        $this->getHashHelper()->hash($value, $algoOutput, $binary);
                     }
                 }
             }

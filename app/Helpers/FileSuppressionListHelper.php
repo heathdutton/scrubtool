@@ -291,19 +291,22 @@ class FileSuppressionListHelper
             foreach ($this->columnSupports as $columnIndex => $supports) {
                 // Get sanitized values for each hash type needed.
                 $valuesByHashType = [];
+                /** @var SuppressionListSupport $support */
                 foreach ($supports as $support) {
                     $value = $row[$columnIndex];
                     if (
                         !isset($valuesByHashType[$support->hash_type])
-                        && $this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'output', true,
+                        && $this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, true,
                             $support->hash_type)
                     ) {
                         $valuesByHashType[$support->hash_type] = $value;
                     }
                 }
+                /** @var SuppressionListSupport $support */
                 foreach ($supports as $support) {
                     if (isset($valuesByHashType[$support->hash_type])) {
-                        if ($support->getContent()->where('content', $valuesByHashType[$support->hash_type])->exists()) {
+                        if ($support->getContent()->where('content',
+                            $valuesByHashType[$support->hash_type])->exists()) {
                             $row   = [];
                             $scrub = true;
                             break;
@@ -331,12 +334,22 @@ class FileSuppressionListHelper
                 $rowIndex = 0;
             }
             foreach ($this->columnSupports as $columnIndex => $supports) {
+                $valuesByHashType = [];
                 /** @var SuppressionListSupport $support */
                 foreach ($supports as $support) {
-                    // Validate/sanitize/hash before insertion.
                     $value = $row[$columnIndex];
-                    if ($this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, 'input', true)) {
-                        $support->addContentToQueue($value, $rowIndex);
+                    if (
+                        !isset($valuesByHashType[$support->hash_type])
+                        && $this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, true,
+                            $support->hash_type)
+                    ) {
+                        $valuesByHashType[$support->hash_type] = $value;
+                    }
+                }
+                /** @var SuppressionListSupport $support */
+                foreach ($supports as $support) {
+                    if (isset($valuesByHashType[$support->hash_type])) {
+                        $support->addContentToQueue($valuesByHashType[$support->hash_type], $rowIndex);
                         $valid = true;
                     }
                 }
