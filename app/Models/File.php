@@ -656,16 +656,16 @@ class File extends Model implements Auditable
         if ($this->input_settings) {
             foreach ($this->input_settings as $key => $value) {
                 if ($value && 0 === strpos($key, $prefix)) {
-                    if (is_integer($value)) {
-                        $listIds[] = (int) $value;
+                    if (is_numeric($value)) {
+                        $listIds[(int) $value] = (int) $value;
                     } else {
-                        $listIds[] = $value;
+                        $listIds[$value] = $value;
                     }
                 }
             }
         }
 
-        return array_unique($listIds);
+        return $listIds;
     }
 
     /**
