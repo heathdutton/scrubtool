@@ -173,7 +173,8 @@ class FileController extends Controller
 
         $file->saveInputSettings($file->form->getFieldValues());
 
-        return redirect(route('file', ['id' => $file->id]));
+        return redirect(route('file', ['id' => $file->id]))
+            ->with('success', __('Settings accepted!'));
     }
 
     /**
