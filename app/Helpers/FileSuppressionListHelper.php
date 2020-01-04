@@ -39,13 +39,15 @@ class FileSuppressionListHelper
     /** @var array */
     private $warnings = [];
 
+    /** @var array */
+    private $formValues = [];
 
     /**
      * FileSuppressionListHelper constructor.
      *
      * @param  File  $file
-     * @param  array  $formValues
-     * @param  null  $scrubSuppressionLists
+     * @param  array  $formValues  Optionally provided for form validation.
+     * @param  null  $scrubSuppressionLists  Optionally provided for form validation.
      *
      * @throws Exception
      */
@@ -55,6 +57,7 @@ class FileSuppressionListHelper
         $scrubSuppressionLists = null
     ) {
         $this->file                  = $file;
+        $this->formValues            = $formValues;
         $this->scrubSuppressionLists = $scrubSuppressionLists;
 
         if (
@@ -68,16 +71,16 @@ class FileSuppressionListHelper
         $this->insertIds = (bool) ($this->file->mode ^ File::MODE_LIST_APPEND);
 
         if ($this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND)) {
-            $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST, $formValues);
+            $this->destinationSupports(FileSuppressionList::REL_FILE_INTO_LIST);
         }
 
         if ($this->file->mode & File::MODE_LIST_REPLACE) {
-            $this->destinationSupports(FileSuppressionList::REL_FILE_REPLACE_LIST, $formValues);
+            $this->destinationSupports(FileSuppressionList::REL_FILE_REPLACE_LIST);
         }
 
         // Scrub against an existing Suppression List.
         if ($this->file->mode & File::MODE_SCRUB) {
-            $this->scrubSupports($formValues);
+            $this->scrubSupports();
         }
 
         return $this;
@@ -85,46 +88,102 @@ class FileSuppressionListHelper
 
     /**
      * @param $relationship
-     * @param  array  $formValues
      *
      * @return $this
      * @throws Exception
      */
-    private function destinationSupports($relationship, $formValues = [])
+    private function destinationSupports($relationship)
     {
+        if ($this->errors) {
+            return $this;
+        }
         /** @var SuppressionList $suppressionList */
         if ($suppressionList = $this->file->suppressionLists->whereIn('pivot.relationship', $relationship)->first()) {
-            foreach ($this->discernSupportsNeeded($formValues) as $columnType => $columns) {
-                $support = $suppressionList->suppressionListSupports()
-                    ->firstOrCreate([
-                        'column_type' => $columnType,
-                        'hash_type'   => array_values($columns)[0],
-                    ], [
-                        'status' => SuppressionListSupport::STATUS_BUILDING,
-                    ]);
-                if ($support->status !== SuppressionListSupport::STATUS_BUILDING) {
-                    // Pre-existing supports can continue to be used during the update process (appending or replacing).
-                    if ($relationship == FileSuppressionList::REL_FILE_REPLACE_LIST) {
-                        $support->status = SuppressionListSupport::STATUS_TO_BE_REPLACED;
-                    } else {
-                        $support->status = SuppressionListSupport::STATUS_TO_BE_APPENDED;
-                    }
-                    $support->save();
+            foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
+                $supports  = new Collection;
+                $hashTypes = array_unique($columns);
+                if (count($hashTypes) > 1) {
+                    // While we could support this, it's not advisable due to how quickly it can make things confusing.
+                    throw new Exception(__('Multiple hash types were used for :columnType in the same suppression list. This is not supported.',
+                        [
+                            'columnType' => __('column_types.plural.'.$columnType),
+                        ]));
                 }
-                foreach (array_keys($columns) as $columnIndex) {
-                    if (!isset($this->columnSupports[$columnIndex])) {
-                        $this->columnSupports[$columnIndex] = (new Collection)->add($support);
-                    } else {
-                        if (!$this->columnSupports[$columnIndex]->contains('id', $support->id)) {
-                            $this->columnSupports[$columnIndex]->add($support);
+                $hashType   = $hashTypes[0];
+                $attributes = [
+                    'suppression_list_id' => $suppressionList->id,
+                    'column_type'         => $columnType,
+                    'hash_type'           => $hashType,
+                ];
+                // Find preexisting supports (for appending/replacing).
+                if ($this->file->mode & (File::MODE_LIST_REPLACE | File::MODE_LIST_APPEND)) {
+                    $supports = SuppressionListSupport::findPreferredSupports($attributes);
+                    if ($hashType) {
+                        // Hash was provided.
+                        if (1 === $supports->where('hash_type', '=', $hashType)->count()) {
+                            // Hash has a match.
+                            if (0 === $supports->where('hash_type', '=', null)->count()) {
+                                // There is a plaintext support.
+                                // We are incompatible because we cannot fully match existing supports.
+                                $this->errors['suppression_list_append'] = __('Suppression list was created with :columnType in plaintext. You can not append this list using hashed :columnType. Append with plaintext or create a new suppression list.',
+                                    [
+                                        'columnType' => __('column_types.plural.'.$columnType),
+                                    ]);
+                            } else {
+                                // There is NO plaintext support.
+                                // The support count must be 1 otherwise we will not fully cover the supports.
+                                if (1 < $supports->count()) {
+                                    throw new Exception(__('Multiple hash types exist without plaintext for :columnType. This is not supported. This suppression list cannot be appended as a result.',
+                                        [
+                                            'columnType' => __('column_types.plural.'.$columnType),
+                                        ]));
+                                }
+                            }
+                        } else {
+                            // Hash has NO match.
+                            // We are incompatible.
+                            $this->errors['suppression_list_append'] = __('Suppression list was created with :columnType in :hashTypes. Your file must match this or be in plaintext to append to it.',
+                                [
+                                    'columnType' => __('column_types.plural.'.$columnType),
+                                    'hashTypes'  => implode(', ', $supports->pluck('hash_type')->toArray()),
+                                ]);
                         }
                     }
                 }
+                // Create new support if necessary.
+                if (!$this->errors && !$supports->count() && !$this->formValues) {
+                    $support = $suppressionList->suppressionListSupports()
+                        ->orderBy('hash_type', 'ASC')
+                        ->firstOrCreate($attributes, [
+                            'status' => SuppressionListSupport::STATUS_BUILDING,
+                        ]);
+                    // Check support status.
+                    if ($support->status & SuppressionListSupport::STATUS_TO_BE_REPLACED) {
+                        $this->errors[] = __('Suppression list :list is in the process of rebuilding. Please try later.',
+                            ['list' => $suppressionList->name]);
+                    } else {
+                        $supports->add($support);
+                    }
+                }
+                if (!$this->errors && $supports->count()) {
+                    foreach (array_keys($columns) as $columnIndex) {
+                        if (!isset($this->columnSupports[$columnIndex])) {
+                            $this->columnSupports[$columnIndex] = $supports;
+                        } else {
+                            foreach ($supports as $support) {
+                                if (!$this->columnSupports[$columnIndex]->contains('id', $support->id)) {
+                                    $this->columnSupports[$columnIndex]->add($support);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    return $this;
+                }
             }
         }
-        if (!$this->columnSupports) {
-            $this->errors['static_columns'] = __('There was no Email or Phone column to build your suppression list from.');
-        }
+
+        $this->prepSupportsForAdditions($relationship);
 
         return $this;
     }
@@ -132,16 +191,14 @@ class FileSuppressionListHelper
     /**
      * Suppression lists can contain email/phone/both at the moment.
      *
-     * @param  array  $formValues
-     *
      * @return array
      */
-    private function discernSupportsNeeded($formValues = [])
+    private function discernSupportsNeeded()
     {
         // Suppression lists can contain email/phone/both at the moment.
         $supportsNeeded = [];
         foreach (self::COLUMN_TYPES as $columnType) {
-            $columns = $this->file->getColumnsWithInputHashes($columnType, $formValues);
+            $columns = $this->file->getColumnsWithInputHashes($columnType, $this->formValues);
             if ($columns) {
                 if (count(array_unique($columns)) > 1) {
                     $this->errors[$columnType] = __('Multiple hash types were used for :type. This is not supported. Please only use one hash type, or use plain-text.',
@@ -155,39 +212,60 @@ class FileSuppressionListHelper
     }
 
     /**
+     * Set to pending/replacing as appropriate before building.
+     *
+     * @param $relationship
+     */
+    private function prepSupportsForAdditions($relationship)
+    {
+        if (
+            $relationship
+            && !$this->errors
+            && count($this->columnSupports)
+            && !$this->formValues
+        ) {
+            // Mark supports as being replaced/appended as appropriate.
+            foreach ($this->columnSupports as $columnIndex => $supports) {
+                $supports->each(function ($support, $key) use ($relationship) {
+                    if ($support->status !== SuppressionListSupport::STATUS_BUILDING) {
+                        // Pre-existing supports can continue to be used during the update process (appending or replacing).
+                        if ($relationship == FileSuppressionList::REL_FILE_REPLACE_LIST) {
+                            $support->status = SuppressionListSupport::STATUS_TO_BE_REPLACED;
+                            $support->save();
+                        } elseif ($relationship == FileSuppressionList::REL_FILE_INTO_LIST) {
+                            $support->status = SuppressionListSupport::STATUS_TO_BE_APPENDED;
+                            $support->save();
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /**
      * Evaluate if the suppression list in question supports the column/hash types in use here before beginning the
      * scrubbing process, while also building the column map.
      *
-     * @param  array  $formValues
-     *
      * @return $this
      */
-    private function scrubSupports($formValues = [])
+    private function scrubSupports()
     {
+        if ($this->errors) {
+            return $this;
+        }
         $unsupportedListIds = [];
         if ($this->file) {
             if ($suppressionListIds = $this->scrubSuppressionLists()->pluck('id')->toArray()) {
                 $unsupportedListIds += array_flip($suppressionListIds);
                 $supportedListIds   = [];
                 $issues             = [];
-                $supportedHashTypes = $this->getFileHashHelper()->supportedHashTypes();
-                foreach ($this->discernSupportsNeeded($formValues) as $columnType => $columns) {
-                    $q = SuppressionListSupport::query();
-                    $q->whereIn('suppression_list_id', array_keys($unsupportedListIds));
-                    $q->where('column_type', $columnType);
+                foreach ($this->discernSupportsNeeded() as $columnType => $columns) {
                     $hashType = array_values($columns)[0];
-                    if (null === $hashType && count($supportedHashTypes)) {
-                        $q->where(function ($q) use ($supportedHashTypes) {
-                            $q->whereNull('hash_type');
-                            $q->orWhereIn('hash_type', $supportedHashTypes);
-                        });
-                    } else {
-                        $q->where('hash_type', $hashType);
-                    }
-                    $q->where('status', SuppressionListSupport::STATUS_READY);
-                    $q->groupBy(['suppression_list_id']);
-                    $q->orderBy('hash_type', 'ASC');
-                    $supports = $q->get();
+                    $supports = SuppressionListSupport::findPreferredSupports([
+                        'suppression_list_id' => array_keys($unsupportedListIds),
+                        'column_type'         => $columnType,
+                        'hash_type'           => $hashType,
+                    ]);
 
                     if ($supports->count()) {
                         foreach (array_keys($columns) as $columnIndex) {
@@ -242,18 +320,6 @@ class FileSuppressionListHelper
         }
 
         return $this->scrubSuppressionLists;
-    }
-
-    /**
-     * @return FileHashHelper
-     */
-    private function getFileHashHelper()
-    {
-        if (!$this->fileHashHelper) {
-            $this->fileHashHelper = new FileHashHelper($this->file);
-        }
-
-        return $this->fileHashHelper;
     }
 
     /**
@@ -317,6 +383,18 @@ class FileSuppressionListHelper
         }
 
         return $scrub;
+    }
+
+    /**
+     * @return FileHashHelper
+     */
+    private function getFileHashHelper()
+    {
+        if (!$this->fileHashHelper) {
+            $this->fileHashHelper = new FileHashHelper($this->file);
+        }
+
+        return $this->fileHashHelper;
     }
 
     /**

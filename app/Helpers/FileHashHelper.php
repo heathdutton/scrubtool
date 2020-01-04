@@ -112,12 +112,4 @@ class FileHashHelper
 
         return $this->hashHelper;
     }
-
-    /**
-     * @return array
-     */
-    public function supportedHashTypes()
-    {
-        return array_keys($this->getHashHelper()->listChoices());
-    }
 }
