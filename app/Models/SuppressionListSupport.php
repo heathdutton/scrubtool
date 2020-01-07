@@ -80,6 +80,47 @@ class SuppressionListSupport extends Model
     private $queueCount = 0;
 
     /**
+     * @param  array  $attributes
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public static function findPreferredSupports(array $attributes = []) {
+        $suppressionListIds = (array) $attributes['suppression_list_id'];
+        $columnType         = $attributes['column_type'] ?? null;
+        $hashType           = $attributes['hash_type'] ?? null;
+        $status             = $attributes['status'] ?? SuppressionListSupport::STATUS_READY;
+        $supportedHashTypes = (new HashHelper())->listChoices();
+        $limit              = count($suppressionListIds);
+        $q                  = self::query();
+        if ($suppressionListIds) {
+            $q->whereIn('suppression_list_id', $suppressionListIds);
+        }
+        if ($columnType) {
+            $q->where('column_type', $columnType);
+        }
+        if (null === $hashType && count($supportedHashTypes)) {
+            $limit *= (count($supportedHashTypes) + 1);
+            $q->where(function ($q) use ($supportedHashTypes) {
+                $q->whereNull('hash_type');
+                $q->orWhereIn('hash_type', $supportedHashTypes);
+            });
+        } elseif ($hashType) {
+            $q->where('hash_type', $hashType);
+        }
+        if ($status) {
+            $q->where('status', $status);
+        }
+        if ($limit > 1) {
+            $q->groupBy(['suppression_list_id'])
+                ->orderBy('hash_type', 'ASC');
+        }
+
+        $q->limit($limit);
+
+        return collect($q->get());
+    }
+
+    /**
      * @param $content
      * @param  int  $id
      *

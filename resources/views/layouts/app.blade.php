@@ -71,6 +71,10 @@
                                 {{ Auth::user()->name }} <span class="caret"></span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{{ url('profile') }}">
+                                    <i class="fa fa-user"></i>
+                                    {{ __('Profile') }}
+                                </a>
                                 @if(Auth::user()->hasRole('admin'))
                                     <a class="dropdown-item" href="{{ url('admin') }}">
                                         <i class="fa fa-cog"></i>
@@ -97,6 +101,7 @@
         </div>
     </nav>
     <main class="py-5">
+        @include('partials.notification.flash')
         @yield('content')
     </main>
 </div>

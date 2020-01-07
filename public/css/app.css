@@ -14126,6 +14126,11 @@ th {
   font-family: "Helvetica Neue", Arial, sans-serif;
 }
 
+.navbar .notify-drop {
+  max-width: 550px;
+  overflow-y: auto;
+}
+
 /*
  * The MIT License
  * Copyright (c) 2012 Matias Meno <m@tias.me>

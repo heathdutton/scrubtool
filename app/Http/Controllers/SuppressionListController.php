@@ -159,12 +159,14 @@ class SuppressionListController extends Controller
             unset($suppressionList->form);
             $suppressionList->delete();
 
-            return redirect(route('suppressionLists'));
+            return redirect(route('suppressionLists'))
+                ->with('success', __('Suppression List deleted!'));
         } else {
             unset($suppressionList->form);
             $suppressionList->save();
 
-            return redirect(route('suppressionList', ['id' => $id]));
+            return redirect(route('suppressionList', ['id' => $id]))
+                ->with('success', __('Suppression List updated!'));
         }
     }
 
