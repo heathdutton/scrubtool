@@ -55,14 +55,16 @@ $class = 'secondary';
                                         <i class="fa fa-plus"></i>
                                         {{ __('Append') }}
                                     </a>
-                                    <clipboard-copy value="{{ $suppressionList->getShareRoute() }}"
-                                                    aria-label="Copy to clipboard" class="btn btn-secondary"
-                                                    tabindex="0" role="button"
-                                                    data-toggle='tooltip' data-trigger='manual' data-placement='bottom'
-                                                    data-original-title='{{ __(':link was copied to your clipboard. Paste this link to others and they can use this suppression list to scrub their files.', ['link' => $suppressionList->getShareRoute()]) }}'>
-                                        <i class="fa fa-share"></i>
-                                        {{ __('Share') }}
-                                    </clipboard-copy>
+                                    @if(!$suppressionList->private)
+                                        <clipboard-copy value="{{ $suppressionList->getShareRoute() }}"
+                                                        aria-label="Copy to clipboard" class="btn btn-secondary"
+                                                        tabindex="0" role="button"
+                                                        data-toggle='tooltip' data-trigger='manual' data-placement='bottom'
+                                                        data-original-title='{{ __(':link was copied to your clipboard. Paste this link to others and they can use this suppression list to scrub their files.', ['link' => $suppressionList->getShareRoute()]) }}'>
+                                            <i class="fa fa-share"></i>
+                                            {{ __('Share') }}
+                                        </clipboard-copy>
+                                    @endif
                                     <a href="{{ route('defaults', [
                                         'action_defaults' => [
                                             'mode' => App\Models\File::MODE_SCRUB,

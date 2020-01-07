@@ -32,6 +32,12 @@ Route::get('/files/{id}/{status?}', 'FileController@file');
 
 Route::any('/defaults', 'ActionDefaultsController')->name('defaults');
 
+Route::get('/profile', 'Auth\ProfileController@index')->name('profile');
+Route::post('/profile', 'Auth\ProfileController@store')->name('profile.store');
+
+Route::get('/plan', 'Auth\PlanController@index')->name('plan');
+Route::post('/plan', 'Auth\PlanController@store')->name('plan.store');
+
 Route::get('/notification/read/all', 'NotificationController@readAll')->name('notificationReadAll');
 
 Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists');
