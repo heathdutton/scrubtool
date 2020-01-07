@@ -32,6 +32,9 @@ Route::get('/files/{id}/{status?}', 'FileController@file');
 
 Route::any('/defaults', 'ActionDefaultsController')->name('defaults');
 
+Route::get('/profile', 'Auth\ProfileController@index')->name('profile');
+Route::post('/profile', 'Auth\ProfileController@store')->name('profile.store');
+
 Route::get('/notification/read/all', 'NotificationController@readAll')->name('notificationReadAll');
 
 Route::get('/lists', 'SuppressionListController@index')->name('suppressionLists');
@@ -39,4 +42,5 @@ Route::get('/lists/{id}', 'SuppressionListController@suppressionList')->name('su
 Route::get('/lists/{id}/edit', 'SuppressionListController@edit')->name('suppressionList.edit');
 Route::post('/lists/{id}/store', 'SuppressionListController@store')->name('suppressionList.store');
 Route::get('/lists/{id}/restore', 'SuppressionListController@restore')->name('suppressionList.restore');
-Route::get('/{idToken}', 'SuppressionListShareController@share')->name('suppressionList.share');
+Route::get('/{idToken}', 'SuppressionListShareController@share')
+    ->where('idToken', '.+z.+')->name('suppressionList.share');
