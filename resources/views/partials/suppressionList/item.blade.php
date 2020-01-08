@@ -3,7 +3,7 @@ $class = 'secondary';
 // $action = '';
 ?>
 @if(isset($suppressionList->id))
-    <div class="card border-{{ $class }} mb-4" data-list-id="{{ $suppressionList->id }}" data-list-status="{{ $suppressionList->status }}">
+    <div class="card border-{{ $class }} mb-4" data-list-id="{{ $suppressionList->id }}">
         <span class="card-header text-{{ $class }}"
               role="tab" id="heading{{ $suppressionList->id }}"
               data-toggle="collapse" data-parent="#accordion" aria-expanded="true" aria-controls="list{{ $suppressionList->id }}">
