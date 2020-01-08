@@ -81,9 +81,18 @@
                                         {{ __('Admin Panel') }}
                                     </a>
                                 @endif
+                                <a class="dropdown-item" href="{{ url('profile') }}">
+                                    <i class="fa fa-user"></i>
+                                    {{ __('Profile') }}
+                                </a>
+                                @if(config('cashier.plan'))
+                                    <a class="dropdown-item" href="{{ url('plan') }}">
+                                        <i class="fa fa-money"></i>
+                                        {{ __('Plan') }}
+                                    </a>
+                                @endif
                                 <a class="dropdown-item" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
+                                   onclick="event.preventDefault();document.getElementById('logout-form').submit();">
                                     <i class="fa fa-key"></i>
                                     {{ __('Logout') }}
                                 </a>

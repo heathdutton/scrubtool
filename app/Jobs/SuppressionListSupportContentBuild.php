@@ -109,8 +109,8 @@ class SuppressionListSupportContentBuild implements ShouldQueue
                 }
             }
         );
-        $content->finish();
 
+        $suppressionListSupport->count  = $content->finish();
         $suppressionListSupport->status = SuppressionListSupport::STATUS_READY;
         $suppressionListSupport->save();
     }

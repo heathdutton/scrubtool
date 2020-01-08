@@ -23,7 +23,7 @@ class User extends AuthUser implements CanResetPassword, Auditable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'phone'
     ];
 
     /**

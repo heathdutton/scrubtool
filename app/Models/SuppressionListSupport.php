@@ -84,7 +84,8 @@ class SuppressionListSupport extends Model
      *
      * @return \Illuminate\Support\Collection
      */
-    public static function findPreferredSupports(array $attributes = []) {
+    public static function findPreferredSupports(array $attributes = [])
+    {
         $suppressionListIds = (array) $attributes['suppression_list_id'];
         $columnType         = $attributes['column_type'] ?? null;
         $hashType           = $attributes['hash_type'] ?? null;
@@ -163,10 +164,14 @@ class SuppressionListSupport extends Model
             $this->content->finish();
 
             $this->status = self::STATUS_READY;
+            if ($this->content->isReplacement()) {
+                $this->count = $persisted;
+            } else {
+                $this->count += $persisted;
+            }
             $this->save();
 
             // Build support for additional hash types, and queue the processes to build them out.
-            $persisted = $this->content->getPersistedCount();
             if (null === $this->hash_type && $persisted) {
 
                 if (!$this->suppressionList) {

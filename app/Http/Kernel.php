@@ -3,11 +3,12 @@
 namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\CaptureToken;
 use App\Http\Middleware\CheckForMaintenanceMode;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\HttpsForce;
+use App\Http\Middleware\Plan;
 use App\Http\Middleware\RedirectIfAuthenticated;
-use App\Http\Middleware\CaptureToken;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\VerifyCsrfToken;
@@ -80,6 +81,7 @@ class Kernel extends HttpKernel
     protected $routeMiddleware = [
         'auth'             => Authenticate::class,
         'auth.basic'       => AuthenticateWithBasicAuth::class,
+        'plan'             => Plan::class,
         'bindings'         => SubstituteBindings::class,
         'cache.headers'    => SetCacheHeaders::class,
         'can'              => Authorize::class,
@@ -105,5 +107,6 @@ class Kernel extends HttpKernel
         AuthenticateSession::class,
         SubstituteBindings::class,
         Authorize::class,
+        Plan::class,
     ];
 }
