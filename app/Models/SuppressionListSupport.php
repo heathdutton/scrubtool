@@ -161,7 +161,7 @@ class SuppressionListSupport extends Model
     {
         $persisted = 0;
         if ($this->content) {
-            $this->content->finish();
+            $persisted = $this->content->finish();
 
             $this->status = self::STATUS_READY;
             if ($this->content->isReplacement()) {
