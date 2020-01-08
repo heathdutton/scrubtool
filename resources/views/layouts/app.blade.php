@@ -71,16 +71,16 @@
                                 {{ Auth::user()->name }} <span class="caret"></span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="{{ url('profile') }}">
-                                    <i class="fa fa-user"></i>
-                                    {{ __('Profile') }}
-                                </a>
                                 @if(Auth::user()->hasRole('admin'))
                                     <a class="dropdown-item" href="{{ url('admin') }}">
                                         <i class="fa fa-cog"></i>
                                         {{ __('Admin Panel') }}
                                     </a>
                                 @endif
+                                <a class="dropdown-item" href="{{ url('profile') }}">
+                                    <i class="fa fa-user"></i>
+                                    {{ __('Profile') }}
+                                </a>
                                 <a class="dropdown-item" href="{{ url('plan') }}">
                                     <i class="fa fa-profile"></i>
                                     {{ __('Plan') }}
