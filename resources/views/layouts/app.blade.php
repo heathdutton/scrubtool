@@ -81,10 +81,6 @@
                                         {{ __('Admin Panel') }}
                                     </a>
                                 @endif
-                                <a class="dropdown-item" href="{{ url('profile') }}">
-                                    <i class="fa fa-user"></i>
-                                    {{ __('Profile') }}
-                                </a>
                                 @if(config('cashier.plan'))
                                     <a class="dropdown-item" href="{{ url('plan') }}">
                                         <i class="fa fa-money"></i>
