@@ -465,13 +465,18 @@ class FileSuppressionListHelper
                     ->first();
             }
             if ($suppressionList) {
-                $notification = new SuppressionListReadyNotification($suppressionList);
-                if ($suppressionList->user) {
-                    // Notify the user.
-                    $suppressionList->user->notify($notification);
-                } else {
-                    // Notify the owner of the file if possible.
-                    $suppressionList->file->notify($notification);
+                try {
+                    $notification = new SuppressionListReadyNotification($suppressionList);
+                    if ($suppressionList->user) {
+                        // Notify the user.
+                        $suppressionList->user->notify($notification);
+                    } else {
+                        // Notify the owner of the file if possible.
+                        $suppressionList->file->notify($notification);
+                    }
+                } catch (Exception $exception) {
+                    // Do not abort or delete the file for exceptions regarding notifications.
+                    report($exception);
                 }
             }
         }

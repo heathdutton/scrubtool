@@ -256,28 +256,34 @@ class FileImportSheet implements ToModel
         }
 
         $this->stats['rows_processed'] = max($this->stats['rows_processed'], $this->stats['rows_total']);
-        if ($this->file->mode & File::MODE_HASH) {
-            // Notify the user of a file ready to download.
-            $notification = new HashFileReadyNotification($this->file);
-            if ($this->file->user) {
-                // Notify the user.
-                $this->file->user->notify($notification);
-            } else {
-                // Notify the owner of the file if possible.
-                $this->file->notify($notification);
-            }
-        }
 
-        if ($this->file->mode & File::MODE_SCRUB) {
-            // Notify the user of a file ready to download.
-            $notification = new ScrubFileReadyNotification($this->file);
-            if ($this->file->user) {
-                // Notify the user.
-                $this->file->user->notify($notification);
-            } else {
-                // Notify the owner of the file if possible.
-                $this->file->notify($notification);
+        try {
+            if ($this->file->mode & File::MODE_HASH) {
+                // Notify the user of a file ready to download.
+                $notification = new HashFileReadyNotification($this->file);
+                if ($this->file->user) {
+                    // Notify the user.
+                    $this->file->user->notify($notification);
+                } else {
+                    // Notify the owner of the file if possible.
+                    $this->file->notify($notification);
+                }
             }
+
+            if ($this->file->mode & File::MODE_SCRUB) {
+                // Notify the user of a file ready to download.
+                $notification = new ScrubFileReadyNotification($this->file);
+                if ($this->file->user) {
+                    // Notify the user.
+                    $this->file->user->notify($notification);
+                } else {
+                    // Notify the owner of the file if possible.
+                    $this->file->notify($notification);
+                }
+            }
+        } catch (Exception $exception) {
+            // Do not abort or delete the file for exceptions regarding notifications.
+            report($exception);
         }
 
         $this->persistStats();
