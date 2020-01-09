@@ -45,8 +45,8 @@ class FileForm extends Form
 
             // Get user's own suppression lists as options to scrub against.
             if ($file->user && $file->user->suppressionLists) {
-                $suppressionLists = $file->user->suppressionLists;
-                foreach ($file->user->suppressionLists as $suppressionList) {
+                $suppressionLists = [];
+                foreach ($file->user->suppressionLists->unique() as $suppressionList) {
                     $ownedListOptions[$suppressionList->id] = $suppressionList->name ?? $suppressionList->id;
                     if ($suppressionList->required) {
                         $requiredLists[$suppressionList->id] = true;

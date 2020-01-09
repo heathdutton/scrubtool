@@ -578,7 +578,7 @@ class File extends Model implements Auditable
                     throw new Exception(__('You must be logged in to append a list.'));
                 }
                 if ($suppressionListIds = $this->getInputLists('suppression_list_append')) {
-                    if ($suppressionLists = $this->user->suppressionLists->whereIn('id', $suppressionListIds)) {
+                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id', $suppressionListIds)) {
                         $ids = [];
                         foreach ($suppressionLists as $suppressionList) {
                             $ids[$suppressionList->id] = [
@@ -598,7 +598,7 @@ class File extends Model implements Auditable
                     throw new Exception(__('You must be logged in to replace a list.'));
                 }
                 if ($suppressionListIds = $this->getInputLists('suppression_list_replace')) {
-                    if ($suppressionLists = $this->user->suppressionLists->whereIn('id', $suppressionListIds)) {
+                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id', $suppressionListIds)) {
                         if (count($suppressionLists) > 1) {
                             throw new Exception(__('You may not replace more than one suppression list at a time.'));
                         }
