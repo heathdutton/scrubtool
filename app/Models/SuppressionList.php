@@ -361,4 +361,13 @@ class SuppressionList extends Model implements Auditable
     {
         return $this->hasMany(SuppressionListSupport::class);
     }
+
+    /**
+     * @return HasMany
+     */
+    public function suppressionListSupportScrubs()
+    {
+        return $this->hasMany(SuppressionListSupportScrub::class);
+    }
+
 }

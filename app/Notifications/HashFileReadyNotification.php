@@ -25,7 +25,7 @@ class HashFileReadyNotification extends NotificationAbstract
             'url'      => route('file.download.with.token',
                 [
                     'id'    => $this->object->id,
-                    'token' => $this->object->downloadLinks()->create()->token,
+                    'token' => $this->object->fileDownloadLinks()->create()->token,
                 ]),
             'action'   => __('Download File'),
             'userId'   => $this->object->user->id ?? '',

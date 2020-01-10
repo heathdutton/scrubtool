@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-class FileDownload extends ActionAbstract
+class FileUpload extends ActionAbstract
 {
     /**
      * @return mixed

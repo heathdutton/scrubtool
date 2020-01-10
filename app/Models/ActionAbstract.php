@@ -36,7 +36,6 @@ abstract class ActionAbstract extends Model
 
         static::creating(function ($model) {
             /** @var ActionAbstract $model */
-            $model->created_at = $model->freshTimestamp();
             $model->referrer   = $model->referrer ?? $model->resolveReferrer() ?? '';
             $model->ip_address = $model->ip_address ?? $model->resolveIpAddress();
             $model->user_agent = $model->user_agent ?? $model->resolveUserAgent() ?? '';

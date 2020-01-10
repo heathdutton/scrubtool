@@ -6,6 +6,7 @@ use App\Models\File;
 use App\Models\FileSuppressionList;
 use App\Models\SuppressionList;
 use App\Models\SuppressionListSupport;
+use App\Models\SuppressionListSupportScrub;
 use App\Notifications\SuppressionListReadyNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -29,6 +30,9 @@ class FileSuppressionListHelper
 
     /** @var array */
     private $columnSupports = [];
+
+    /** @var array Keyed by Support ID, with 'rows_filled' and 'rows_scrubbed' counts */
+    private $supportScrubStats = [];
 
     /** @var bool */
     private $insertIds;
@@ -371,10 +375,19 @@ class FileSuppressionListHelper
                 /** @var SuppressionListSupport $support */
                 foreach ($supports as $support) {
                     if (isset($valuesByHashType[$support->hash_type])) {
+                        // We are only counting the filled values that we are actively searching for records for.
+                        if (!isset($this->supportScrubStats[$support->id])) {
+                            $this->supportScrubStats[$support->id] = [
+                                'rows_filled'   => 0,
+                                'rows_scrubbed' => 0,
+                            ];
+                        }
+                        $this->supportScrubStats[$support->id]['rows_filled']++;
                         if ($support->getContent()->where('content',
                             $valuesByHashType[$support->hash_type])->exists()) {
                             $row   = [];
                             $scrub = true;
+                            $this->supportScrubStats[$support->id]['rows_scrubbed']++;
                             break;
                         }
                     }
@@ -448,6 +461,25 @@ class FileSuppressionListHelper
             /** @var SuppressionListSupport $support */
             foreach ($supports as $support) {
                 $persisted = max($persisted, $support->finish());
+            }
+        }
+
+        if ($this->file->mode & File::MODE_SCRUB) {
+            if ($this->supportScrubStats) {
+                foreach ($this->supportScrubStats as $supportId => $stats) {
+                    SuppressionListSupportScrub::create([
+                        // Carry over these from the fileUpload action.
+                        'referrer'                    => $this->file->fileUpload->referrer ?? '',
+                        'ip_address'                  => $this->file->fileUpload->ip_address ?? null,
+                        'user_agent'                  => $this->file->fileUpload->user_agent ?? '',
+                        'token'                       => $this->file->fileUpload->token ?? '',
+                        'user_id'                     => $this->file->user->id ?? null,
+                        'file_id'                     => $this->file->id,
+                        'suppression_list_support_id' => $supportId,
+                        'rows_filled'                 => $stats['rows_filled'] ?? 0,
+                        'rows_scrubbed'               => $stats['rows_scrubbed'] ?? 0,
+                    ]);
+                }
             }
         }
 

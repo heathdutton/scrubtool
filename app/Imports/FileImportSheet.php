@@ -59,6 +59,9 @@ class FileImportSheet implements ToModel
     /** @var array */
     private $columnsFilled = [];
 
+    /** @var array */
+    private $scrubs = [];
+
     /**
      * FileImport constructor.
      *
@@ -247,8 +250,8 @@ class FileImportSheet implements ToModel
     {
         if (
             $this->fileSuppressionListHelper
-            && $this->file
-            && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
+            // && $this->file
+            // && $this->file->mode & (File::MODE_LIST_CREATE | File::MODE_LIST_APPEND | File::MODE_LIST_REPLACE)
         ) {
             // Finish saving changes to the suppression list and it's supports.
             // Notifications will be fired based on the persisted suppression list data.

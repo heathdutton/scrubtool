@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -106,18 +107,22 @@ class File extends Model implements Auditable
 
     const STORAGE             = 'local';
 
+    /** @var string */
     protected $dateFormat = self::DATE_FORMAT;
 
+    /** @var array */
     protected $guarded = [
         'id',
     ];
 
+    /** @var array */
     protected $casts = [
         'input_settings' => 'array',
         'columns'        => 'array',
         'sheets'         => 'array',
     ];
 
+    /** @var array We only care about user-alterable attributes for our audit trail. */
     protected $auditInclude = [
         'name',
         'input_settings',
@@ -255,6 +260,8 @@ class File extends Model implements Auditable
             FileAnalyze::dispatch($file->id);
         }
 
+        $file->fileUpload()->create();
+
         return $file;
     }
 
@@ -313,6 +320,14 @@ class File extends Model implements Auditable
         }
 
         return $this->storage;
+    }
+
+    /**
+     * @return HasOne
+     */
+    public function fileUpload()
+    {
+        return $this->hasOne(FileUpload::class);
     }
 
     /**
@@ -499,7 +514,7 @@ class File extends Model implements Auditable
             $name .= '.'.pathinfo($this->name, PATHINFO_EXTENSION);
 
             if ($this->getStorage()->exists($this->getRelativeLocation($location))) {
-                $this->downloads()->create();
+                $this->fileDownloads()->create();
 
                 return response()->download($location, $name);
             } else {
@@ -513,7 +528,7 @@ class File extends Model implements Auditable
     /**
      * @return HasMany
      */
-    public function downloads()
+    public function fileDownloads()
     {
         return $this->hasMany(FileDownload::class);
     }
@@ -521,9 +536,17 @@ class File extends Model implements Auditable
     /**
      * @return HasMany
      */
-    public function downloadLinks()
+    public function fileDownloadLinks()
     {
         return $this->hasMany(FileDownloadLink::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function suppressionListSupportScrubs()
+    {
+        return $this->hasMany(SuppressionListSupportScrub::class);
     }
 
     /**
@@ -578,7 +601,8 @@ class File extends Model implements Auditable
                     throw new Exception(__('You must be logged in to append a list.'));
                 }
                 if ($suppressionListIds = $this->getInputLists('suppression_list_append')) {
-                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id', $suppressionListIds)) {
+                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id',
+                        $suppressionListIds)) {
                         $ids = [];
                         foreach ($suppressionLists as $suppressionList) {
                             $ids[$suppressionList->id] = [
@@ -598,7 +622,8 @@ class File extends Model implements Auditable
                     throw new Exception(__('You must be logged in to replace a list.'));
                 }
                 if ($suppressionListIds = $this->getInputLists('suppression_list_replace')) {
-                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id', $suppressionListIds)) {
+                    if ($suppressionLists = $this->user->suppressionLists->unique()->whereIn('id',
+                        $suppressionListIds)) {
                         if (count($suppressionLists) > 1) {
                             throw new Exception(__('You may not replace more than one suppression list at a time.'));
                         }
@@ -713,7 +738,7 @@ class File extends Model implements Auditable
      */
     public function getColumnsWithInputHashes($colType, $formValues = [])
     {
-        $columns       = [];
+        $columns = [];
         if ($formValues) {
             $inputSettings = $formValues;
         } else {

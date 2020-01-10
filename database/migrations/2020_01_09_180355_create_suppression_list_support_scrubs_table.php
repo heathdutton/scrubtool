@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateFileDownloadsTable extends Migration
+class CreateSuppressionListSupportScrubsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class CreateFileDownloadsTable extends Migration
      */
     public function up()
     {
-        Schema::create('file_downloads', function (Blueprint $table) {
+        Schema::create('suppression_list_support_scrubs', function (Blueprint $table) {
             // Standard ActionAbstract fields:
             $table->collation = 'utf8mb4_unicode_ci';
             $table->bigIncrements('id');
@@ -26,6 +26,9 @@ class CreateFileDownloadsTable extends Migration
 
             // Additions.
             $table->unsignedBigInteger('file_id')->nullable()->index();
+            $table->unsignedBigInteger('suppression_list_support_id')->index('suppression_list_support_id');
+            $table->unsignedBigInteger('rows_filled')->default(0);
+            $table->unsignedBigInteger('rows_scrubbed')->default(0);
         });
     }
 
@@ -36,6 +39,6 @@ class CreateFileDownloadsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('file_downloads');
+        Schema::dropIfExists('suppression_list_support_scrubs');
     }
 }

@@ -105,7 +105,7 @@ if ($file->status & \App\Models\File::STATUS_ADDED) {
                     @include('partials.stat', ['icon' => 'hashtag', 'class' => 'text-success', 'value' => $file->stat('rows_hashed'), 'id' => 'rows_hashed', 'label' => __('Hashed')])
                     @include('partials.stat', ['icon' => 'filter', 'class' => 'text-success', 'value' => $file->stat('rows_scrubbed'), 'id' => 'rows_scrubbed', 'label' => __('Scrubbed')])
                     @include('partials.stat', ['icon' => 'check', 'class' => 'text-success', 'value' => $file->stat('rows_imported'), 'id' => 'rows_imported', 'label' => __('Imported')])
-                    @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => number_format($file->downloads->count()), 'id' => '', 'label' => __('Downloads')])
+                    @include('partials.stat', ['icon' => 'download', 'class' => '', 'value' => number_format($file->fileDownloads->count()), 'id' => '', 'label' => __('Downloads')])
                 </div>
                 <div class="row">
                     <div class="col-md-12 mt-3 mb-1">
