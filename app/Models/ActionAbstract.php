@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Config;
 use OwenIt\Auditing\Auditable;
 
+/**
+ * Class ActionAbstract
+ *
+ * Used as an abstract model for web actions made by end-users
+ * that we wish to audit without limits/truncation. Examples include uploads and downloads.
+ *
+ * @package App\Models
+ */
 abstract class ActionAbstract extends Model
 {
     use Auditable;
@@ -78,4 +86,23 @@ abstract class ActionAbstract extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
+    /**
+     * @param  array  $attributes
+     *
+     * @return ActionSummary
+     */
+    public function hourly($attributes = [])
+    {
+        return new ActionSummary($attributes, $this, ActionSummary::TYPE_HOURLY);
+    }
+
+    /**
+     * @param  array  $attributes
+     *
+     * @return ActionSummary
+     */
+    public function daily($attributes = [])
+    {
+        return new ActionSummary($attributes, $this, ActionSummary::TYPE_DAILY);
+    }
 }
