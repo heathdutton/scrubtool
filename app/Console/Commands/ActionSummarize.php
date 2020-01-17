@@ -25,7 +25,7 @@ class ActionSummarize extends Command
     {
         $start      = new Carbon();
         $tsStop     = new Carbon($this->timeLimit);
-        $types      = ['daily', 'hourly'];
+        $types      = ['hourly', 'daily'];
         $seconds    = floor($tsStop->diffInSeconds(new Carbon(), true) / (count($this->classes) * count($types)));
         $classTypes = [];
         foreach ($this->classes as $class) {
@@ -34,8 +34,8 @@ class ActionSummarize extends Command
 
         // Generate daily summaries.
         while ($classTypes && new Carbon() < $tsStop) {
-            foreach ($classTypes as $class => &$types) {
-                foreach ($types as &$type) {
+            foreach ($classTypes as $class => $types) {
+                foreach ($types as $t => $type) {
                     $model = new $class;
                     /** @var FileDownload $model */
                     $persisted = $model->{$type}()
@@ -43,9 +43,9 @@ class ActionSummarize extends Command
                         ->generate(min((clone $start)->addSeconds($seconds), $tsStop));
                     // Stop attempting to generate if no data persisted. We'll assume the generation is complete.
                     if (!$persisted) {
-                        unset($type);
-                        if (!$types) {
-                            unset($classTypes);
+                        unset($classTypes[$class][$t]);
+                        if (!$classTypes[$class]) {
+                            unset($classTypes[$class]);
                         }
                     }
                 }

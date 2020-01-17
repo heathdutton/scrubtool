@@ -178,7 +178,7 @@ class ActionSummary extends Model
             foreach ($this->sumColumns as $column) {
                 $selects[] = "SUM('{$column}') as '{$column}'";
             }
-            $data = DB::table($this->parent->getTable())
+            $data = DB::table($this->source()->getTable())
                 ->select(DB::raw(implode(', ', $selects)))
                 ->where('created_at', '>=', $ts)
                 ->where('created_at', '<', $this->iterateTime(clone $ts))
@@ -207,10 +207,23 @@ class ActionSummary extends Model
     public function nextTimeSlot($rebuild = false, Carbon &$ts = null, Carbon &$tsEnd = null)
     {
         if ($ts === null) {
-            $ts       = $this->startTimestamp();
-            $firstRun = true;
-            if ($tsEnd === null) {
-                $tsEnd = $this->endTimestamp($ts);
+            $ts = $this->startTimestamp();
+            // On the first run, jump back to the first filled source data.
+            if ($newestSource = DB::table($this->source()->getTable())
+                ->where(self::TS, '<', $ts)
+                ->orderByDesc(self::TS)
+                ->first()
+            ) {
+                $ts = new Carbon($newestSource->{self::TS});
+                $this->normalizeTime($ts);
+
+                $firstRun = true;
+                if ($tsEnd === null) {
+                    $tsEnd = $this->endTimestamp($ts);
+                }
+            } else {
+                // No more data to generate.
+                return false;
             }
         } else {
             $this->iterateTime($ts);
@@ -218,18 +231,18 @@ class ActionSummary extends Model
         }
         if (!$rebuild) {
             if ($firstRun) {
-                // On the first run, jump back to the first empty spot.
-                $oldest = DB::table($this->getTable())
+                // Find the first empty slot to know where to begin.
+                if ($oldestDestination = DB::table($this->destination()->getTable())
                     ->where(self::TS, '<', $ts)
                     ->orderby(self::TS)
-                    ->first();
-                if ($oldest) {
-                    // A record was found, jump back one hour.
-                    $ts = (new Carbon($oldest->{self::TS}, config('app.timezone')))
-                        ->subHour()->setMinute(0)->setSecond(0)->setMilli(0);
+                    ->first()
+                ) {
+                    // A record was found, jump back one iteration.
+                    $ts = (new Carbon($oldestDestination->{self::TS}, config('app.timezone')));
+                    $this->iterateTime($ts);
                 }
             } else {
-                // Subsequent runs, if the current exists, jump back till empty slot is found.
+                // On subsequent runs, if the current exists, jump back till empty slot is found.
                 while (
                     $ts >= $tsEnd
                     && DB::table($this->getTable())
@@ -259,6 +272,45 @@ class ActionSummary extends Model
         }
     }
 
+    private function source()
+    {
+        if ($this->summaryType == self::TYPE_HOURLY) {
+            return $this->parent;
+        } else {
+            return $this->hourly();
+        }
+    }
+
+    private function hourly()
+    {
+        return $this->getSummaryByType(self::TYPE_HOURLY);
+    }
+
+    protected function getSummaryByType($type)
+    {
+        if ($this->summaryType == $type) {
+            return $this;
+        } else {
+            return new self($this->attributes, $this->parent, $type, $this->maxDaysBack);
+        }
+    }
+
+    /**
+     * @param  Carbon  $ts
+     *
+     * @return Carbon
+     */
+    private function normalizeTime(Carbon $ts)
+    {
+        if ($this->summaryType == self::TYPE_HOURLY) {
+            $ts->minute(0)->second(0)->micro(0);
+        } elseif ($this->summaryType == self::TYPE_DAILY) {
+            $ts->setTime(0, 0, 0, 0);
+        }
+
+        return $ts;
+    }
+
     /**
      * @param  Carbon  $ts
      *
@@ -269,7 +321,7 @@ class ActionSummary extends Model
     {
         $tsEnd = (clone $ts)->subDays($this->maxDaysBack);
         // If the parent data doesn't go back that far update tsEnd.
-        $parentRecord = DB::table($this->parent->getTable())
+        $parentRecord = DB::table($this->source()->getTable())
             ->where(self::TS, '>', $tsEnd)
             ->orderBy(self::TS)
             ->first();
@@ -292,12 +344,27 @@ class ActionSummary extends Model
     private function iterateTime(Carbon $ts)
     {
         if ($this->summaryType == self::TYPE_HOURLY) {
-            $ts->subHour()->minute(0)->second(0)->micro(0);
+            $ts->subHour();
         } elseif ($this->summaryType == self::TYPE_DAILY) {
-            $ts->subDay()->setTime(0, 0, 0, 0);
+            $ts->subDay();
         }
+        $this->normalizeTime($ts);
 
         return $ts;
+    }
+
+    private function destination()
+    {
+        if ($this->summaryType == self::TYPE_HOURLY) {
+            return $this->hourly();
+        } else {
+            return $this->daily();
+        }
+    }
+
+    private function daily()
+    {
+        return $this->getSummaryByType(self::TYPE_DAILY);
     }
 
     /**
@@ -321,19 +388,14 @@ class ActionSummary extends Model
      */
     public function persistQueue()
     {
-        if ($this->summaryType == self::TYPE_HOURLY) {
-            $destination = $this->hourly();
-        } else {
-            $destination = $this->daily();
-        }
         if ($this->deleteQueue) {
-            DB::table($destination->getTable())
+            DB::table($this->destination()->getTable())
                 ->whereIn('created_at', $this->deleteQueue)
                 ->delete();
             $this->deleteQueue = [];
         }
 
-        $this->persistedCount += DB::table($destination->getTable())->insertOrIgnore($this->queue);
+        $this->persistedCount += DB::table($this->destination()->getTable())->insertOrIgnore($this->queue);
 
         $this->queueCount = 0;
         $this->queue      = [];
@@ -341,80 +403,4 @@ class ActionSummary extends Model
         return $this->persistedCount;
     }
 
-    private function hourly()
-    {
-        return $this->getSummaryByType(self::TYPE_HOURLY);
-    }
-
-    // /**
-    //  * @param  int  $maxDaysBack  Maximum days backward to seek before aborting.
-    //  * @param  string  $maxExecutionTime  Maximum time to spend summarizing before aborting.
-    //  * @param  bool  $rebuild  Set to true to delete/regenerate data in the past.
-    //  * @param  bool  $useHourly  Use the hourly summarized table to build daily (more efficient).
-    //  *
-    //  * @return int
-    //  * @throws \Exception
-    //  */
-    // public function generateDays(
-    //     $maxDaysBack = 365,
-    //     $maxExecutionTime = '59 minutes',
-    //     $rebuild = false,
-    //     $useHourly = true
-    // ) {
-    //     // Start with midnight of the previous complete day in the default timezone.
-    //     $ts = new Carbon('yesterday midnight', config('app.timezone'));
-    //     $endDate   = (clone $ts)->subDays($maxDaysBack);
-    //     $persisted = 0;
-    //     $oldest    = $this->parent->query()->orderBy(self::TS)->first();
-    //     $stopTime  = $maxExecutionTime ? new Carbon('+'.$maxExecutionTime) : null;
-    //     do {
-    //         $exists = self::query()->where(self::TS, $ts)->doesntExist();
-    //         if ($rebuild || $exists) {
-    //             if ($rebuild && $this->keyColumns && $exists) {
-    //                 $this->query()
-    //                     ->where(self::TS >= $ts)
-    //                     ->where(self::TS < (clone $ts)->addDay())
-    //                     ->delete();
-    //             }
-    //             $selects = [];
-    //             foreach ($this->sumColumns as $i => $column) {
-    //                 $selects[] = "SUM(:{$i}) as :{$i}";
-    //             }
-    //             $data = $this->parent->query()
-    //                 ->select(implode(', ', $selects), $this->sumColumns)
-    //                 ->where(self::TS >= $ts)
-    //                 ->where(self::TS < (clone $ts)->addDay())
-    //                 ->groupBy([DB::raw('DATE('.self::TS.')')] + $this->keyColumns)
-    //                 ->get()
-    //                 ->toArray();
-    //             if ($data) {
-    //                 $persisted += DB::table($this->getTable())->insertOrIgnore($data);
-    //             }
-    //         }
-    //     } while (
-    //         $ts->subDay()->setTime(0, 0)
-    //         // Exceeded the max days.
-    //         && $ts >= $endDate
-    //         // Exceeded the max execution time.
-    //         && (!$stopTime || new Carbon() < $stopTime)
-    //         // Exceeded rows to summarize.
-    //         && (!$oldest || $oldest->created_at < $ts)
-    //     );
-    //
-    //     return $persisted;
-    // }
-
-    protected function getSummaryByType($type)
-    {
-        if ($this->summaryType == $type) {
-            return $this;
-        } else {
-            return new self($this->attributes, $this->parent, $type, $this->maxDaysBack);
-        }
-    }
-
-    private function daily()
-    {
-        return $this->getSummaryByType(self::TYPE_DAILY);
-    }
 }
