@@ -22,7 +22,7 @@ class FileHashHelper
      *
      * @param  File  $file
      */
-    public function __construct(File $file)
+    public function __construct(File $file = null)
     {
         $this->file = $file;
     }
@@ -49,14 +49,16 @@ class FileHashHelper
      * @param $columnIndex
      * @param  bool  $binary
      * @param  null  $algoOutput
+     * @param  null  $overrideType
+     * @param  null  $overrideAlgoInput
      *
-     * @return string|string[]|null
+     * @return bool
      */
-    public function sanitizeColumn(&$value, $columnIndex, $binary = false, $algoOutput = null)
+    public function sanitizeColumn(&$value, $columnIndex, $binary = false, $algoOutput = null, $overrideType = null, $overrideAlgoInput = null)
     {
         if (!empty($value)) {
-            $type      = $this->file->input_settings['column_type_'.$columnIndex] ?? null;
-            $algoInput = $this->file->input_settings['column_hash_input_'.$columnIndex] ?? null;
+            $type      = $this->file->input_settings['column_type_'.$columnIndex] ?? $overrideType;
+            $algoInput = $this->file->input_settings['column_hash_input_'.$columnIndex] ?? $overrideAlgoInput;
 
             if (!$algoInput) {
                 // We are starting with plain text.
