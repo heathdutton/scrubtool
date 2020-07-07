@@ -315,6 +315,27 @@ class SuppressionList extends Model implements Auditable
     /**
      * @return string
      */
+    public function getApiRoute()
+    {
+        static $apiRoute;
+
+        if (!$apiRoute) {
+            $apiRoute = route('api.suppressionList.scrub', ['idToken' => $this->getIdToken(), 'record' => '555-666-7777']);
+            if (
+                ($appUrl = config('app.url'))
+                && ($appShortUrl = config('app.short_url'))
+                && $appUrl !== $appShortUrl
+            ) {
+                $apiRoute = str_ireplace($appUrl, $appShortUrl, $apiRoute);
+            }
+        }
+
+        return $apiRoute;
+    }
+
+    /**
+     * @return string
+     */
     public function getShareRoute()
     {
         static $route;

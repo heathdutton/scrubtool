@@ -12,4 +12,4 @@
 */
 
 Route::get('/v1/scrub/{idToken}/{record}', 'Api\V1\ScrubController@single')
-    ->where('idToken', '.+z.+')->name('api.scrub');
+    ->where('idToken', '.+z.+')->name('api.suppressionList.scrub');
