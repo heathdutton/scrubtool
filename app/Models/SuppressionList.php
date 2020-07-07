@@ -317,17 +317,13 @@ class SuppressionList extends Model implements Auditable
      */
     public function getApiRoute()
     {
-        static $apiRoute;
-
-        if (!$apiRoute) {
-            $apiRoute = route('api.suppressionList.scrub', ['idToken' => $this->getIdToken(), 'record' => '555-666-7777']);
-            if (
-                ($appUrl = config('app.url'))
-                && ($appShortUrl = config('app.short_url'))
-                && $appUrl !== $appShortUrl
-            ) {
-                $apiRoute = str_ireplace($appUrl, $appShortUrl, $apiRoute);
-            }
+        $apiRoute = route('api.suppressionList.scrub', ['idToken' => $this->getIdToken(), 'record' => '555-666-7777']);
+        if (
+            ($appUrl = config('app.url'))
+            && ($appShortUrl = config('app.short_url'))
+            && $appUrl !== $appShortUrl
+        ) {
+            $apiRoute = str_ireplace($appUrl, $appShortUrl, $apiRoute);
         }
 
         return $apiRoute;
@@ -338,17 +334,13 @@ class SuppressionList extends Model implements Auditable
      */
     public function getShareRoute()
     {
-        static $route;
-
-        if (!$route) {
-            $route = route('suppressionList.share', ['idToken' => $this->getIdToken()]);
-            if (
-                ($appUrl = config('app.url'))
-                && ($appShortUrl = config('app.short_url'))
-                && $appUrl !== $appShortUrl
-            ) {
-                $route = str_ireplace($appUrl, $appShortUrl, $route);
-            }
+        $route = route('suppressionList.share', ['idToken' => $this->getIdToken()]);
+        if (
+            ($appUrl = config('app.url'))
+            && ($appShortUrl = config('app.short_url'))
+            && $appUrl !== $appShortUrl
+        ) {
+            $route = str_ireplace($appUrl, $appShortUrl, $route);
         }
 
         return $route;
