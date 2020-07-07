@@ -27,7 +27,7 @@ class ScrubController extends Controller
                 'record' => $record,
                 'result' => 'error',
                 'error'  => 'Suppression list token was not provided',
-            ]);
+            ], 404);
         }
 
         /** @var SuppressionList $suppressionList */
@@ -37,7 +37,7 @@ class ScrubController extends Controller
                 'record' => $record,
                 'result' => 'error',
                 'error'  => 'Suppression list token is not valid',
-            ]);
+            ], 404);
         }
 
         $helper     = new FileAnalysisHelper();
@@ -47,7 +47,7 @@ class ScrubController extends Controller
                 'record' => $record,
                 'result' => 'error',
                 'error'  => 'Could not discern the type of record provided.',
-            ]);
+            ], 400);
         }
 
         $apiSuppressionListHelper = new ApiSuppressionListHelper(collect([$suppressionList]), $columnType);
@@ -61,6 +61,6 @@ class ScrubController extends Controller
             'result'          => $scrubbed ? 'Scrubbed' : 'Not Found',
             'status'          => $scrubbed ? 0 : 1,
             'suppressionList' => $suppressionList->name,
-        ]);
+        ], $scrubbed ? 406 : 200);
     }
 }
