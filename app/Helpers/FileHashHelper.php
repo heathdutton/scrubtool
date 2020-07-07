@@ -76,7 +76,7 @@ class FileHashHelper
                     $this->getHashHelper()->filter($value, $binary, $algoInput);
                 } else {
                     if (!$algoOutput) {
-                        if ($this->file->mode & File::MODE_HASH) {
+                        if ($this->file && $this->file->mode & File::MODE_HASH) {
                             // Generate hash for output from the filtered plaintext.
                             $algoOutput = $this->file->input_settings['column_hash_output_'.$columnIndex] ?? null;
                         }

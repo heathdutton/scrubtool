@@ -434,7 +434,7 @@ class FileAnalysisHelper
         if ($this->isHash($value)) {
             return SuppressionListSupport::TYPE_HASH;
         }
-        if ($this->isPhone($value, $this->file->country ?? 'US')) {
+        if ($this->isPhone($value, $this->file->country ?? 'US', true)) {
             return SuppressionListSupport::TYPE_PHONE;
         }
 

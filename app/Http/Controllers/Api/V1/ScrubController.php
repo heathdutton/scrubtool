@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Api\V1\Controllers;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Helpers\ApiSuppressionListHelper;
 use App\Helpers\FileAnalysisHelper;
@@ -20,10 +20,11 @@ class ScrubController extends Controller
      * @return JsonResponse
      * @throws Exception
      */
-    public function share($idToken, $record, Request $request)
+    public function single($idToken, $record, Request $request)
     {
         if (!$idToken) {
             return response()->json([
+                'record' => $record,
                 'result' => 'error',
                 'error'  => 'Suppression list token was not provided',
             ]);
@@ -33,26 +34,33 @@ class ScrubController extends Controller
         $suppressionList = SuppressionList::findByIdToken($idToken);
         if (!$suppressionList) {
             return response()->json([
+                'record' => $record,
                 'result' => 'error',
                 'error'  => 'Suppression list token is not valid',
             ]);
         }
 
-        $helper = new FileAnalysisHelper();
-        $type   = $helper->getType($record);
-        if (!$type) {
+        $helper     = new FileAnalysisHelper();
+        $columnType = $helper->getType($record);
+        if (!$columnType) {
             return response()->json([
+                'record' => $record,
                 'result' => 'error',
                 'error'  => 'Could not discern the type of record provided.',
             ]);
         }
-        $apiSuppressionListHelper = new ApiSuppressionListHelper(collect($suppressionList), $type);
+
+        $apiSuppressionListHelper = new ApiSuppressionListHelper(collect([$suppressionList]), $columnType);
         $row                      = [$record];
         $apiSuppressionListHelper->scrubRow($row);
         $scrubbed = (bool) !count($row);
 
         return response()->json([
-            'result' => $scrubbed ? 'scrubbed' : 'not found',
+            'record'          => $record,
+            'type'            => __('column_types.'.$columnType),
+            'result'          => $scrubbed ? 'Scrubbed' : 'Not Found',
+            'status'          => $scrubbed ? 0 : 1,
+            'suppressionList' => $suppressionList->name,
         ]);
     }
 }

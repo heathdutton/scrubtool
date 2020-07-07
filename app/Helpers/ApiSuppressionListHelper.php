@@ -125,7 +125,7 @@ class ApiSuppressionListHelper
         foreach (self::COLUMN_TYPES as $columnType) {
             if ($this->type === $columnType) {
                 // Only one column with api currently.
-                $supportsNeeded[$columnType] = 0;
+                $supportsNeeded[$columnType] = [0];
             }
         }
 
