@@ -128,7 +128,7 @@ class FileAnalysisHelper
      *
      * @param $file
      */
-    public function __construct($file)
+    public function __construct($file = null)
     {
         $this->file = $file;
     }
@@ -423,7 +423,7 @@ class FileAnalysisHelper
      *
      * @return int
      */
-    private function getType($value, $columnIndex)
+    public function getType($value, $columnIndex = null)
     {
         if (self::isIp($value)) {
             return SuppressionListSupport::TYPE_IP;
@@ -434,7 +434,7 @@ class FileAnalysisHelper
         if ($this->isHash($value)) {
             return SuppressionListSupport::TYPE_HASH;
         }
-        if ($this->isPhone($value, $this->file->country ?? 'US')) {
+        if ($this->isPhone($value, $this->file->country ?? 'US', true)) {
             return SuppressionListSupport::TYPE_PHONE;
         }
 
