@@ -14,8 +14,8 @@
         }
     ],
     "require": {
-        "php": "^7.2",
-        "ext-json": "^1.6",
+        "php": "^7.3",
+        "ext-json": "*",
         "aws/aws-sdk-php": "^3.123",
         "fideloper/proxy": "^4.0",
         "giggsey/libphonenumber-for-php": "^8.10",
