@@ -419,11 +419,12 @@ class FileAnalysisHelper
      * Attempt to detect the column type given the value.
      *
      * @param $value
-     * @param $columnIndex
+     * @param  null  $columnIndex
+     * @param  bool  $returnHashType
      *
-     * @return int
+     * @return int|array
      */
-    public function getType($value, $columnIndex = null)
+    public function getType($value, $columnIndex = null, $returnHashType = false)
     {
         if (self::isIp($value)) {
             return SuppressionListSupport::TYPE_IP;
@@ -431,7 +432,10 @@ class FileAnalysisHelper
         if ($this->isEmail($value)) {
             return SuppressionListSupport::TYPE_EMAIL;
         }
-        if ($this->isHash($value)) {
+        if ($hash = $this->getHashHelper()->detectHash($value)) {
+            if ($returnHashType) {
+                return [SuppressionListSupport::TYPE_HASH, $hash['id']];
+            }
             return SuppressionListSupport::TYPE_HASH;
         }
         if ($this->isPhone($value, $this->file->country ?? 'US', true)) {

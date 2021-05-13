@@ -31,20 +31,26 @@ class ApiSuppressionListHelper
     private $warnings = [];
 
     /** @var int */
+    private $hashType;
+
+    /** @var int */
     private $type;
 
     /**
      * ApiSuppressionListHelper constructor.
      *
      * @param $scrubSuppressionLists
-     * @param  int  $type
+     * @param $type
+     * @param $hash
      */
     public function __construct(
         $scrubSuppressionLists,
-        $type = FileAnalysisHelper::TYPE_EMAIL
+        $type,
+        $hashType = null
     ) {
         $this->scrubSuppressionLists = $scrubSuppressionLists;
         $this->type                  = $type;
+        $this->hashType              = $hashType;
 
         // Scrub against an existing Suppression List.
         $this->scrubSupports();
@@ -122,10 +128,19 @@ class ApiSuppressionListHelper
     private function discernSupportsNeeded()
     {
         $supportsNeeded = [];
-        foreach (self::COLUMN_TYPES as $columnType) {
-            if ($this->type === $columnType) {
-                // Only one column with api currently.
-                $supportsNeeded[$columnType] = [0];
+
+        if ($this->type & FileAnalysisHelper::TYPE_HASH) {
+            // Assume it could be any type.
+            foreach (self::COLUMN_TYPES as $columnType) {
+                // Assuming a single column for the API.
+                $supportsNeeded[$columnType] = [0 => $this->hashType];
+            }
+        } else {
+            foreach (self::COLUMN_TYPES as $columnType) {
+                if ($this->type & $columnType) {
+                    // Assuming a single column for the API, no hash.
+                    $supportsNeeded[$columnType] = [0 => null];
+                }
             }
         }
 
@@ -173,7 +188,7 @@ class ApiSuppressionListHelper
                     if (
                         !isset($valuesByHashType[$support->hash_type])
                         && $this->getFileHashHelper()->sanitizeColumn($value, $columnIndex, true,
-                            $support->hash_type, $this->type, null)
+                            $support->hash_type, $this->type, $this->hashType)
                     ) {
                         $valuesByHashType[$support->hash_type] = $value;
                     }
