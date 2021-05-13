@@ -10,6 +10,8 @@ jobs:
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
     - name: Install Dependencies
+      with:
+        php_version: 7.3
       env:
         NOVA_USER: ${{ secrets.nova_user }}
         NOVA_TOKEN: ${{ secrets.nova_token }}
@@ -17,18 +19,28 @@ jobs:
         composer config http-basic.nova.laravel.com $NOVA_USER $NOVA_TOKEN \
         && composer install --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
     - name: Generate key
+      with:
+        php_version: 7.3
       run: php artisan key:generate
     - name: Create Database
       run: |
         mkdir -p database
         touch database/database.sqlite
     - name: Optimize
+      with:
+        php_version: 7.3
       run: php artisan optimize
     - name: Migrate
+      with:
+        php_version: 7.3
       run: php artisan migrate:fresh --force
     - name: Seed
+      with:
+        php_version: 7.3
       run: php artisan db:seed --force
     - name: Execute tests (Unit and Feature tests) via PHPUnit
+      with:
+        php_version: 7.3
       env:
         DB_CONNECTION: sqlite
         DB_DATABASE: database/database.sqlite
