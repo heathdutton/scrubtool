@@ -40,8 +40,11 @@ class ScrubController extends Controller
             ], 404);
         }
 
+        $hashType   = null;
+        $row        = [$record];
         $helper     = new FileAnalysisHelper();
-        $columnType = $helper->getType($record);
+        $columnType = $helper->getType($record, 0, true);
+
         if (!$columnType) {
             return response()->json([
                 'record' => $record,
@@ -50,17 +53,26 @@ class ScrubController extends Controller
             ], 400);
         }
 
-        $apiSuppressionListHelper = new ApiSuppressionListHelper(collect([$suppressionList]), $columnType);
-        $row                      = [$record];
+        // Assume this could be email or phone if a hash was sent
+        if (is_array($columnType)) {
+            [$columnType, $hashType] = $columnType;
+        }
+        $apiSuppressionListHelper = new ApiSuppressionListHelper(collect([$suppressionList]), $columnType, $hashType);
         $apiSuppressionListHelper->scrubRow($row);
         $scrubbed = (bool) !count($row);
 
-        return response()->json([
+        $result = [
             'record'          => $record,
             'type'            => __('column_types.'.$columnType),
             'result'          => $scrubbed ? 'Scrubbed' : 'Not Found',
             'status'          => $scrubbed ? 0 : 1,
             'suppressionList' => $suppressionList->name,
-        ], $scrubbed ? 406 : 200);
+        ];
+        $errors = $apiSuppressionListHelper->getErrors();
+        if ($errors) {
+            $result['error'] = implode(' ', $errors);
+        }
+
+        return response()->json($result, $scrubbed ? 406 : 200);
     }
 }

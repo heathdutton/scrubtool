@@ -6,7 +6,11 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.3'
+    - uses: actions/checkout@v2
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
     - name: Install Dependencies
@@ -14,9 +18,8 @@ jobs:
         NOVA_USER: ${{ secrets.nova_user }}
         NOVA_TOKEN: ${{ secrets.nova_token }}
       run: |
-        composer config http-basic.nova.laravel.com.username $NOVA_USER \
-        && composer config http-basic.nova.laravel.com.password $NOVA_TOKEN \
-        && composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+        composer config http-basic.nova.laravel.com $NOVA_USER $NOVA_TOKEN \
+        && composer install --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
     - name: Generate key
       run: php artisan key:generate
     - name: Create Database
@@ -24,10 +27,19 @@ jobs:
         mkdir -p database
         touch database/database.sqlite
     - name: Optimize
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
       run: php artisan optimize
     - name: Migrate
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
       run: php artisan migrate:fresh --force
     - name: Seed
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: database/database.sqlite
       run: php artisan db:seed --force
     - name: Execute tests (Unit and Feature tests) via PHPUnit
       env:
